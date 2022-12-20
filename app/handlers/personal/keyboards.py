@@ -1,5 +1,6 @@
-from aiogram.utils.keyboard import KeyboardButton, InlineKeyboardButton, \
-    ReplyKeyboardBuilder, InlineKeyboardBuilder
+from aiogram.utils.keyboard import (InlineKeyboardBuilder,
+                                    InlineKeyboardButton, KeyboardButton,
+                                    ReplyKeyboardBuilder)
 
 languages = [
     "Albanian",

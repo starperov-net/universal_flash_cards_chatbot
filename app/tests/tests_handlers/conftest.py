@@ -2,13 +2,14 @@ import asyncio
 
 import pytest
 import pytest_asyncio
+from aiogram import Bot, Dispatcher
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram import Bot, Dispatcher
 
-from tests.tests_handlers.mocked_bot import MockedBot
-from tests.tests_handlers.utils import TEST_USER, TEST_USER_CHAT
+from app.tests.tests_handlers.mocked_bot import MockedBot
+from app.tests.tests_handlers.utils import TEST_USER_CHAT
+from app.tests.utils import TELEGRAM_USER_1 as TEST_USER
 
 
 @pytest_asyncio.fixture(scope="session")
