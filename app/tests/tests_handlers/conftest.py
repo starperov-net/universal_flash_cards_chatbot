@@ -2,10 +2,10 @@ import asyncio
 
 import pytest
 import pytest_asyncio
+from aiogram import Bot, Dispatcher
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.base import StorageKey
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram import Bot, Dispatcher
 
 from app.tests.tests_handlers.mocked_bot import MockedBot
 from app.tests.tests_handlers.utils import TEST_USER_CHAT

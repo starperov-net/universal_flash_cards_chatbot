@@ -25,7 +25,9 @@ from app.settings import settings  # noqa !!!
         ),
         (
             TranslateRequest(
-                in_lang=ISO639_1.Russian, out_lang=ISO639_1.Ukrainian, line="унылая пора"
+                in_lang=ISO639_1.Russian,
+                out_lang=ISO639_1.Ukrainian,
+                line="унылая пора",
             ),
             {
                 "translatedText": "похмура пора",

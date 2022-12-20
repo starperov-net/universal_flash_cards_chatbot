@@ -1,16 +1,16 @@
 from typing import Optional
 
-from aiogram import Dispatcher, types, F
+from aiogram import Dispatcher, F, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.state import State, StatesGroup
 
 import app.handlers.personal.keyboards as kb
 from app.base_functions.translator import get_translate
-from app.db_functions.personal import (add_user_db, add_user_context_db,
-                                       get_user_db, get_user_context_db)
+from app.db_functions.personal import (add_user_context_db, add_user_db,
+                                       get_user_context_db, get_user_db)
 from app.scheme.transdata import ISO639_1, TranslateRequest
-from app.tables import UserContext, User
+from app.tables import User, UserContext
 
 
 class FSMChooseLanguage(StatesGroup):
@@ -33,8 +33,8 @@ async def get_user_data(msg: types.Message, state: FSMContext) -> None:
     if user_context_db:
         await msg.answer(
             text=f"{user_context_db.user.first_name}, "
-                 f"your native language is {user_context_db.context_1.name}, "
-                 f"your target - {user_context_db.context_2.name}",
+            f"your native language is {user_context_db.context_1.name}, "
+            f"your target - {user_context_db.context_2.name}",
         )
         return
 
@@ -44,7 +44,9 @@ async def get_user_data(msg: types.Message, state: FSMContext) -> None:
     )
 
 
-async def select_native_language(callback_query: types.CallbackQuery, state: FSMContext) -> None:
+async def select_native_language(
+    callback_query: types.CallbackQuery, state: FSMContext
+) -> None:
     await state.set_data({"native_lang": callback_query.data})
     await state.set_state(FSMChooseLanguage.target_language)
     await callback_query.message.answer(
@@ -53,20 +55,21 @@ async def select_native_language(callback_query: types.CallbackQuery, state: FSM
     )
 
 
-async def select_target_language(callback_query: types.CallbackQuery, state: FSMContext) -> None:
+async def select_target_language(
+    callback_query: types.CallbackQuery, state: FSMContext
+) -> None:
     await state.update_data({"target_lang": callback_query.data})
     user_db = await get_user_db(callback_query.from_user)
     if user_db is None:
         user_db: Optional[User] = await add_user_db(callback_query.from_user)
-
 
     state_data = await state.get_data()
     user_context_db = await add_user_context_db(state_data, user_db)
 
     await callback_query.message.answer(
         text=f"{user_db.first_name}, "
-             f"your native language is {user_context_db.context_1.name}, "
-             f"your target - {user_context_db.context_2.name}",
+        f"your native language is {user_context_db.context_1.name}, "
+        f"your target - {user_context_db.context_2.name}",
     )
     await state.clear()
 
@@ -84,9 +87,13 @@ async def translate_word(msg: types.Message):
 
 
 def register_handler_start(dp: Dispatcher):
-    dp.message.register(translate_word, F.test.regexp("[a-zA-Z ]"))  # regexp_match=Match("[a-zA-Z ]")))
+    dp.message.register(translate_word, F.test.regexp("[a-zA-Z ]"))
     dp.message.register(start, Command(commands=["start", "початок"]))
     dp.message.register(greeting, Command(commands=["hello"]))
     dp.message.register(get_user_data)
-    dp.callback_query.register(select_native_language, FSMChooseLanguage.native_language)
-    dp.callback_query.register(select_target_language, FSMChooseLanguage.target_language)
+    dp.callback_query.register(
+        select_native_language, FSMChooseLanguage.native_language
+    )
+    dp.callback_query.register(
+        select_target_language, FSMChooseLanguage.target_language
+    )
