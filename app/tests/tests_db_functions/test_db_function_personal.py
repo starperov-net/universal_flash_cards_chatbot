@@ -40,8 +40,12 @@ class TestApp(IsolatedAsyncioTestCase):
         context: Context = Context(name='English', name_alfa2='en')
         await context.save()
         await TABLE_USER_1.save()
-        item: Item = await add_item_db(text, context.id, TABLE_USER_1.id)
+        item: Item = await add_item_db(
+            author=TABLE_USER_1.id,
+            context=context.id,
+            text=text
+        )
 
-        assert item.text == 'window'
-        assert item.context == context.id
         assert item.author == TABLE_USER_1.id
+        assert item.context == context.id
+        assert item.text == 'window'
