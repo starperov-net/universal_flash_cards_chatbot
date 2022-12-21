@@ -7,9 +7,9 @@ from parameterized import parameterized
 from piccolo.conf.apps import Finder
 from piccolo.table import Table, create_db_tables_sync, drop_db_tables_sync
 
-from app.db_functions.personal import add_user_db, add_item_db
-from app.tables import User, Item, Context
-from app.tests.utils import TELEGRAM_USER_1, TELEGRAM_USER_2, TABLE_USER_1
+from app.db_functions.personal import add_user_db, add_item_db, add_item_relation_db
+from app.tables import User, ItemRelation, Item, Context
+from app.tests.utils import TELEGRAM_USER_1, TELEGRAM_USER_2, TABLE_USER_1, CONTEXT_EN, CONTEXT_UK
 
 TABLES: t.List[t.Type[Table]] = Finder().get_table_classes()
 
@@ -48,3 +48,23 @@ class TestVerificationOfRecordedDataToDB(IsolatedAsyncioTestCase):
         assert item.author == TABLE_USER_1.id
         assert item.context == context.id
         assert item.text == 'window'
+
+    @pytest.mark.asyncio
+    async def test_add_item_relation_db_verification_of_recorded_data(self) -> None:
+        await TABLE_USER_1.save()
+        await CONTEXT_EN.save()
+        await CONTEXT_UK.save()
+        item_en: Item = Item(author=TABLE_USER_1.id, context=CONTEXT_EN.id, text='window')
+        item_uk: Item = Item(author=TABLE_USER_1.id, context=CONTEXT_UK.id, text='вікно')
+        await item_en.save()
+        await item_uk.save()
+
+        item_relation: ItemRelation = await add_item_relation_db(
+            author=TABLE_USER_1.id,
+            item_1=item_en.id,
+            item_2=item_uk.id
+        )
+
+        assert item_relation.author == TABLE_USER_1.id
+        assert item_relation.item_1 == item_en.id
+        assert item_relation.item_2 == item_uk.id
