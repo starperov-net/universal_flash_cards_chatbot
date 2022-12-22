@@ -37,12 +37,14 @@ class UserContext(Table):
 
 
 class Item(Table):
+    id = UUID(primary_key=True)
     author = ForeignKey(references=User)
     context = ForeignKey(references=Context)
     text = Text()
 
 
 class ItemRelation(Table):
+    id = UUID(primary_key=True)
     author = ForeignKey(references=User)
     item_1 = ForeignKey(references=Item)
     item_2 = ForeignKey(references=Item)
