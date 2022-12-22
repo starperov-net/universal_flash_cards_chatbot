@@ -34,7 +34,7 @@ TELEGRAM_USER_2 = User(
 TABLE_USER_1 = tables.User(
     telegram_user_id=TELEGRAM_USER_1.id,
     telegram_language=TELEGRAM_USER_1.language_code,
-    user_name=TELEGRAM_USER_1.full_name,
+    user_name=TELEGRAM_USER_1.username,
     first_name=TELEGRAM_USER_1.first_name,
     last_name=TELEGRAM_USER_1.last_name
 )

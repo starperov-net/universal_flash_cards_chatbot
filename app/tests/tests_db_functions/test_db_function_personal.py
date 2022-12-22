@@ -16,7 +16,6 @@ TABLES: t.List[t.Type[Table]] = Finder().get_table_classes()
 
 class TestApp(IsolatedAsyncioTestCase):
     def setUp(self):
-        pass
         create_db_tables_sync(*TABLES)
 
     def tearDown(self):
