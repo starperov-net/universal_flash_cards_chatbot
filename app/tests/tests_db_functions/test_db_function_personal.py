@@ -14,7 +14,7 @@ from app.tests.utils import TELEGRAM_USER_1, TELEGRAM_USER_2, TABLE_USER_1
 TABLES: t.List[t.Type[Table]] = Finder().get_table_classes()
 
 
-class TestApp(IsolatedAsyncioTestCase):
+class TestVerificationOfRecordedDataToDB(IsolatedAsyncioTestCase):
     def setUp(self):
         create_db_tables_sync(*TABLES)
 
@@ -23,7 +23,7 @@ class TestApp(IsolatedAsyncioTestCase):
 
     @parameterized.expand([(TELEGRAM_USER_1,), (TELEGRAM_USER_2,)])
     @pytest.mark.asyncio
-    async def test_add_user_db_verification_of_recorded_data(
+    async def test_add_user_db(
         self, telegram_user: aiogram.types.User
     ) -> None:
         user: User = await add_user_db(telegram_user)
@@ -34,7 +34,7 @@ class TestApp(IsolatedAsyncioTestCase):
         assert user.telegram_language == (telegram_user.language_code or "")
 
     @pytest.mark.asyncio
-    async def test_add_item_db_verification_of_recorded_data(self) -> None:
+    async def test_add_item_db(self) -> None:
         text: str = 'window'
         context: Context = Context(name='English', name_alfa2='en')
         await context.save()
