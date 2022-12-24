@@ -1,8 +1,9 @@
 import asyncio
 import logging
+
 from aiogram import types
 
-from app.create_bot import dp, bot
+from app.create_bot import bot, dp
 from app.handlers import register_all_handlers
 from app.scheme.transdata import ISO639_1
 from app.tables import Context
@@ -40,8 +41,8 @@ async def main(logger: logging.Logger) -> None:
 if __name__ == "__main__":
     logger: logging.Logger = logging.getLogger(__name__)
     try:
-        logger.info('Bot started')
+        logger.info("Bot started")
         asyncio.run(main(logger))
 
     except (KeyboardInterrupt, SystemExit):
-        logger.info('Bot stopped')
+        logger.info("Bot stopped")
