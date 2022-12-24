@@ -65,16 +65,16 @@ async def get_translated_word_db(word: str, telegram_user_id, ) -> Optional[tupl
      значить інше слово і є переклад
     '''
     user_context: UserContext = await get_user_context_db(telegram_user_id)
-    translation: ItemRelation = await ItemRelation.objects(ItemRelation.all_related()). \
-        where((ItemRelation.author.telegram_user_id.is_in([telegram_user_id, 0])) & \
-              (ItemRelation.item_1.context.is_in((user_context.context_1, user_context.context_2))) & \
-              (ItemRelation.item_2.context.is_in((user_context.context_1, user_context.context_2)))). \
-        where((ItemRelation.item_1.text == word) | (ItemRelation.item_2.text == word)). \
-        order_by(ItemRelation.author.telegram_user_id, ascending=False). \
-        first()
+    translation: ItemRelation = await ItemRelation.objects(ItemRelation.all_related()).where(
+        (ItemRelation.author.telegram_user_id.is_in([telegram_user_id, 0])) &
+        (ItemRelation.item_1.context.is_in((user_context.context_1, user_context.context_2))) &
+        (ItemRelation.item_2.context.is_in((user_context.context_1, user_context.context_2)))).where(
+        (ItemRelation.item_1.text == word) | (ItemRelation.item_2.text == word)).order_by(
+        ItemRelation.author.telegram_user_id, ascending=False).first()
 
     if translation:
-        translated_word: str = list(set((translation.item_1.text, translation.item_2.text)) - set((word,)))[0]
+        word1, word2 = translation.item_1.text, translation.item_2.text
+        translated_word: str = list(set((word1, word2)) - set((word,)))[0]
         return translated_word
 
     return None

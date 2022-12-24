@@ -4,7 +4,6 @@ from aiogram.types import User
 
 from app import tables
 
-
 TELEGRAM_USER_1 = User(
     id=1,
     is_bot=False,
@@ -47,7 +46,7 @@ TELEGRAM_USER_GOOGLE = User(
     supports_inline_queries=None,
 )
 
-TELEGRAM_USER_3=User(
+TELEGRAM_USER_3 = User(
     id=3,
     is_bot=False,
     first_name="Bot3",
