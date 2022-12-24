@@ -7,7 +7,7 @@ from parameterized import parameterized
 from piccolo.conf.apps import Finder
 from piccolo.table import Table, create_db_tables_sync, drop_db_tables_sync
 
-from app.db_functions.personal import add_user_db, get_item_relation
+from app.db_functions.personal import add_user_db, get_translated_word_db
 from app.tables import User, ItemRelation, Item, UserContext, Context
 from app.tests.utils import (TELEGRAM_USER_1, TELEGRAM_USER_2,
                              TABLE_USER_1, TABLE_USER_2, TABLE_USER_3, TABLE_USER_GOOGLE,
@@ -90,8 +90,8 @@ class TestGetItemRelation(IsolatedAsyncioTestCase):
 
                            ])
     @pytest.mark.asyncio
-    async def test_get_item_relation_correct_answer(
+    async def test_get_translated_word_db(
             self, word: str, translated_word: str, telegram_user_id: int
     ) -> None:
-        answer: t.Optional[str] = await get_item_relation(word, telegram_user_id)
+        answer: t.Optional[str] = await get_translated_word_db(word, telegram_user_id)
         assert answer == translated_word

@@ -52,7 +52,7 @@ async def get_user_db(data_telegram: aiogram.types.User) -> Optional[User]:
     return user
 
 
-async def get_item_relation(word: str, telegram_user_id, ) -> Optional[tuple[str]]:
+async def get_translated_word_db(word: str, telegram_user_id, ) -> Optional[tuple[str]]:
     '''
      беремо всі переклади авторства юзера чи гугла(telegram_iser_id=0)
      додаемо умову пошуку тільки тих слів, де мови такі ж як і у user_context
