@@ -3,6 +3,7 @@ from datetime import datetime
 from aiogram.types import User
 
 from app import tables
+from app.tables import Context, Item
 
 TELEGRAM_USER_1 = User(
     id=1,
@@ -133,6 +134,19 @@ TABLE_USER_CONTEXT_3_ru_de = tables.UserContext(
     last_date=datetime(2022, 2, 24)
 )
 
+CONTEXT_EN = Context(name='English', name_alfa2='en')
+CONTEXT_UK = Context(name='Ukrainian', name_alfa2='uk')
+
+ITEM_EN: Item = Item(author=TABLE_USER_1.id, context=CONTEXT_EN.id, text='window')
+ITEM_UK: Item = Item(author=TABLE_USER_1.id, context=CONTEXT_UK.id, text='вікно')
+
+# TABLE_USER_2 = tables.User(
+#     telegram_user_id=TELEGRAM_USER_2.id,
+#     telegram_language=TELEGRAM_USER_2.language_code,
+#     user_name=TELEGRAM_USER_2.full_name,
+#     first_name=TELEGRAM_USER_2.first_name,
+#     last_name=TELEGRAM_USER_2.last_name
+# )
 TABLE_ITEM_en_auto = tables.Item(
     author=TABLE_USER_1.id,
     context=TABLE_CONTEXT_en.id,

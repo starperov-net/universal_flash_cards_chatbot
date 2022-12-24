@@ -7,11 +7,10 @@ from parameterized import parameterized
 from piccolo.conf.apps import Finder
 from piccolo.table import Table, create_db_tables_sync, drop_db_tables_sync
 
-
-from app.db_functions.personal import add_user_db, add_item_db, get_translated_word_db
+from app.db_functions.personal import add_user_db, add_item_db, add_item_relation_db, get_translated_word_db
 from app.tables import User, ItemRelation, Item, UserContext, Context
-from app.tests.utils import (TELEGRAM_USER_1, TELEGRAM_USER_2,
-                             TABLE_USER_1, TABLE_USER_2, TABLE_USER_3, TABLE_USER_GOOGLE,
+from app.tests.utils import (TELEGRAM_USER_1, TELEGRAM_USER_2, TABLE_USER_1, CONTEXT_EN,
+                             TABLE_USER_2, TABLE_USER_3, TABLE_USER_GOOGLE,
                              TABLE_USER_CONTEXT_1_uk_en, TABLE_USER_CONTEXT_2_uk_en, TABLE_USER_CONTEXT_3_ru_de,
                              TABLE_ITEM_en_auto, TABLE_ITEM_de_auto, TABLE_ITEM_de_wagen,
                              TABLE_ITEM_uk_automobil, TABLE_ITEM_ru_mashina,
@@ -27,13 +26,12 @@ TABLES: t.List[t.Type[Table]] = Finder().get_table_classes()
 
 class TestVerificationOfRecordedDataToDB(IsolatedAsyncioTestCase):
     def setUp(self):
-        create_db_tables_sync(*TABLES)
+        create_db_tables_sync(*TABLES, if_not_exists=True)
 
     def tearDown(self):
         drop_db_tables_sync(*TABLES)
 
     @parameterized.expand([(TELEGRAM_USER_1,), (TELEGRAM_USER_2,)])
-    @pytest.mark.asyncio
     async def test_add_user_db(
         self, telegram_user: aiogram.types.User
     ) -> None:
@@ -44,21 +42,31 @@ class TestVerificationOfRecordedDataToDB(IsolatedAsyncioTestCase):
         assert user.user_name == (telegram_user.username or "")
         assert user.telegram_language == (telegram_user.language_code or "")
 
-    @pytest.mark.asyncio
     async def test_add_item_db(self) -> None:
         text: str = 'window'
-        context: Context = Context(name='English', name_alfa2='en')
-        await context.save()
+        await CONTEXT_EN.save()
         await TABLE_USER_1.save()
         item: Item = await add_item_db(
             author=TABLE_USER_1.id,
-            context=context.id,
+            context=CONTEXT_EN.id,
             text=text
         )
 
         assert item.author == TABLE_USER_1.id
-        assert item.context == context.id
+        assert item.context == CONTEXT_EN.id
         assert item.text == 'window'
+
+
+@pytest.mark.asyncio
+async def test_add_item_relation_db(user, item_uk, item_en) -> None:
+    item_relation: ItemRelation = await add_item_relation_db(
+        author=user.id,
+        item_1=item_en.id,
+        item_2=item_uk.id
+    )
+    assert item_relation.author == user.id
+    assert item_relation.item_1 == item_en.id
+    assert item_relation.item_2 == item_uk.id
 
 
 class TestGetItemRelation(IsolatedAsyncioTestCase):
