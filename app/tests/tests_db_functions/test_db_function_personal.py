@@ -43,7 +43,7 @@ class TestVerificationOfRecordedDataToDB(IsolatedAsyncioTestCase):
         assert user.last_name == (telegram_user.last_name or "")
         assert user.user_name == (telegram_user.username or "")
         assert user.telegram_language == (telegram_user.language_code or "")
-        
+
     @pytest.mark.asyncio
     async def test_add_item_db(self) -> None:
         text: str = 'window'
@@ -113,3 +113,4 @@ class TestGetItemRelation(IsolatedAsyncioTestCase):
     ) -> None:
         answer: t.Optional[str] = await get_translated_word_db(word, telegram_user_id)
         assert answer == translated_word
+mak
