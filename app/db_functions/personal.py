@@ -2,7 +2,7 @@ from typing import Optional
 
 import aiogram
 
-from app.tables import Context, User, UserContext
+from app.tables import Context, User, UserContext, ItemRelation
 
 
 async def add_user_db(data_telegram: aiogram.types.User) -> User:
@@ -50,3 +50,31 @@ async def get_user_db(data_telegram: aiogram.types.User) -> Optional[User]:
         User.telegram_user_id == data_telegram.id
     )
     return user
+
+
+async def get_item_relation(word: str, telegram_user_id, ) -> Optional[tuple[str]]:
+    '''
+     беремо всі переклади авторства юзера чи гугла(telegram_iser_id=0)
+     додаемо умову пошуку тільки тих слів, де мови такі ж як і у user_context
+     отримали як би "словничок" саме цього юзера
+     тепер із цього словничка обираємо записи з співпадінням слів
+     відсортовуємо в зворотньому напрямку, щоб першим стояв переклад юзера, а гугла  - в кінці
+      беремо перший переклад, тобто переклад юзера.
+
+     потім з отриманого запису беру два слова і із них прибираю те слово, по якому шукали
+     значить інше слово і є переклад
+    '''
+    user_context: UserContext = await get_user_context_db(telegram_user_id)
+    translation: ItemRelation = await ItemRelation.objects(ItemRelation.all_related()). \
+        where((ItemRelation.author.telegram_user_id.is_in([telegram_user_id, 0])) & \
+              (ItemRelation.item_1.context.is_in((user_context.context_1, user_context.context_2))) & \
+              (ItemRelation.item_2.context.is_in((user_context.context_1, user_context.context_2)))). \
+        where((ItemRelation.item_1.text == word) | (ItemRelation.item_2.text == word)). \
+        order_by(ItemRelation.author.telegram_user_id, ascending=False). \
+        first()
+
+    if translation:
+        translated_word: str = list(set((translation.item_1.text, translation.item_2.text)) - set((word,)))[0]
+        return translated_word
+
+    return None

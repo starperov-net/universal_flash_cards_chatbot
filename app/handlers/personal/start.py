@@ -8,7 +8,8 @@ from aiogram.fsm.state import State, StatesGroup
 import app.handlers.personal.keyboards as kb
 from app.base_functions.translator import get_translate
 from app.db_functions.personal import (add_user_context_db, add_user_db,
-                                       get_user_context_db, get_user_db)
+                                       get_user_context_db, get_user_db,
+                                       get_item_relation)
 from app.scheme.transdata import ISO639_1, TranslateRequest
 from app.tables import User, UserContext
 
@@ -76,6 +77,7 @@ async def select_target_language(
 
 async def translate_word(msg: types.Message):
     NATIVE_LANGUAGE = TARGET_LANGUAGE = ""
+    x = get_item_relation_db('car', msg.from_user.id)
     request = TranslateRequest(
         in_lang=ISO639_1[TARGET_LANGUAGE],
         out_lang=ISO639_1[NATIVE_LANGUAGE],
