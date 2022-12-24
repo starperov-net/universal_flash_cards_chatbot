@@ -1,6 +1,7 @@
 from aiogram.types import User
 
 from app import tables
+from app.tables import Context, Item
 
 TELEGRAM_USER_1 = User(
     id=1,
@@ -38,6 +39,12 @@ TABLE_USER_1 = tables.User(
     first_name=TELEGRAM_USER_1.first_name,
     last_name=TELEGRAM_USER_1.last_name
 )
+
+CONTEXT_EN = Context(name='English', name_alfa2='en')
+CONTEXT_UK = Context(name='Ukrainian', name_alfa2='uk')
+
+ITEM_EN: Item = Item(author=TABLE_USER_1.id, context=CONTEXT_EN.id, text='window')
+ITEM_UK: Item = Item(author=TABLE_USER_1.id, context=CONTEXT_UK.id, text='вікно')
 
 # TABLE_USER_2 = tables.User(
 #     telegram_user_id=TELEGRAM_USER_2.id,

@@ -2,7 +2,7 @@ from typing import Optional
 
 import aiogram
 
-from app.tables import Context, User, UserContext, Item
+from app.tables import Context, User, UserContext, Item, ItemRelation
 
 
 async def add_item_db(text: str, context: Context.id, author: User.id) -> Item:
@@ -13,6 +13,16 @@ async def add_item_db(text: str, context: Context.id, author: User.id) -> Item:
     )
     await item.save()
     return item
+
+
+async def add_item_relation_db(author: User.id, item_1: Item.id, item_2: Item.id) -> ItemRelation:
+    item_relation: ItemRelation = ItemRelation(
+        author=author,
+        item_1=item_1,
+        item_2=item_2
+    )
+    await item_relation.save()
+    return item_relation
 
 
 async def add_user_db(data_telegram: aiogram.types.User) -> User:
