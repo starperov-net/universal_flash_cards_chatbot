@@ -121,4 +121,3 @@ class TestGetItemRelation(IsolatedAsyncioTestCase):
     ) -> None:
         answer: t.Optional[str] = await get_translated_word_db(word, telegram_user_id)
         assert answer == translated_word
-
