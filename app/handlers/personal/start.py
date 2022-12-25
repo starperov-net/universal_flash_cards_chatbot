@@ -8,7 +8,8 @@ from aiogram.fsm.state import State, StatesGroup
 import app.handlers.personal.keyboards as kb
 from app.base_functions.translator import get_translate
 from app.db_functions.personal import (add_user_context_db, add_user_db,
-                                       get_user_context_db, get_user_db)
+                                       get_user_context_db, get_user_db,
+                                       get_translated_word_db)
 from app.scheme.transdata import ISO639_1, TranslateRequest
 from app.tables import User, UserContext
 
@@ -76,12 +77,14 @@ async def select_target_language(
 
 async def translate_word(msg: types.Message):
     NATIVE_LANGUAGE = TARGET_LANGUAGE = ""
-    request = TranslateRequest(
-        in_lang=ISO639_1[TARGET_LANGUAGE],
-        out_lang=ISO639_1[NATIVE_LANGUAGE],
-        line=msg.text,
-    )
-    translated = get_translate(input_=request).translated_line
+    translated_word_from_db = get_translated_word_db(msg.text, msg.from_user.id)
+    if translated_word_from_db is None:
+        request = TranslateRequest(
+            in_lang=ISO639_1[TARGET_LANGUAGE],
+            out_lang=ISO639_1[NATIVE_LANGUAGE],
+            line=msg.text,
+        )
+        translated = get_translate(input_=request).translated_line
     await msg.answer("I can't translate")
     await msg.answer(f'you wrote {msg.text}. Translated - "{translated}"')
 
