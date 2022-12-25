@@ -3,37 +3,37 @@ from piccolo.table import create_db_tables_sync, drop_db_tables_sync
 
 from app.tables import User, Context, Item
 from app.tests.tests_db_functions.test_db_function_personal import TABLES
-from app.tests.utils import TABLE_USER_1, CONTEXT_UK, CONTEXT_EN, ITEM_UK, ITEM_EN
+from app.tests.tests_db_functions.utils import CONTEXT_uk, CONTEXT_en, ITEM_uk_automobil, ITEM_en_auto, USER_1
 
 
 @pytest_asyncio.fixture
 async def user():
-    await User.insert(TABLE_USER_1)
-    return TABLE_USER_1
+    await User.insert(USER_1)
+    return USER_1
 
 
 @pytest_asyncio.fixture
 async def context_uk():
-    await Context.insert(CONTEXT_UK)
-    return CONTEXT_UK
+    await Context.insert(CONTEXT_uk)
+    return CONTEXT_uk
 
 
 @pytest_asyncio.fixture
 async def context_en():
-    await Context.insert(CONTEXT_EN)
-    return CONTEXT_EN
+    await Context.insert(CONTEXT_en)
+    return CONTEXT_en
 
 
 @pytest_asyncio.fixture
 async def item_uk(user, context_uk):
-    await Item.insert(ITEM_UK)
-    return ITEM_UK
+    await Item.insert(ITEM_uk_automobil)
+    return ITEM_uk_automobil
 
 
 @pytest_asyncio.fixture
 async def item_en(user, context_en):
-    await Item.insert(ITEM_EN)
-    return ITEM_EN
+    await Item.insert(ITEM_en_auto)
+    return ITEM_en_auto
 
 
 def setup():
