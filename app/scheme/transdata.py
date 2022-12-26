@@ -226,15 +226,15 @@ class ISO639_1(str, Enum):
 class TranslateRequest(BaseModel):
     """Describes data model for the translation request."""
 
-    in_lang: ISO639_1
-    out_lang: ISO639_1
+    native_lang: ISO639_1
+    foreign_lang: ISO639_1
     line: str
 
-    @validator("out_lang")
-    def out_lang_must_not_be_equal_in_lang(cls, out_lang, values):
-        if out_lang == values["in_lang"]:
-            raise ValueError("out_lang must not be equal to in_lang")
-        return out_lang
+    @validator("foreign_lang")
+    def foreign_lang_must_not_be_equal_native_lang(cls, foreign_lang, values):
+        if foreign_lang == values["native_lang"]:
+            raise ValueError("foreign_lang must not be equal to native_lang")
+        return foreign_lang
 
     @validator("line")
     def prepare_line(cls, line):
@@ -245,5 +245,8 @@ class TranslateRequest(BaseModel):
 class TranslateResponse(BaseModel):
     """Describes data model for the translation response."""
 
-    input_line: str
-    translated_line: str
+    input_text: str
+    translated_text: str
+    input_text_language: str
+    translated_text_language: str
+

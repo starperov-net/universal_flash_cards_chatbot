@@ -56,7 +56,7 @@ def test_get_translate(translate_request, mock_translate_return_value, right_ans
     with patch.object(
         translate_client, "translate", return_value=mock_translate_return_value
     ) as mock_translate:
-        assert get_translate(input_=translate_request).translated_line == right_answer
+        assert get_translate(input_=translate_request).translated_text == right_answer
 
     mock_translate.assert_called_once_with(
         translate_request.line, target_language=translate_request.out_lang
@@ -70,8 +70,8 @@ def test_validate_in_data():
         )
     assert exc_info.value.errors() == [
         {
-            "loc": ("out_lang",),
-            "msg": "out_lang must not be equal to in_lang",
+            "loc": ("foreign_lang",),
+            "msg": "foreign_lang must not be equal to in_lang",
             "type": "value_error",
         }
     ]

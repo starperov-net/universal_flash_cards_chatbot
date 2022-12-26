@@ -4,9 +4,11 @@ import logging
 from aiogram import types
 
 from app.create_bot import bot, dp
+from app.db_functions.personal import get_or_create_user_db
 from app.handlers import register_all_handlers
 from app.scheme.transdata import ISO639_1
 from app.tables import Context
+from app.tests.utils import TELEGRAM_USER_GOOGLE
 
 
 async def set_default_commands():
@@ -25,9 +27,14 @@ async def add_languages_to_context():
             await new_language.save()
 
 
+async def add_user_google():
+    await get_or_create_user_db(TELEGRAM_USER_GOOGLE)
+
+
 async def on_startup():
     await set_default_commands()
     await add_languages_to_context()
+    await add_user_google()
 
 
 async def main(logger: logging.Logger) -> None:
