@@ -1,6 +1,6 @@
 from typing import Optional
 
-from aiogram import Dispatcher, F, types, filters
+from aiogram import Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -11,10 +11,11 @@ from app.db_functions.personal import (add_user_context_db, add_user_db,
                                        get_or_create_item_db,
                                        get_user_context_db, get_user_db,
                                        add_item_relation_db, get_context_id_db,
-                                       get_translated_text_db)
+                                       get_translated_text_db, add_card_db)
+from app.handlers.personal.callback_data_states import ToStudyCallbackData
 
-from app.scheme.transdata import ISO639_1, TranslateRequest, TranslateResponse
-from app.tables import User, UserContext
+from app.scheme.transdata import TranslateRequest, TranslateResponse
+from app.tables import User, UserContext, ItemRelation
 from app.tests.utils import TELEGRAM_USER_GOOGLE
 
 
@@ -97,7 +98,7 @@ async def translate_text(msg: types.Message):
 
     if translated_text:
         await msg.answer(f'you wrote {msg.text}. Translated - "{translated_text}"',
-                         reply_markup=kb.what_to_do_with_text_keyboard)
+                         reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id))
     else:
 
         request = TranslateRequest(
@@ -121,10 +122,15 @@ async def translate_text(msg: types.Message):
             item_2 = await get_or_create_item_db(translate.translated_text, translated_text_context_id,
                                                  user_context.user.id)
             google = await get_user_db(TELEGRAM_USER_GOOGLE.id)
-            await add_item_relation_db(google.id, item_1, item_2)
+            item_relation: ItemRelation = await add_item_relation_db(google.id, item_1, item_2)
 
             await msg.answer(f'you wrote {translate.input_text}. Translated - "{translate.translated_text}"',
-                             reply_markup=kb.what_to_do_with_text_keyboard)
+                             reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id))
+
+
+async def add_words_to_study(callback_query: types.CallbackQuery, callback_data: ToStudyCallbackData):
+    await add_card_db(callback_query.from_user.id, callback_data.item_relation_id)
+    await callback_query.answer('Added to study.')
 
 
 def register_handler_start(dp: Dispatcher):
@@ -136,4 +142,5 @@ def register_handler_start(dp: Dispatcher):
     dp.callback_query.register(
         select_target_language, FSMChooseLanguage.target_language
     )
+    dp.callback_query.register(add_words_to_study, ToStudyCallbackData.filter())
     dp.message.register(translate_text)  # F.test.regexp("[a-zA-Z ]"))

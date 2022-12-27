@@ -1,8 +1,23 @@
+import datetime
 from typing import Optional
 
 import aiogram
 
-from app.tables import Context, User, UserContext, Item, ItemRelation
+from app.tables import Context, User, UserContext, Item, ItemRelation, Card
+
+
+async def add_card_db(telegram_user_id: int, item_relation_id: ItemRelation.id) -> Card:
+    user: User = await get_user_db(telegram_user_id)
+    card: Card = Card(
+        user=user,
+        item_relation=item_relation_id,
+        box_number=1,
+        last_date=datetime.datetime.now(),
+        repeats_amount=0,
+        author=user
+    )
+    await card.save()
+    return card
 
 
 async def add_item_db(text: str, context: Context.id, author: User.id) -> Item:
@@ -30,6 +45,7 @@ async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
         'first_name': data_telegram.first_name,
         'last_name': data_telegram.last_name or ""})
     return user
+
 
 async def add_item_relation_db(author: User.id, item_1: Item.id, item_2: Item.id) -> ItemRelation:
     item_relation: ItemRelation = ItemRelation(
