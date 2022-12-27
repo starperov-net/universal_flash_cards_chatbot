@@ -80,15 +80,25 @@ async def select_target_language(
 
 
 async def translate_text(msg: types.Message):
+    '''
+    1.getting translate from our own database.
+      return translated_text
+    2.if we don't have a translation, using google-translate
+      in this case save this text and translates_text as items and item_relation
+      return translated_text
+    '''
     user_context: UserContext = await get_user_context_db(msg.from_user.id)
-    translated_word: Optional[str] = await get_translated_text_db(
+    translated_text: Optional[str] = await get_translated_text_db(
         msg.text,
         msg.from_user.id,
         user_context.context_1.id,
         user_context.context_2.id
     )
 
-    if translated_word is None:
+    if translated_text:
+        await msg.answer(f'you wrote {msg.text}. Translated - "{translated_text}"',
+                         reply_markup=kb.what_to_do_with_text_keyboard)
+    else:
 
         request = TranslateRequest(
             native_lang=user_context.context_1.name_alfa2,
@@ -113,7 +123,9 @@ async def translate_text(msg: types.Message):
             google = await get_user_db(TELEGRAM_USER_GOOGLE.id)
             await add_item_relation_db(google.id, item_1, item_2)
 
-        await msg.answer(f'you wrote {msg.text}. Translated - "{translated_word}"')
+            await msg.answer(f'you wrote {translate.input_text}. Translated - "{translate.translated_text}"',
+                             reply_markup=kb.what_to_do_with_text_keyboard)
+
 
 def register_handler_start(dp: Dispatcher):
     dp.message.register(start, Command(commands=["start", "початок"]))
