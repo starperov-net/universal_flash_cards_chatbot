@@ -1,6 +1,7 @@
 from typing import Optional
+from uuid import UUID
 
-from aiogram import Dispatcher, F, types, filters
+from aiogram import Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -14,7 +15,7 @@ from app.db_functions.personal import (add_user_context_db, add_user_db,
                                        get_translated_text_db)
 
 from app.scheme.transdata import ISO639_1, TranslateRequest, TranslateResponse
-from app.tables import User, UserContext
+from app.tables import User, UserContext, Item
 from app.tests.utils import TELEGRAM_USER_GOOGLE
 
 
@@ -79,7 +80,35 @@ async def select_target_language(
     await state.clear()
 
 
-async def translate_text(msg: types.Message):
+async def google_translate(user_context, msg):
+    request = TranslateRequest(
+        native_lang=user_context.context_1.name_alfa2,
+        foreign_lang=user_context.context_2.name_alfa2,
+        line=msg.text,
+    )
+
+    try:
+        translate: TranslateResponse = get_translate(input_=request)
+
+    except ValueError as er:
+        await msg.answer(er.args[0])
+
+    else:
+
+        input_text_context_id: UUID = await get_context_id_db(translate.input_text_language)
+        translated_text_context_id: UUID = await get_context_id_db(translate.translated_text_language)
+
+        item_1: Item = await get_or_create_item_db(translate.input_text, input_text_context_id,
+                                                   user_context.user.id)
+        item_2: Item = await get_or_create_item_db(translate.translated_text, translated_text_context_id,
+                                                   user_context.user.id)
+        google: User = await get_user_db(TELEGRAM_USER_GOOGLE.id)
+        await add_item_relation_db(google.id, item_1, item_2)
+
+    return translate.translated_text
+
+
+async def translate_text(msg: types.Message) -> None:
     '''
     1.getting translate from our own database.
       return translated_text
@@ -99,32 +128,9 @@ async def translate_text(msg: types.Message):
         await msg.answer(f'you wrote {msg.text}. Translated - "{translated_text}"',
                          reply_markup=kb.what_to_do_with_text_keyboard)
     else:
+        translated_text: str = google_translate(user_context, msg)
 
-        request = TranslateRequest(
-            native_lang=user_context.context_1.name_alfa2,
-            foreign_lang=user_context.context_2.name_alfa2,
-            line=msg.text,
-        )
-
-        try:
-            translate: TranslateResponse = get_translate(input_=request)
-
-        except ValueError as er:
-            await msg.answer(er.args[0])
-
-        else:
-
-            input_text_context_id = await get_context_id_db(translate.input_text_language)
-            translated_text_context_id = await get_context_id_db(translate.translated_text_language)
-
-            item_1 = await get_or_create_item_db(translate.input_text, input_text_context_id, user_context.user.id)
-            item_2 = await get_or_create_item_db(translate.translated_text, translated_text_context_id,
-                                                 user_context.user.id)
-            google = await get_user_db(TELEGRAM_USER_GOOGLE.id)
-            await add_item_relation_db(google.id, item_1, item_2)
-
-            await msg.answer(f'you wrote {translate.input_text}. Translated - "{translate.translated_text}"',
-                             reply_markup=kb.what_to_do_with_text_keyboard)
+    await msg.answer(translated_text, reply_markup=kb.what_to_do_with_text_keyboard)
 
 
 def register_handler_start(dp: Dispatcher):

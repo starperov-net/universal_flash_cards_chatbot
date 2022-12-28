@@ -1,6 +1,5 @@
 from aiogram.utils.keyboard import (InlineKeyboardBuilder,
-                                    InlineKeyboardButton, KeyboardButton,
-                                    ReplyKeyboardBuilder,
+                                    InlineKeyboardButton,
                                     InlineKeyboardMarkup)
 
 # ------- keyboard for choice languages
