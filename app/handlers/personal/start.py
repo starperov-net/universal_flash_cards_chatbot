@@ -80,7 +80,7 @@ async def select_target_language(
     await state.clear()
 
 
-async def google_translate(user_context, msg):
+async def google_translate(user_context, msg) -> str:
     request = TranslateRequest(
         native_lang=user_context.context_1.name_alfa2,
         foreign_lang=user_context.context_2.name_alfa2,
@@ -124,10 +124,7 @@ async def translate_text(msg: types.Message) -> None:
         user_context.context_2.id
     )
 
-    if translated_text:
-        await msg.answer(f'you wrote {msg.text}. Translated - "{translated_text}"',
-                         reply_markup=kb.what_to_do_with_text_keyboard)
-    else:
+    if not translated_text:
         translated_text: str = google_translate(user_context, msg)
 
     await msg.answer(translated_text, reply_markup=kb.what_to_do_with_text_keyboard)

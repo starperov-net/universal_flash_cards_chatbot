@@ -98,7 +98,7 @@ async def get_user_db(telegram_user_id: int) -> Optional[User]:
 
 
 async def get_translated_text_db(text: str, telegram_user_id: int, context_1: Context.id, context_2: Context.id) -> \
-        Optional[tuple[str]]:
+        Optional[str]:
     '''
      беремо всі переклади авторства юзера чи гугла(telegram_iser_id=0)
      додаемо умову пошуку тільки тих слів, де мови такі ж як і у user_context

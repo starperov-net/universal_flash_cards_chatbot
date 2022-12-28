@@ -25,7 +25,7 @@ def get_translate(
         raise ValueError(f"Your word is {result['detectedSourceLanguage']},"
                          f"translated as {result['translatedText']}"
                          )
-    if result["detectedSourceLanguage"] != input_.foreign_lang:
+    if result["detectedSourceLanguage"] == input_.native_lang:
         result = translate_client.translate(input_.line, target_language=input_.foreign_lang)
         translated_text_language = input_.foreign_lang
     return TranslateResponse(
