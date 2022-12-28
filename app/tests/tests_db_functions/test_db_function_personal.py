@@ -7,7 +7,7 @@ from parameterized import parameterized
 from piccolo.conf.apps import Finder
 from piccolo.table import Table, create_db_tables_sync, drop_db_tables_sync
 
-from app.db_functions.personal import add_user_db, add_item_db, add_item_relation_db, get_translated_word_db
+from app.db_functions.personal import add_user_db, add_item_db, add_item_relation_db, get_translated_text_db
 from app.tables import User, ItemRelation, Item, UserContext, Context
 from app.tests.utils import (TELEGRAM_USER_1, TELEGRAM_USER_2)
 from app.tests.tests_db_functions.utils import (USER_1, USER_2, USER_3, USER_GOOGLE,
@@ -95,18 +95,19 @@ class TestGetItemRelation(IsolatedAsyncioTestCase):
     def tearDown(self):
         drop_db_tables_sync(*TABLES)
 
-    @parameterized.expand([('wagen', 'машина', 3), ('машина', None, 1),
-                           ('автомобіль', 'auto', 1),
-                           ('auto', 'автомобіль', 1),
-                           ('auto', 'автомобіль', 2),
-                           ('машина', 'auto', 3),
+    @parameterized.expand([('wagen', 'машина', 3, USER_CONTEXT_3_ru_de.context_1, USER_CONTEXT_3_ru_de.context_2),
+                           ('машина', None, 1, USER_CONTEXT_1_uk_en.context_1, USER_CONTEXT_1_uk_en.context_2),
+                           ('автомобіль', 'auto', 1, USER_CONTEXT_1_uk_en.context_1, USER_CONTEXT_1_uk_en.context_2),
+                           ('auto', 'автомобіль', 1, USER_CONTEXT_1_uk_en.context_1, USER_CONTEXT_1_uk_en.context_2),
+                           ('auto', 'автомобіль', 2, USER_CONTEXT_2_uk_en.context_1, USER_CONTEXT_2_uk_en.context_2),
+                           ('машина', 'auto', 3, USER_CONTEXT_3_ru_de.context_1, USER_CONTEXT_3_ru_de.context_2),
 
                            ])
     @pytest.mark.asyncio
-    async def test_get_translated_word_db(
-            self, word: str, translated_word: str, telegram_user_id: int
+    async def test_get_translated_text_db(
+            self, word: str, translated_word: str, telegram_user_id: int, context_1: Context.id, context_2: Context.id
     ) -> None:
-        answer: t.Optional[str] = await get_translated_word_db(word, telegram_user_id)
+        answer: t.Optional[str] = await get_translated_text_db(word, telegram_user_id, context_1, context_2)
         assert answer == translated_word
 
 

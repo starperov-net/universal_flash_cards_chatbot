@@ -8,7 +8,7 @@ translate_client = translate.Client()
 
 
 def get_translate(
-    input_: TranslateRequest, translate_client: translate.Client = translate_client
+        input_: TranslateRequest, translate_client: translate.Client = translate_client
 ) -> TranslateResponse:
     """Translates a word or phrase.
 
@@ -19,13 +19,18 @@ def get_translate(
     environment variable containing the path to the file with credentials
     (the file must be available at this path)
     """
-    result = translate_client.translate(input_.line, target_language=input_.out_lang)
-    if result["detectedSourceLanguage"] != input_.in_lang:
-        raise ValueError(
-            "Original message language recognized as "
-            f"{result['detectedSourceLanguage']} while {input_.in_lang} is specified"
-        )
+    result = translate_client.translate(input_.line, target_language=input_.native_lang)
+    translated_text_language = input_.native_lang
+    if result["detectedSourceLanguage"] not in [input_.native_lang, input_.foreign_lang]:
+        raise ValueError(f"Your word is {result['detectedSourceLanguage']},"
+                         f"translated as {result['translatedText']}"
+                         )
+    if result["detectedSourceLanguage"] == input_.native_lang:
+        result = translate_client.translate(input_.line, target_language=input_.foreign_lang)
+        translated_text_language = input_.foreign_lang
     return TranslateResponse(
-        input_line=input_.line,
-        translated_line=result["translatedText"],
+        input_text=input_.line,
+        translated_text=result["translatedText"],
+        input_text_language=result["detectedSourceLanguage"],
+        translated_text_language=translated_text_language
     )

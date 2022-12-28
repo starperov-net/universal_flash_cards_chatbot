@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, call
 
 import pytest
 from pydantic import ValidationError
@@ -14,7 +14,7 @@ from app.settings import settings  # noqa !!!
     (
         (
             TranslateRequest(
-                in_lang=ISO639_1.English, out_lang=ISO639_1.Ukrainian, line="makes"
+                native_lang=ISO639_1.English, foreign_lang=ISO639_1.Ukrainian, line="makes"
             ),
             {
                 "translatedText": "робить",
@@ -25,8 +25,8 @@ from app.settings import settings  # noqa !!!
         ),
         (
             TranslateRequest(
-                in_lang=ISO639_1.Russian,
-                out_lang=ISO639_1.Ukrainian,
+                native_lang=ISO639_1.Russian,
+                foreign_lang=ISO639_1.Ukrainian,
                 line="унылая пора",
             ),
             {
@@ -38,8 +38,8 @@ from app.settings import settings  # noqa !!!
         ),
         (
             TranslateRequest(
-                in_lang=ISO639_1.English,
-                out_lang=ISO639_1.Ukrainian,
+                native_lang=ISO639_1.English,
+                foreign_lang=ISO639_1.Ukrainian,
                 line="    assemble  ",
             ),
             {
@@ -56,22 +56,21 @@ def test_get_translate(translate_request, mock_translate_return_value, right_ans
     with patch.object(
         translate_client, "translate", return_value=mock_translate_return_value
     ) as mock_translate:
-        assert get_translate(input_=translate_request).translated_line == right_answer
-
-    mock_translate.assert_called_once_with(
-        translate_request.line, target_language=translate_request.out_lang
-    )
+        assert get_translate(input_=translate_request).translated_text == right_answer
+    calls = [call(translate_request.line, target_language=translate_request.native_lang),
+             call(translate_request.line, target_language=translate_request.foreign_lang)]
+    mock_translate.assert_has_calls(calls)
 
 
 def test_validate_in_data():
     with pytest.raises(ValidationError) as exc_info:
         TranslateRequest(
-            in_lang=ISO639_1.English, out_lang=ISO639_1.English, line="    assemble  "
+            native_lang=ISO639_1.English, foreign_lang=ISO639_1.English, line="    assemble  "
         )
     assert exc_info.value.errors() == [
         {
-            "loc": ("out_lang",),
-            "msg": "out_lang must not be equal to in_lang",
+            "loc": ("foreign_lang",),
+            "msg": "foreign_lang must not be equal to native_lang",
             "type": "value_error",
         }
     ]
@@ -79,7 +78,7 @@ def test_validate_in_data():
 
 def test_matching_indicated_and_recognized_lang():
     translate_request = TranslateRequest(
-        in_lang=ISO639_1.Haitian, out_lang=ISO639_1.Ukrainian, line="    assemble  "
+        native_lang=ISO639_1.Haitian, foreign_lang=ISO639_1.Ukrainian, line="    assemble  "
     )
     mock_translate_return_value = {
         "translatedText": "зібрати",
@@ -92,8 +91,8 @@ def test_matching_indicated_and_recognized_lang():
     ) as mock_translate:
         with pytest.raises(ValueError) as exc_info:
             get_translate(input_=translate_request)
-        assert "Original message language recognized as" in str(exc_info.value)
+        assert "Your word is" in str(exc_info.value)
 
     mock_translate.assert_called_once_with(
-        translate_request.line, target_language=translate_request.out_lang
+        translate_request.line,  target_language=translate_request.native_lang
     )
