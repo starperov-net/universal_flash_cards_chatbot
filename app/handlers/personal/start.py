@@ -14,7 +14,7 @@ from app.db_functions.personal import (add_user_context_db, add_user_db,
                                        add_item_relation_db, get_context_id_db,
                                        get_translated_text_db)
 
-from app.scheme.transdata import ISO639_1, TranslateRequest, TranslateResponse
+from app.scheme.transdata import TranslateRequest, TranslateResponse
 from app.tables import User, UserContext, Item
 from app.tests.utils import TELEGRAM_USER_GOOGLE
 

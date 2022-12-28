@@ -31,6 +31,7 @@ async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
         'last_name': data_telegram.last_name or ""})
     return user
 
+
 async def add_item_relation_db(author: User.id, item_1: Item.id, item_2: Item.id) -> ItemRelation:
     item_relation: ItemRelation = ItemRelation(
         author=author,
