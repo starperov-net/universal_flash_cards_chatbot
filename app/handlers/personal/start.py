@@ -11,7 +11,7 @@ from app.db_functions.personal import (add_user_context_db, add_user_db,
                                        get_or_create_item_db,
                                        get_user_context_db, get_user_db,
                                        add_item_relation_db, get_context_id_db,
-                                       get_translated_text_db, add_card_db)
+                                       get_translated_text, add_card_db, get_item_relation_by_text)
 from app.handlers.personal.callback_data_states import ToStudyCallbackData
 
 from app.scheme.transdata import TranslateRequest, TranslateResponse
@@ -89,16 +89,16 @@ async def translate_text(msg: types.Message):
       return translated_text
     '''
     user_context: UserContext = await get_user_context_db(msg.from_user.id)
-    translated_text: Optional[str] = await get_translated_text_db(
+    item_relation: Optional[ItemRelation] = await get_item_relation_by_text(
         msg.text,
         msg.from_user.id,
         user_context.context_1.id,
         user_context.context_2.id
     )
 
-    if translated_text:
-        await msg.answer(f'you wrote {msg.text}. Translated - "{translated_text}"',
-                         reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id))
+    if item_relation:
+        translated_text = get_translated_text(msg.text, item_relation)
+
     else:
 
         request = TranslateRequest(
@@ -109,6 +109,7 @@ async def translate_text(msg: types.Message):
 
         try:
             translate: TranslateResponse = get_translate(input_=request)
+            translated_text = translate.translated_text
 
         except ValueError as er:
             await msg.answer(er.args[0])
@@ -124,8 +125,8 @@ async def translate_text(msg: types.Message):
             google = await get_user_db(TELEGRAM_USER_GOOGLE.id)
             item_relation: ItemRelation = await add_item_relation_db(google.id, item_1, item_2)
 
-            await msg.answer(f'you wrote {translate.input_text}. Translated - "{translate.translated_text}"',
-                             reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id))
+    await msg.answer(f'you wrote {translate.input_text}. Translated - "{translate.translated_text}"',
+                     reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id))
 
 
 async def add_words_to_study(callback_query: types.CallbackQuery, callback_data: ToStudyCallbackData):

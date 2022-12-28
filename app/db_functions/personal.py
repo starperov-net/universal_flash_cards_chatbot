@@ -1,6 +1,6 @@
 import datetime
 from typing import Optional
-
+from zoneinfo import ZoneInfo
 import aiogram
 
 from app.tables import Context, User, UserContext, Item, ItemRelation, Card
@@ -12,7 +12,7 @@ async def add_card_db(telegram_user_id: int, item_relation_id: ItemRelation.id) 
         user=user,
         item_relation=item_relation_id,
         box_number=1,
-        last_date=datetime.datetime.now(),
+        last_date=datetime.datetime.now(tz=ZoneInfo('UTC')),
         repeats_amount=0,
         author=user
     )
@@ -94,6 +94,16 @@ async def get_context_id_db(name_alfa2: str) -> Context.id:
     return context.id
 
 
+async def get_item_relation_by_text(text: str, telegram_user_id: int, context_1: Context.id, context_2: Context.id):
+    translation: ItemRelation = await ItemRelation.objects(ItemRelation.all_related()).where(
+        (ItemRelation.author.telegram_user_id.is_in([telegram_user_id, 0])) &
+        (ItemRelation.item_1.context.is_in((context_1, context_2))) &
+        (ItemRelation.item_2.context.is_in((context_1, context_2)))).where(
+        (ItemRelation.item_1.text == text) | (ItemRelation.item_2.text == text)).order_by(
+        ItemRelation.author.telegram_user_id, ascending=False).first()
+    return translation
+
+
 async def get_user_context_db(telegram_user_id) -> Optional[UserContext]:
     user_context = (
         await UserContext.objects(UserContext.all_related())
@@ -112,8 +122,7 @@ async def get_user_db(telegram_user_id: int) -> Optional[User]:
     return user
 
 
-async def get_translated_text_db(text: str, telegram_user_id: int, context_1: Context.id, context_2: Context.id) -> \
-        Optional[tuple[str]]:
+def get_translated_text(text: str, item_relation: ItemRelation) -> Optional[str]:
     '''
      беремо всі переклади авторства юзера чи гугла(telegram_iser_id=0)
      додаемо умову пошуку тільки тих слів, де мови такі ж як і у user_context
@@ -126,16 +135,16 @@ async def get_translated_text_db(text: str, telegram_user_id: int, context_1: Co
      значить інше слово і є переклад
     '''
 
-    translation: ItemRelation = await ItemRelation.objects(ItemRelation.all_related()).where(
-        (ItemRelation.author.telegram_user_id.is_in([telegram_user_id, 0])) &
-        (ItemRelation.item_1.context.is_in((context_1, context_2))) &
-        (ItemRelation.item_2.context.is_in((context_1, context_2)))).where(
-        (ItemRelation.item_1.text == text) | (ItemRelation.item_2.text == text)).order_by(
-        ItemRelation.author.telegram_user_id, ascending=False).first()
+    # item_relation: ItemRelation = await ItemRelation.objects(ItemRelation.all_related()).where(
+    #     (ItemRelation.author.telegram_user_id.is_in([telegram_user_id, 0])) &
+    #     (ItemRelation.item_1.context.is_in((context_1, context_2))) &
+    #     (ItemRelation.item_2.context.is_in((context_1, context_2)))).where(
+    #     (ItemRelation.item_1.text == text) | (ItemRelation.item_2.text == text)).order_by(
+    #     ItemRelation.author.telegram_user_id, ascending=False).first()
 
-    if translation:
-        text1, text2 = translation.item_1.text, translation.item_2.text
-        translated_text: str = list(set((text1, text2)) - set((text,)))[0]
-        return translated_text
+    # if item_relation:
+    text1, text2 = item_relation.item_1.text, item_relation.item_2.text
+    translated_text: str = list(set((text1, text2)) - set((text,)))[0]
+    return translated_text
 
-    return None
+    # return None
