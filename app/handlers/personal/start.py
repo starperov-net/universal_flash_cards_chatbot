@@ -109,13 +109,12 @@ async def translate_text(msg: types.Message):
 
         try:
             translate: TranslateResponse = get_translate(input_=request)
-            translated_text = translate.translated_text
 
         except ValueError as er:
-            await msg.answer(er.args[0])
+            return await msg.answer(er.args[0])
 
         else:
-
+            translated_text = translate.translated_text
             input_text_context_id = await get_context_id_db(translate.input_text_language)
             translated_text_context_id = await get_context_id_db(translate.translated_text_language)
 
@@ -125,7 +124,7 @@ async def translate_text(msg: types.Message):
             google = await get_user_db(TELEGRAM_USER_GOOGLE.id)
             item_relation: ItemRelation = await add_item_relation_db(google.id, item_1, item_2)
 
-    await msg.answer(f'you wrote {translate.input_text}. Translated - "{translate.translated_text}"',
+    await msg.answer(f'you wrote {msg.text}. Translated - "{translated_text}"',
                      reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id))
 
 
