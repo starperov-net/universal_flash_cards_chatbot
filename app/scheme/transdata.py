@@ -249,4 +249,3 @@ class TranslateResponse(BaseModel):
     translated_text: str
     input_text_language: str
     translated_text_language: str
-

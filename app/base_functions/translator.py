@@ -23,11 +23,12 @@ def get_translate(
     translated_text_language: str = input_.native_lang
     if result["detectedSourceLanguage"] not in [input_.native_lang, input_.foreign_lang]:
         raise ValueError(f"Your word is {result['detectedSourceLanguage']},"
-                         f"translated as {result['translatedText']}"
-                         )
-    if result["detectedSourceLanguage"] != input_.foreign_lang:
+                         f"translated as {result['translatedText']}")
+
+    if result["detectedSourceLanguage"] == input_.native_lang:
         result: dict = translate_client.translate(input_.line, target_language=input_.foreign_lang)
         translated_text_language: str = input_.foreign_lang
+
     return TranslateResponse(
         input_text=input_.line,
         translated_text=result["translatedText"],

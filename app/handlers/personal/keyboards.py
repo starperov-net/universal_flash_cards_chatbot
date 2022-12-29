@@ -1,6 +1,5 @@
 from aiogram.utils.keyboard import (InlineKeyboardBuilder,
-                                    InlineKeyboardButton, KeyboardButton,
-                                    ReplyKeyboardBuilder,
+                                    InlineKeyboardButton,
                                     InlineKeyboardMarkup)
 from asyncpg.pgproto.pgproto import UUID
 
