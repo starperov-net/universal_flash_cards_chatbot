@@ -79,7 +79,7 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: ItemRelat
     The function checks if the user already has a pair of such items to study that are in item_relation.
     '''
     item_relation: ItemRelation = await get_item_relation_db(item_relation_id)
-    card: Card = await Card.objects().where(
+    card: list[Card] = await Card.objects().where(
         (Card.user.telegram_user_id == telegram_user_id) &
         (Card.item_relation.item_1.is_in((item_relation.item_1, item_relation.item_2))) &
         (Card.item_relation.item_2.is_in((item_relation.item_1, item_relation.item_2)))
