@@ -78,7 +78,7 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: ItemRelat
     '''
     The function checks if the user already has a pair of such items to study that are in item_relation.
     '''
-    item_relation: ItemRelation = await get_item_relation_db(item_relation_id)
+    item_relation: ItemRelation = await get_item_relation_by_id_db(item_relation_id)
     card: list[Card] = await Card.objects().where(
         (Card.user.telegram_user_id == telegram_user_id) &
         (Card.item_relation.item_1.is_in((item_relation.item_1, item_relation.item_2))) &
@@ -109,13 +109,13 @@ async def get_context_id_db(name_alfa2: str) -> Context.id:
     return context.id
 
 
-async def get_item_relation_db(item_relation_id: ItemRelation.id) -> ItemRelation:
+async def get_item_relation_by_id_db(item_relation_id: ItemRelation.id) -> ItemRelation:
     item_relation: ItemRelation = await ItemRelation.objects()\
         .get(ItemRelation.id == item_relation_id)
     return item_relation
 
 
-async def get_item_relation_by_text(text: str, telegram_user_id: int, context_1: Context.id, context_2: Context.id) \
+async def get_item_relation_by_text_db(text: str, telegram_user_id: int, context_1: Context.id, context_2: Context.id) \
         -> ItemRelation:
     '''
     беремо всі переклади авторства юзера чи гугла(telegram_iser_id=0)

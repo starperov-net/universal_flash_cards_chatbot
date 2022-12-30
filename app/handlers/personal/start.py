@@ -13,7 +13,7 @@ from app.db_functions.personal import (add_user_context_db, add_user_db,
                                        get_user_context_db, get_user_db,
                                        add_item_relation_db, get_context_id_db,
                                        get_translated_text_from_item_relation, add_card_db,
-                                       get_item_relation_by_text, is_words_in_card_db)
+                                       get_item_relation_by_text_db, is_words_in_card_db)
 from app.handlers.personal.callback_data_states import ToStudyCallbackData
 
 from app.scheme.transdata import TranslateRequest, TranslateResponse
@@ -126,7 +126,7 @@ async def translate_text(msg: types.Message) -> types.Message:
       which language the translation was made.
     '''
     user_context: UserContext = await get_user_context_db(msg.from_user.id)
-    item_relation: Optional[ItemRelation] = await get_item_relation_by_text(
+    item_relation: Optional[ItemRelation] = await get_item_relation_by_text_db(
         msg.text,
         msg.from_user.id,
         user_context.context_1.id,
