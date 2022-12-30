@@ -37,7 +37,7 @@ select_language_keyboard = select_language_keyboard_builder.as_markup(resize_key
 def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="to train",
-                   callback_data=ToStudyCallbackData(text="to_train", item_relation_id=item_relation_id))
+                   callback_data=ToStudyCallbackData(item_relation_id=item_relation_id))
     builder.button(text="my_variant",
                    callback_data="my_variant")
     builder.button(text="nothing to do",
