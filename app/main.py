@@ -38,8 +38,6 @@ async def on_startup():
 
 
 async def main(logger: logging.Logger) -> None:
-    logging.basicConfig(level=logging.DEBUG)
-
     register_all_handlers(dp)
     dp.startup.register(on_startup)
     await dp.start_polling(bot, logger=logger)
@@ -47,6 +45,7 @@ async def main(logger: logging.Logger) -> None:
 
 if __name__ == "__main__":
     logger: logging.Logger = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.DEBUG)
     try:
         logger.info("Bot started")
         asyncio.run(main(logger))
