@@ -82,7 +82,7 @@ async def select_target_language(
     await state.clear()
 
 
-async def google_translate(user_context, msg) -> [ItemRelation | ValueError]:
+async def google_translate(user_context, text) -> [ItemRelation | ValueError]:
     '''
     Exception ValueError raise when language of the inputted word
     is not in [user_context.context_1, user_context.context_2]
@@ -90,7 +90,7 @@ async def google_translate(user_context, msg) -> [ItemRelation | ValueError]:
     request = TranslateRequest(
         native_lang=user_context.context_1.name_alfa2,
         foreign_lang=user_context.context_2.name_alfa2,
-        line=msg.text,
+        line=text,
     )
 
     try:
@@ -115,30 +115,32 @@ async def google_translate(user_context, msg) -> [ItemRelation | ValueError]:
 
 async def translate_text(msg: types.Message) -> types.Message:
     '''
-    1.getting translate from our own database.
+    1.received text for translation converts to lowercase.
+    2.getting translate from our own database.
       return item_relation
-    2.if we don't have an item_relation, using google_translate
+    3.if we don't have an item_relation, using google_translate
       in this case save this text and translates_text as items and item_relation
       return item_relation
-    3.shows the translated text and offers to choose 'add to study'/'my variant'/'nothing to do'.
+    4.shows the translated text and offers to choose 'add to study'/'my variant'/'nothing to do'.
       If the language of the entered word is not in [user_context.context_1, user_context.context_2]
       raises an Exception ValueError and shows the translation, but indicating from
       which language the translation was made.
     '''
     user_context: UserContext = await get_user_context_db(msg.from_user.id)
+    inputted_text_lowercase: str = msg.text.strip().lower()
     item_relation: Optional[ItemRelation] = await get_item_relation_by_text_db(
-        msg.text,
+        inputted_text_lowercase,
         msg.from_user.id,
         user_context.context_1.id,
         user_context.context_2.id
     )
     if not item_relation:
         try:
-            item_relation: ItemRelation = await google_translate(user_context, msg)
+            item_relation: ItemRelation = await google_translate(user_context, inputted_text_lowercase)
         except ValueError as er:
             return await msg.answer(er.args[0])
 
-    translated_text: str = get_translated_text_from_item_relation(msg.text, item_relation)
+    translated_text: str = get_translated_text_from_item_relation(inputted_text_lowercase, item_relation)
     return await msg.answer(translated_text,
                             reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id))
 
