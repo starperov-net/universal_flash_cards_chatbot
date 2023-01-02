@@ -45,7 +45,7 @@ async def main(logger: logging.Logger) -> None:
 
 if __name__ == "__main__":
     logger: logging.Logger = logging.getLogger(__name__)
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
     try:
         logger.info("Bot started")
         asyncio.run(main(logger))

@@ -1,7 +1,7 @@
 import datetime
 
 from piccolo.columns.column_types import (UUID, BigInt, ForeignKey, Integer,
-                                          Text, Timestamp, Varchar, Timestamptz)
+                                          Text, Varchar, Timestamptz)
 from piccolo.table import Table
 
 
@@ -33,7 +33,7 @@ class UserContext(Table):
     context_1 = ForeignKey(references=Context)
     context_2 = ForeignKey(references=Context)
     user = ForeignKey(references=User)
-    last_date = Timestamp(default=datetime.datetime.now())
+    last_date = Timestamptz(default=datetime.datetime.utcnow())
 
 
 class Item(Table):

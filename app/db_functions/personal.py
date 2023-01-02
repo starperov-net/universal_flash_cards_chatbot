@@ -76,13 +76,11 @@ async def is_exist_item_db(text: str, context: Context.id) -> bool:
 
 async def is_words_in_card_db(telegram_user_id: int, item_relation_id: ItemRelation.id) -> bool:
     '''
-    The function checks if the user already has a pair of such items to study that are in item_relation.
+    The function checks if the user already has the item_relation to study.
     '''
-    item_relation: ItemRelation = await get_item_relation_by_id_db(item_relation_id)
     card: list[Card] = await Card.objects().where(
         (Card.user.telegram_user_id == telegram_user_id) &
-        (Card.item_relation.item_1.is_in((item_relation.item_1, item_relation.item_2))) &
-        (Card.item_relation.item_2.is_in((item_relation.item_1, item_relation.item_2)))
+        (Card.item_relation.id == item_relation_id)
     )
     return bool(card)
 
