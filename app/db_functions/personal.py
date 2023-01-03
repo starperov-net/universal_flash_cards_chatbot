@@ -1,7 +1,6 @@
-import datetime
 import random
 from typing import Optional
-from zoneinfo import ZoneInfo
+
 import aiogram
 
 from app.tables import Context, User, UserContext, Item, ItemRelation, Card
@@ -14,9 +13,6 @@ async def add_card_db(telegram_user_id: int, item_relation_id: ItemRelation.id, 
     card: Card = Card(
         user=user,
         item_relation=item_relation_id,
-        box_number=1,
-        last_date=datetime.datetime.now(tz=ZoneInfo('UTC')),
-        repeats_amount=0,
         author=author
     )
     await card.save()
