@@ -12,6 +12,7 @@ class ToStudyCallbackData(CallbackData, prefix='to_study'):
     '''
     item_relation_id: UUID
 
+
 class StudyCardCallbackData(CallbackData, prefix='study_card'):
     '''
     CallbackQuerry  - "know", "don't know"
