@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from aiogram import Dispatcher, types
+from aiogram import Dispatcher, types, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -159,6 +159,14 @@ async def add_words_to_study(callback_query: types.CallbackQuery, callback_data:
         await callback_query.answer('Added to study.')
 
 
+async def my_variant(callback_query: types.CallbackQuery):
+    await callback_query.answer('it is example')
+
+
+async def nothing_to_do(callback_query: types.CallbackQuery):
+    await callback_query.answer('nothing_to_do')
+
+
 def register_handler_start(dp: Dispatcher):
     dp.message.register(start, Command(commands=["start", "початок"]))
     dp.message.register(greeting, Command(commands=["hello"]))
@@ -169,4 +177,6 @@ def register_handler_start(dp: Dispatcher):
         select_target_language, FSMChooseLanguage.target_language
     )
     dp.callback_query.register(add_words_to_study, ToStudyCallbackData.filter())
+    dp.callback_query.register(my_variant, F.data == 'my_variant')
+    dp.callback_query.register(nothing_to_do, F.data == 'nothing_to_do')
     dp.message.register(translate_text)  # F.test.regexp("[a-zA-Z ]"))

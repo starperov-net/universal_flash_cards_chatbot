@@ -11,3 +11,10 @@ class ToStudyCallbackData(CallbackData, prefix='to_study'):
     Fields of the class can have only these types: int, str, float, Decimal, Fraction, UUID, Enum.
     '''
     item_relation_id: UUID
+
+class StudyCardCallbackData(CallbackData, prefix='study_card'):
+    '''
+    CallbackQuerry  - "know", "don't know"
+    data - 'card_id'
+    '''
+    card_id: UUID

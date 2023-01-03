@@ -3,7 +3,7 @@ from aiogram.utils.keyboard import (InlineKeyboardBuilder,
                                     InlineKeyboardMarkup)
 from asyncpg.pgproto.pgproto import UUID
 
-from app.handlers.personal.callback_data_states import ToStudyCallbackData
+from app.handlers.personal.callback_data_states import ToStudyCallbackData, StudyCardCallbackData
 
 # ------- keyboard for choice languages
 languages = [
@@ -43,3 +43,13 @@ def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarku
     builder.button(text="nothing to do",
                    callback_data="nothing_to_do")
     return builder.as_markup()
+
+
+# --------keyboard "know", "don't know" for train card
+
+def what_to_do_with_card(card_id: UUID) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text="know",
+                   callback_data=StudyCardCallbackData(card_id=card_id))
+    builder.button(text="don't know",
+                   callback_data=StudyCardCallbackData(card_id=card_id))
