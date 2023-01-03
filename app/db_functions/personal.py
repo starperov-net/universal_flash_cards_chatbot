@@ -1,4 +1,5 @@
 import datetime
+import random
 from typing import Optional
 from zoneinfo import ZoneInfo
 import aiogram
@@ -132,7 +133,17 @@ async def get_item_relation_by_text_db(text: str, telegram_user_id: int, context
     return item_relation
 
 
-async def get_user_context_db(telegram_user_id) -> Optional[UserContext]:
+async def get_list_cards_to_study_db(telegram_user_id: int) -> list[Card]:
+    '''
+    The function returns a list with up to 10 random user cards.
+    '''
+    cards: list[Card] = await Card.objects().where(Card.user.telegram_user_id == telegram_user_id)
+    k = 10 if len(cards) >= 10 else len(cards)
+    cards_10_pcs: list[Card] = random.sample(cards, k)
+    return cards_10_pcs
+
+
+async def get_user_context_db(telegram_user_id: int) -> Optional[UserContext]:
     user_context = (
         await UserContext.objects(UserContext.all_related())
         .get(UserContext.user.telegram_user_id == telegram_user_id)
