@@ -1,6 +1,3 @@
-import datetime
-from zoneinfo import ZoneInfo
-
 from piccolo.columns.column_types import (UUID, BigInt, ForeignKey, Integer,
                                           Text, Varchar, Timestamptz)
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
@@ -35,7 +32,7 @@ class UserContext(Table):
     context_1 = ForeignKey(references=Context)
     context_2 = ForeignKey(references=Context)
     user = ForeignKey(references=User)
-    last_date = Timestamptz(default=TimestamptzNow)
+    last_date = Timestamptz(default=TimestamptzNow) # type:ignore
 
 
 class Item(Table):
@@ -58,5 +55,5 @@ class Card(Table):
     item_relation = ForeignKey(references=ItemRelation)
     repetition_level = Integer(default=0)
     memorization_stage = Integer(default=0)
-    last_date = Timestamptz(default=TimestamptzNow)
+    last_date = Timestamptz(default=TimestamptzNow) # type:ignore
     author = ForeignKey(references=User)
