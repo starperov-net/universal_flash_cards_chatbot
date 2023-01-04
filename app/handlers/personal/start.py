@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 
 from aiogram import Dispatcher, types
@@ -126,7 +126,7 @@ async def translate_text(msg: types.Message) -> types.Message:
       raises an Exception ValueError and shows the translation, but indicating from
       which language the translation was made.
     '''
-    user_context: UserContext = await get_user_context_db(msg.from_user.id)
+    user_context: Union[UserContext, None] = await get_user_context_db(msg.from_user.id)
     inputted_text_lowercase: str = msg.text.strip().lower()
     item_relation: Optional[ItemRelation] = await get_item_relation_by_text_db(
         inputted_text_lowercase,
