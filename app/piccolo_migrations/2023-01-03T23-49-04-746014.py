@@ -10,9 +10,7 @@ DESCRIPTION = "Change Card(Table): deleted fields box_number, repeats_amount and
 
 
 async def forwards():
-    manager = MigrationManager(
-        migration_id=ID, app_name="app", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="app", description=DESCRIPTION)
 
     manager.drop_column(
         table_class_name="Card",

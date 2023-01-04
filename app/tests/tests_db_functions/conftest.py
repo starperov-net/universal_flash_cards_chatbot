@@ -3,7 +3,13 @@ from piccolo.table import create_db_tables_sync, drop_db_tables_sync
 
 from app.tables import User, Context, Item
 from app.tests.tests_db_functions.test_db_function_personal import TABLES
-from app.tests.tests_db_functions.utils import CONTEXT_uk, CONTEXT_en, ITEM_uk_automobil, ITEM_en_auto, USER_1
+from app.tests.tests_db_functions.utils import (
+    CONTEXT_uk,
+    CONTEXT_en,
+    ITEM_uk_automobil,
+    ITEM_en_auto,
+    USER_1,
+)
 
 
 @pytest_asyncio.fixture

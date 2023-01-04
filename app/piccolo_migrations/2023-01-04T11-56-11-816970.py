@@ -6,13 +6,13 @@ from piccolo.columns.defaults.timestamptz import TimestamptzNow
 
 ID = "2023-01-04T11:56:11:816970"
 VERSION = "0.96.0"
-DESCRIPTION = "attempt to create a dynamic default parameter using ORM - for table UserContext"
+DESCRIPTION = (
+    "attempt to create a dynamic default parameter using ORM - for table UserContext"
+)
 
 
 async def forwards():
-    manager = MigrationManager(
-        migration_id=ID, app_name="app", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="app", description=DESCRIPTION)
 
     manager.alter_column(
         table_class_name="UserContext",
