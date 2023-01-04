@@ -19,14 +19,16 @@ def get_translate(
     environment variable containing the path to the file with credentials
     (the file must be available at this path)
     """
-    result: dict = translate_client.translate(input_.line, target_language=input_.native_lang)
+    result: dict = translate_client.translate(input_.line, target_language=input_.native_lang,
+                                              source_language=input_.foreign_lang)
     translated_text_language: str = input_.native_lang
     if result["detectedSourceLanguage"] not in [input_.native_lang, input_.foreign_lang]:
         raise ValueError(f"Your word is {result['detectedSourceLanguage']},"
                          f"translated as {result['translatedText']}")
 
     if result["detectedSourceLanguage"] == input_.native_lang:
-        result: dict = translate_client.translate(input_.line, target_language=input_.foreign_lang)
+        result: dict = translate_client.translate(input_.line, target_language=input_.foreign_lang,
+                                              source_language=input_.native_lang)
         translated_text_language: str = input_.foreign_lang
 
     return TranslateResponse(
