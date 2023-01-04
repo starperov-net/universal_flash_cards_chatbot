@@ -1,4 +1,5 @@
 import datetime
+from zoneinfo import ZoneInfo
 
 from piccolo.columns.column_types import (UUID, BigInt, ForeignKey, Integer,
                                           Text, Varchar, Timestamptz)
@@ -56,6 +57,5 @@ class Card(Table):
     item_relation = ForeignKey(references=ItemRelation)
     repetition_level = Integer(default=0)
     memorization_stage = Integer(default=0)
-    last_date = Timestamptz()
-    repeats_amount = Integer()
+    last_date = Timestamptz(datetime.datetime.now(tz=ZoneInfo('UTC')))
     author = ForeignKey(references=User)
