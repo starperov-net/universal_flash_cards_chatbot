@@ -1,7 +1,7 @@
 from aiogram.utils.keyboard import (InlineKeyboardBuilder,
                                     InlineKeyboardButton,
                                     InlineKeyboardMarkup)
-from asyncpg.pgproto.pgproto import UUID
+from uuid import UUID
 
 from app.handlers.personal.callback_data_states import ToStudyCallbackData, StudyCardCallbackData
 

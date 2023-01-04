@@ -1,5 +1,5 @@
 from aiogram.filters.callback_data import CallbackData
-from asyncpg.pgproto.pgproto import UUID
+from uuid import UUID
 
 
 class ToStudyCallbackData(CallbackData, prefix='to_study'):

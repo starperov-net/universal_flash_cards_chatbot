@@ -1,15 +1,16 @@
 import datetime
 from typing import Optional
+from uuid import UUID
 from zoneinfo import ZoneInfo
 import aiogram
 
 from app.tables import Context, User, UserContext, Item, ItemRelation, Card
 
 
-async def add_card_db(telegram_user_id: int, item_relation_id: ItemRelation.id, author: int = None) -> Card:
-    user: User = await get_user_db(telegram_user_id)
+async def add_card_db(telegram_user_id: int, item_relation_id: UUID, author: Optional[int] = None) -> Card:
+    user: Optional[User] = await get_user_db(telegram_user_id)
     if author is None:
-        author = user
+        author: Optional[User] = user
     card: Card = Card(
         user=user,
         item_relation=item_relation_id,
@@ -22,21 +23,21 @@ async def add_card_db(telegram_user_id: int, item_relation_id: ItemRelation.id, 
     return card
 
 
-async def add_item_db(text: str, context: Context.id, author: User.id) -> Item:
+async def add_item_db(text: str, context_id: UUID, author: UUID) -> Item:
     item: Item = Item(
         author=author,
-        context=context,
+        context=context_id,
         text=text
     )
     await item.save()
     return item
 
 
-async def add_item_relation_db(author: User.id, item_1: Item.id, item_2: Item.id) -> ItemRelation:
+async def add_item_relation_db(author_id: UUID, item_1_id: UUID, item_2_id: UUID) -> ItemRelation:
     item_relation: ItemRelation = ItemRelation(
-        author=author,
-        item_1=item_1,
-        item_2=item_2
+        author=author_id,
+        item_1=item_1_id,
+        item_2=item_2_id
     )
     await item_relation.save()
     return item_relation
@@ -54,7 +55,7 @@ async def add_user_db(data_telegram: aiogram.types.User) -> User:
     return user
 
 
-async def add_user_context_db(data_callback_query, user_db):
+async def add_user_context_db(data_callback_query, user_db) -> UserContext:
     context_1 = await Context.objects().get(
         Context.name == data_callback_query["native_lang"]
     )
@@ -70,11 +71,11 @@ async def add_user_context_db(data_callback_query, user_db):
     return user_context
 
 
-async def is_exist_item_db(text: str, context: Context.id) -> bool:
-    return await Item.exists().where((Item.text == text) & (Item.context == context))
+async def is_exist_item_db(text: str, context_id: UUID) -> bool:
+    return await Item.exists().where((Item.text == text) & (Item.context == context_id))
 
 
-async def is_words_in_card_db(telegram_user_id: int, item_relation_id: ItemRelation.id) -> bool:
+async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> bool:
     '''
     The function checks if the user already has the item_relation to study.
     '''
@@ -85,10 +86,10 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: ItemRelat
     return bool(card)
 
 
-async def get_or_create_item_db(text: str, context: Context.id, author: User.id) -> Item:
-    item = await Item.objects().get_or_create((Item.text == text) & (Item.context == context),
-                                              defaults={'author': author,
-                                                        'context': context,
+async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) -> Item:
+    item = await Item.objects().get_or_create((Item.text == text) & (Item.context == context_id),
+                                              defaults={'author': author_id,
+                                                        'context': context_id,
                                                         'text': text})
     return item
 
@@ -102,18 +103,18 @@ async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
     return user
 
 
-async def get_context_id_db(name_alfa2: str) -> Context.id:
+async def get_context_id_db(name_alfa2: str) -> UUID:
     context: Context = await Context.objects().get(Context.name_alfa2 == name_alfa2)
     return context.id
 
 
-async def get_item_relation_by_id_db(item_relation_id: ItemRelation.id) -> ItemRelation:
+async def get_item_relation_by_id_db(item_relation_id: UUID) -> ItemRelation:
     item_relation: ItemRelation = await ItemRelation.objects()\
         .get(ItemRelation.id == item_relation_id)
     return item_relation
 
 
-async def get_item_relation_by_text_db(text: str, telegram_user_id: int, context_1: Context.id, context_2: Context.id) \
+async def get_item_relation_by_text_db(text: str, telegram_user_id: int, context_1_id: UUID, context_2_id: UUID) \
         -> ItemRelation:
     '''
     беремо всі переклади авторства юзера чи гугла(telegram_iser_id=0)
@@ -125,8 +126,8 @@ async def get_item_relation_by_text_db(text: str, telegram_user_id: int, context
     '''
     item_relation: ItemRelation = await ItemRelation.objects(ItemRelation.all_related()).where(
         (ItemRelation.author.telegram_user_id.is_in([telegram_user_id, 0])) &
-        (ItemRelation.item_1.context.is_in((context_1, context_2))) &
-        (ItemRelation.item_2.context.is_in((context_1, context_2)))).where(
+        (ItemRelation.item_1.context.is_in((context_1_id, context_2_id))) &
+        (ItemRelation.item_2.context.is_in((context_1_id, context_2_id)))).where(
         (ItemRelation.item_1.text == text) | (ItemRelation.item_2.text == text)).order_by(
         ItemRelation.author.telegram_user_id, ascending=False).first()
     return item_relation

@@ -159,11 +159,11 @@ async def add_words_to_study(callback_query: types.CallbackQuery, callback_data:
         await callback_query.answer('Added to study.')
 
 
-async def my_variant(callback_query: types.CallbackQuery):
+async def my_variant(callback_query: types.CallbackQuery) -> None:
     await callback_query.answer('it is example')
 
 
-async def nothing_to_do(callback_query: types.CallbackQuery):
+async def nothing_to_do(callback_query: types.CallbackQuery) -> None:
     await callback_query.answer('nothing_to_do')
 
 
