@@ -2,7 +2,6 @@ import random
 from typing import Optional
 
 from uuid import UUID
-from zoneinfo import ZoneInfo
 
 import aiogram
 
