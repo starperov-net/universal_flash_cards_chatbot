@@ -98,8 +98,8 @@ async def select_target_language(
 
     return await callback_query.message.answer(
         text=f"{user_db.first_name}, "
-        f"your native language is {user_context_db.context_1.name}, "
-        f"your target - {user_context_db.context_2.name}",
+             f"your native language is {user_context_db.context_1.name}, "
+             f"your target - {user_context_db.context_2.name}",
     )
 
 
