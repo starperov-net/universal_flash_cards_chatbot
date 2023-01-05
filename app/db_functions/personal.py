@@ -153,9 +153,13 @@ async def get_list_cards_to_study_db(telegram_user_id: int) -> list[Card]:
     """
     The function returns a list with up to 10 random user cards.
     """
-    cards: list[Card] = await Card.objects().where(
-        Card.user.telegram_user_id == telegram_user_id
-    )
+    # # OLD
+    # cards: list[Card] = await Card.objects().where(
+    #     Card.user.telegram_user_id == telegram_user_id
+    # )
+    # NEW
+    cards: list[Card] = await \
+        Card.objects(Card.all_related()).where( Card.user.telegram_user_id == telegram_user_id )
     k = 10 if len(cards) >= 10 else len(cards)
     cards_10_pcs: list[Card] = random.sample(cards, k)
     return cards_10_pcs
