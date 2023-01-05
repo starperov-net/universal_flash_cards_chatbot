@@ -14,6 +14,7 @@ from app.tests.utils import TELEGRAM_USER_GOOGLE
 async def set_default_commands() -> None:
     await bot.set_my_commands(
         [
+            types.BotCommand(command="study", description="study"),
             types.BotCommand(command="start", description="start"),
         ]
     )
