@@ -1,7 +1,7 @@
-from google.cloud import translate_v2 as translate
+from google.cloud import translate_v2 as translate  # type: ignore
 
 from app.db_functions.personal import get_context_name_db
-from app.scheme.transdata import TranslateRequest, TranslateResponse
+from app.scheme.transdata import TranslateRequest, TranslateResponse  # type: ignore
 # noqa !!!used to load the environment variables required for the function get_translateimporta
 from app.settings import settings  # noqa !!!
 
@@ -20,12 +20,14 @@ def get_translate(
     environment variable containing the path to the file with credentials
     (the file must be available at this path)
     """
-    translated_text_language: str = input_.native_lang
-    input_detected_language = translate_client.detect_language(input_.line)
+    # translated_text_language: str = input_.native_lang
+    input_detected_language: dict = translate_client.detect_language(input_.line)
+
+    # attempt to translate from foreign language to native language
     result: dict = translate_client.translate(input_.line, target_language=input_.native_lang,
                                               source_language=input_.foreign_lang)
 
-    if result['translatedText'] != result['input'] and input_detected_language != input_.foreign_lang:
+    if result['translatedText'] != result['input'] and input_detected_language['language'] == input_.foreign_lang.value:
         return TranslateResponse(
             input_text=input_.line,
             translated_text=result["translatedText"],
@@ -33,9 +35,24 @@ def get_translate(
             translated_text_language=input_.native_lang
         )
 
+    # attempt to translate from native language to foreign language
     result: dict = translate_client.translate(input_.line, target_language=input_.foreign_lang,  # type: ignore
                                               source_language=input_.native_lang)
-    if result['translatedText'] != result['input'] and input_detected_language != input_.native_lang:
+
+    # catch a case when input_text same as in other language
+    # in this case get_language method  can return other language, not native language
+    # for prevent this, we try to translate from native language to detected language
+    # if we get a same text we understand that translation was correct
+    # we need 'if' because translate method don't allow target_language has been same source_language
+    if input_.native_lang != input_detected_language['language']:
+        similar_language_request: dict = translate_client.translate(input_.line, target_language=input_.native_lang,
+                                                                    source_language=input_detected_language['language'])
+        is_similar_language: bool = similar_language_request['input'] == similar_language_request['translatedText']
+    else:
+        is_similar_language: bool = True  # type: ignore
+
+    if result['translatedText'] != result['input'] and (
+            input_detected_language['language'] == input_.native_lang.value or is_similar_language):
         return TranslateResponse(
             input_text=input_.line,
             translated_text=result["translatedText"],
@@ -43,23 +60,11 @@ def get_translate(
             translated_text_language=input_.foreign_lang
         )
 
-    result: dict = translate_client.translate(input_.line, target_language=input_.foreign_lang)  # type: ignore
-    input_text_language: str = get_context_name_db(result['detectedSourceLanguage'])
-    raise ValueError(f"In {input_text_language}, "
-                          f"it means {result['translatedText']}")
+    result: dict = translate_client.translate(input_.line, target_language=input_.native_lang)  # type: ignore
 
-    # if result["detectedSourceLanguage"] not in [input_.native_lang, input_.foreign_lang]:
-    #     raise ValueError(f"Your word is {result['detectedSourceLanguage']},"
-    #                      f"translated as {result['translatedText']}")
-    #
-    # if result["detectedSourceLanguage"] == input_.native_lang:
-    #     result: dict = translate_client.translate(input_.line, target_language=input_.foreign_lang,
-    #                                           source_language=input_.native_lang)
-    #     translated_text_language: str = input_.foreign_lang
-    #
-    # return TranslateResponse(
-    #     input_text=input_.line,
-    #     translated_text=result["translatedText"],
-    #     input_text_language=result["detectedSourceLanguage"],
-    #     translated_text_language=translated_text_language
-    # )
+    # select from google-translate available languages full name for input_language
+    input_text_language: str = \
+        [el['name'] for el in translate_client.get_languages() if el['language'] == result['detectedSourceLanguage']][0]
+
+    raise ValueError(f"In {input_text_language}, "
+                     f"it means {result['translatedText']}")
