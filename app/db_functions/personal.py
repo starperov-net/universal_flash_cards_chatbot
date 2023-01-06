@@ -104,6 +104,14 @@ async def get_context_id_db(name_alfa2: str) -> UUID:
     return context.id
 
 
+def get_context_name_db(name_alfa2: str) -> str:
+    '''
+    for sync functions, for example for base_function.translator.translate_text
+    '''
+    context: Context = Context.objects().get(Context.name_alfa2 == name_alfa2).run_sync()
+    return context.name
+
+
 async def get_item_relation_by_id_db(item_relation_id: UUID) -> ItemRelation:
     item_relation: ItemRelation = await ItemRelation.objects().get(
         ItemRelation.id == item_relation_id
