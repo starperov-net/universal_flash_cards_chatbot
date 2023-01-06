@@ -1,11 +1,11 @@
 from uuid import UUID
-from typing import List, Union
+from typing import List, Optional
 from tables import Card
 
 async def get_actual_learning_set(
     user_id: UUID,
     context_id: UUID,
-    authors: Union[List[UUID], None]
+    authors: Optional[List[UUID]]
 ):
     """
     ideal: this is a generator of which at each step return one actual card
@@ -32,4 +32,3 @@ async def get_actual_learning_set(
         ) AND card.user = {}
         ORDER BY memorization_stage, card.last_date;
     """, f"{user_id}")
-    
