@@ -1,6 +1,5 @@
 from google.cloud import translate_v2 as translate  # type: ignore
 
-from app.db_functions.personal import get_context_name_db
 from app.scheme.transdata import TranslateRequest, TranslateResponse  # type: ignore
 # noqa !!!used to load the environment variables required for the function get_translateimporta
 from app.settings import settings  # noqa !!!
