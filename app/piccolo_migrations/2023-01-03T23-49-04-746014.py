@@ -9,7 +9,7 @@ VERSION = "0.96.0"
 DESCRIPTION = "Change Card(Table): deleted fields box_number, repeats_amount and added fefault value in last_date"
 
 
-async def forwards():
+async def forwards() -> MigrationManager:
     manager = MigrationManager(
         migration_id=ID, app_name="app", description=DESCRIPTION
     )

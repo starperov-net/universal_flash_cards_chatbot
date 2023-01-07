@@ -1,5 +1,5 @@
 import random
-from typing import Optional
+from typing import Optional, Any
 
 from uuid import UUID
 
@@ -8,52 +8,28 @@ import aiogram
 from app.tables import Context, User, UserContext, Item, ItemRelation, Card
 
 
-async def add_card_db(telegram_user_id: int, item_relation_id: UUID, author: Optional[int] = None) -> Card:
-    user: Optional[User] = await get_user_db(telegram_user_id)
-    if author is None:
-        author: Optional[User] = user
+async def add_card_db(item_relation_id: UUID, author: Optional[int] = None) -> Card:
+    item_relation: ItemRelation = await get_item_relation_with_related_author_by_id_db(item_relation_id)
     card: Card = Card(
-        user=user,
+        user=item_relation.author,
         item_relation=item_relation_id,
-        author=author
+        author=author or item_relation.author
     )
     await card.save()
     return card
 
 
-async def add_item_db(text: str, context_id: UUID, author: UUID) -> Item:
-    item: Item = Item(
-        author=author,
-        context=context_id,
-        text=text
-    )
-    await item.save()
-    return item
-
-
-async def add_item_relation_db(author_id: UUID, item_1_id: UUID, item_2_id: UUID) -> ItemRelation:
+async def add_item_relation_db(author_id: UUID, item_1_id: UUID, item_2_id: UUID) -> UUID:
     item_relation: ItemRelation = ItemRelation(
         author=author_id,
         item_1=item_1_id,
         item_2=item_2_id
     )
     await item_relation.save()
-    return item_relation
+    return item_relation.id
 
 
-async def add_user_db(data_telegram: aiogram.types.User) -> User:
-    user: User = User(
-        telegram_user_id=data_telegram.id,
-        telegram_language=data_telegram.language_code or "",
-        user_name=data_telegram.username or "",
-        first_name=data_telegram.first_name,
-        last_name=data_telegram.last_name or "",
-    )
-    await user.save()
-    return user
-
-
-async def add_user_context_db(data_callback_query, user_db) -> UserContext:
+async def add_user_context_db(data_callback_query: dict[str, Any], user_db: User) -> UserContext:
     context_1 = await Context.objects().get(
         Context.name == data_callback_query["native_lang"]
     )
@@ -69,10 +45,6 @@ async def add_user_context_db(data_callback_query, user_db) -> UserContext:
     return user_context
 
 
-async def is_exist_item_db(text: str, context_id: UUID) -> bool:
-    return await Item.exists().where((Item.text == text) & (Item.context == context_id))
-
-
 async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> bool:
     '''
     The function checks if the user already has the item_relation to study.
@@ -84,12 +56,11 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> 
     return bool(card)
 
 
-async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) -> Item:
-    item = await Item.objects().get_or_create((Item.text == text) & (Item.context == context_id),
-                                              defaults={'author': author_id,
-                                                        'context': context_id,
-                                                        'text': text})
-    return item
+async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) -> UUID:
+    item: Item = await Item.objects().get_or_create(
+        (Item.text == text) & (Item.context == context_id),
+        defaults={'author': author_id, 'context': context_id, 'text': text})
+    return item.id
 
 
 async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
@@ -106,14 +77,33 @@ async def get_context_id_db(name_alfa2: str) -> UUID:
     return context.id
 
 
-async def get_item_relation_by_id_db(item_relation_id: UUID) -> ItemRelation:
-    item_relation: ItemRelation = await ItemRelation.objects()\
+async def get_item_relation_with_related_author_by_id_db(item_relation_id: UUID) -> ItemRelation:
+    '''
+    return: {ItemRelation}:
+            author = {User}
+            id = {UUID}
+            item_1 = {UUID}
+            item_2 = {UUID}
+    '''
+    item_relation: ItemRelation = await ItemRelation.objects(ItemRelation.author)\
         .get(ItemRelation.id == item_relation_id)
     return item_relation
 
 
-async def get_item_relation_by_text_db(text: str, telegram_user_id: int, context_1_id: UUID, context_2_id: UUID) \
-        -> ItemRelation:
+async def get_item_relation_with_related_items_by_id_db(item_relation_id: UUID) -> ItemRelation:
+    '''
+    return: {ItemRelation}:
+            author = {UUID}
+            id = {UUID}
+            item_1 = {Item}
+            item_2 = {Item}
+    '''
+    item_relation: ItemRelation = await ItemRelation.objects([ItemRelation.item_1, ItemRelation.item_2])\
+        .get(ItemRelation.id == item_relation_id)
+    return item_relation
+
+
+async def get_item_relation_by_text_db(text: str, user_context: UserContext) -> Optional[ItemRelation]:
     '''
     беремо всі переклади авторства юзера чи гугла(telegram_iser_id=0)
     додаемо умову пошуку тільки тих слів, де мови такі ж як і у user_context
@@ -121,11 +111,17 @@ async def get_item_relation_by_text_db(text: str, telegram_user_id: int, context
     тепер із цього словничка обираємо записи з співпадінням слів
     відсортовуємо в зворотньому напрямку, щоб першим стояв переклад юзера, а гугла  - в кінці
     беремо перший переклад, тобто переклад юзера.
+
+    return: Optional[ItemRelation]:
+            author = {UUID}
+            id = {UUID}
+            item_1 = {Item}
+            item_2 = {Item}
     '''
-    item_relation: ItemRelation = await ItemRelation.objects(ItemRelation.all_related()).where(
-        (ItemRelation.author.telegram_user_id.is_in([telegram_user_id, 0])) &
-        (ItemRelation.item_1.context.is_in((context_1_id, context_2_id))) &
-        (ItemRelation.item_2.context.is_in((context_1_id, context_2_id)))).where(
+    item_relation: ItemRelation = await ItemRelation.objects([ItemRelation.item_1, ItemRelation.item_2]).where(
+        (ItemRelation.author.telegram_user_id.is_in([user_context.user.telegram_user_id, 0])) &
+        (ItemRelation.item_1.context.is_in([user_context.context_1.id, user_context.context_2.id])) &
+        (ItemRelation.item_2.context.is_in([user_context.context_1.id, user_context.context_2.id]))).where(
         (ItemRelation.item_1.text == text) | (ItemRelation.item_2.text == text)).order_by(
         ItemRelation.author.telegram_user_id, ascending=False).first()
     return item_relation
@@ -142,8 +138,8 @@ async def get_list_cards_to_study_db(telegram_user_id: int) -> list[Card]:
 
 
 async def get_user_context_db(telegram_user_id: int) -> Optional[UserContext]:
-    user_context = (
-        await UserContext.objects(UserContext.all_related())
+    user_context: Optional[UserContext] = (
+        await UserContext.objects(UserContext.all_related())  # type: ignore
         .get(UserContext.user.telegram_user_id == telegram_user_id)
         .order_by(UserContext.last_date, ascending=False)
         .first()
@@ -152,14 +148,13 @@ async def get_user_context_db(telegram_user_id: int) -> Optional[UserContext]:
     return user_context
 
 
-async def get_user_db(telegram_user_id: int) -> Optional[User]:
-    user: Optional[User] = await User.objects(User.all_related()).get(
-        User.telegram_user_id == telegram_user_id
-    )
-    return user
+async def get_google_user_id_db(telegram_user_id: int) -> UUID:
+    # When the bot started, the google user was added to the database, so 'user' variable cannot return None.
+    user: User = await User.objects().get(User.telegram_user_id == telegram_user_id)
+    return user.id
 
 
-def get_translated_text_from_item_relation(text: str, item_relation: ItemRelation) -> Optional[str]:
+async def get_translated_text_from_item_relation(text: str, item_relation: ItemRelation) -> str:
     '''
      Із item_relation беру два слова і із них прибираю те слово, яке користувач ввів для перекладу(text),
      значить інше слово і є переклад.
@@ -167,3 +162,35 @@ def get_translated_text_from_item_relation(text: str, item_relation: ItemRelatio
     text1, text2 = item_relation.item_1.text, item_relation.item_2.text
     translated_text: str = list(set((text1, text2)) - set((text,)))[0]
     return translated_text
+
+
+# async def add_user_db(data_telegram: aiogram.types.User) -> User:
+#     user: User = User(
+#         telegram_user_id=data_telegram.id,
+#         telegram_language=data_telegram.language_code or "",
+#         user_name=data_telegram.username or "",
+#         first_name=data_telegram.first_name,
+#         last_name=data_telegram.last_name or "",
+#     )
+#     await user.save()
+#     return user
+
+# async def get_user_db(telegram_user_id: int) -> Optional[User]:
+#     user: Optional[User] = await User.objects(User.all_related()).get(
+#         User.telegram_user_id == telegram_user_id
+#     )
+#     return user
+
+
+#
+# async def add_item_db(text: str, context_id: UUID, author: UUID) -> Item:
+#     item: Item = Item(
+#         author=author,
+#         context=context_id,
+#         text=text
+#     )
+#     await item.save()
+#     return item
+#
+# async def is_exist_item_db(text: str, context_id: UUID) -> bool:
+#     return await Item.exists().where((Item.text == text) & (Item.context == context_id))

@@ -1,5 +1,5 @@
 from collections import deque
-from typing import TYPE_CHECKING, AsyncGenerator, Deque, Optional, Type
+from typing import TYPE_CHECKING, AsyncGenerator, Deque, Optional, Type, Any
 
 from aiogram import Bot
 from aiogram.client.session.base import BaseSession
@@ -9,9 +9,9 @@ from aiogram.types import UNSET, ResponseParameters, User
 
 
 class MockedSession(BaseSession):
-    def __init__(self):
+    def __init__(self) -> None:
         super(MockedSession, self).__init__()
-        self.responses: Deque[Response[TelegramType]] = deque()
+        self.responses: Deque[Response[TelegramType]] = deque()  # type: ignore
         self.requests: Deque[Request] = deque()
         self.closed = True
 
@@ -22,7 +22,7 @@ class MockedSession(BaseSession):
     def get_request(self) -> Request:
         return self.requests.pop()
 
-    async def close(self):
+    async def close(self) -> None:
         self.closed = True
 
     async def make_request(
@@ -35,7 +35,7 @@ class MockedSession(BaseSession):
         self.requests.append(method.build_request(bot))
         response: Response[TelegramType] = self.responses.pop()
         self.check_response(
-            method=method, status_code=response.error_code, content=response.json()
+            method=method, status_code=response.error_code, content=response.json()  # type: ignore
         )
         return response.result  # type: ignore
 
@@ -49,9 +49,9 @@ class MockedBot(Bot):
     if TYPE_CHECKING:
         session: MockedSession
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: dict[str, str]) -> None:
         super(MockedBot, self).__init__(
-            kwargs.pop("token", "42:TEST"), session=MockedSession(), **kwargs
+            kwargs.pop("token", "42:TEST"), session=MockedSession(), **kwargs  # type: ignore
         )
         self._me = User(
             id=self.id,
@@ -66,7 +66,7 @@ class MockedBot(Bot):
         self,
         method: Type[TelegramMethod[TelegramType]],
         ok: bool,
-        result: TelegramType = None,
+        result: Optional[TelegramType] = None,
         description: Optional[str] = None,
         error_code: int = 200,
         migrate_to_chat_id: Optional[int] = None,

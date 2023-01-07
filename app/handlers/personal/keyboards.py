@@ -53,3 +53,4 @@ def what_to_do_with_card(card_id: UUID) -> InlineKeyboardMarkup:
                    callback_data=StudyCardCallbackData(card_id=card_id))
     builder.button(text="don't know",
                    callback_data=StudyCardCallbackData(card_id=card_id))
+    return builder.as_markup()

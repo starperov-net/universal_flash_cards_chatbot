@@ -55,23 +55,23 @@ USER_3 = tables.User(
 )
 
 USER_CONTEXT_1_uk_en = tables.UserContext(
-    context_1=CONTEXT_uk.id,
-    context_2=CONTEXT_en.id,
-    user=USER_1.id,
+    context_1=CONTEXT_uk,
+    context_2=CONTEXT_en,
+    user=USER_1,
     last_date=datetime(2022, 2, 24)
 )
 
 USER_CONTEXT_2_uk_en = tables.UserContext(
-    context_1=CONTEXT_uk.id,
-    context_2=CONTEXT_en.id,
-    user=USER_2.id,
+    context_1=CONTEXT_uk,
+    context_2=CONTEXT_en,
+    user=USER_2,
     last_date=datetime(2022, 2, 24)
 )
 
 USER_CONTEXT_3_ru_de = tables.UserContext(
-    context_1=CONTEXT_ru.id,
-    context_2=CONTEXT_de.id,
-    user=USER_3.id,
+    context_1=CONTEXT_ru,
+    context_2=CONTEXT_de,
+    user=USER_3,
     last_date=datetime(2022, 2, 24)
 )
 

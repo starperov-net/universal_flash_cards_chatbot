@@ -10,7 +10,7 @@ VERSION = "0.96.0"
 DESCRIPTION = "Change and added columns in card-table"
 
 
-async def forwards():
+async def forwards() -> MigrationManager:
     manager = MigrationManager(
         migration_id=ID, app_name="app", description=DESCRIPTION
     )

@@ -1,4 +1,4 @@
-from google.cloud import translate_v2 as translate
+from google.cloud import translate_v2 as translate  # type: ignore
 
 from app.scheme.transdata import TranslateRequest, TranslateResponse
 # noqa !!!used to load the environment variables required for the function get_translateimporta
@@ -26,8 +26,8 @@ def get_translate(
                          f"translated as {result['translatedText']}")
 
     if result["detectedSourceLanguage"] == input_.native_lang:
-        result: dict = translate_client.translate(input_.line, target_language=input_.foreign_lang)
-        translated_text_language: str = input_.foreign_lang
+        result: dict = translate_client.translate(input_.line, target_language=input_.foreign_lang)  # type: ignore
+        translated_text_language: str = input_.foreign_lang  # type: ignore
 
     return TranslateResponse(
         input_text=input_.line,

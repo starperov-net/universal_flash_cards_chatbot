@@ -51,7 +51,9 @@ from app.settings import settings  # noqa !!!
         ),
     ),
 )
-def test_get_translate(translate_request, mock_translate_return_value, right_answer):
+def test_get_translate(
+        translate_request: TranslateRequest, mock_translate_return_value: dict, right_answer: str
+) -> None:
 
     with patch.object(
         translate_client, "translate", return_value=mock_translate_return_value
@@ -62,7 +64,7 @@ def test_get_translate(translate_request, mock_translate_return_value, right_ans
     mock_translate.assert_has_calls(calls)
 
 
-def test_validate_in_data():
+def test_validate_in_data() -> None:
     with pytest.raises(ValidationError) as exc_info:
         TranslateRequest(
             native_lang=ISO639_1.English, foreign_lang=ISO639_1.English, line="    assemble  "
@@ -76,7 +78,7 @@ def test_validate_in_data():
     ]
 
 
-def test_matching_indicated_and_recognized_lang():
+def test_matching_indicated_and_recognized_lang() -> None:
     translate_request = TranslateRequest(
         native_lang=ISO639_1.Haitian, foreign_lang=ISO639_1.Ukrainian, line="    assemble  "
     )
