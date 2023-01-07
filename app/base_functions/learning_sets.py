@@ -86,8 +86,9 @@ async def get_actual_card(
     LIMIT 1;
     """
     start_time = datetime.now(tz=ZoneInfo("UTC"))
-    if (start_time + interval) < datetime.now(tz=ZoneInfo("UTC")):
+    while (start_time + interval) > datetime.now(tz=ZoneInfo("UTC")):
         res = await Card.raw(query)
-        res = res[0] if res else res
-        yield res
+        if not res:
+            break
+        yield res[0]
     raise StopIteration
