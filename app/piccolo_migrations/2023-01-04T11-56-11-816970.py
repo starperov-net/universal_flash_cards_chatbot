@@ -1,13 +1,14 @@
 from piccolo.apps.migrations.auto.migration_manager import MigrationManager
-from piccolo.columns.column_types import Timestamp
 from piccolo.columns.column_types import Timestamptz
-from piccolo.columns.defaults.timestamp import TimestampCustom
 from piccolo.columns.defaults.timestamptz import TimestamptzCustom
+from piccolo.columns.defaults.timestamptz import TimestamptzNow
 
 
-ID = "2023-01-02T13:20:52:653636"
+ID = "2023-01-04T11:56:11:816970"
 VERSION = "0.96.0"
-DESCRIPTION = ""
+DESCRIPTION = (
+    "attempt to create a dynamic default parameter using ORM - for table UserContext"
+)
 
 
 async def forwards():
@@ -18,23 +19,14 @@ async def forwards():
         tablename="user_context",
         column_name="last_date",
         db_column_name="last_date",
-        params={
-            "default": TimestamptzCustom(
-                year=2023, month=1, day=1, hour=11, second=52, microsecond=648056
-            )
-        },
+        params={"default": TimestamptzNow},
         old_params={
-            "default": TimestampCustom(
-                year=2022,
-                month=12,
-                day=12,
-                hour=18,
-                second=41,
-                microsecond=869634,
+            "default": TimestamptzCustom(
+                year=2023, month=1, day=1, hour=11, second=36, microsecond=14765
             )
         },
         column_class=Timestamptz,
-        old_column_class=Timestamp,
+        old_column_class=Timestamptz,
     )
 
     return manager
