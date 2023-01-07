@@ -17,8 +17,16 @@ async def get_actual_card(
     general algorythm:
     https://github.com/starperov-net/universal_flash_cards_chatbot/wiki/Card-selection-algorithm-for-studying%5Crepetition
 
-    input: userid, user_context, author, time(?)
-    output: card
+    input: userid (UUID) - obligatory, authors (list(UUID)) - optional, interval (timedelta) - optional
+    output: all data for last usercontext
+        dict {
+            'id': UUID (for actual Card),
+            'memorization_stage': int (for actual Card),
+            'repetition_level': int (for actual Card),
+            'last_date': datetime (for actual Card),
+            'item_1': str,
+            'item_2': str
+    }
     """
     authors_str = (
         ({", ".join(map(lambda x: "'" + str(x) + "'", authors))})
