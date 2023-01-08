@@ -63,8 +63,16 @@ def test_get_translate(
     ) as mock_translate:
         assert get_translate(input_=translate_request).translated_text == right_answer
     calls = [
-        call(translate_request.line, target_language=translate_request.native_lang),
-        call(translate_request.line, target_language=translate_request.foreign_lang),
+        call(
+            translate_request.line,
+            target_language=translate_request.native_lang,
+            source_language=translate_request.foreign_lang
+        ),
+        call(
+            translate_request.line,
+            target_language=translate_request.foreign_lang,
+            source_language=translate_request.native_lang
+        ),
     ]
     mock_translate.assert_has_calls(calls)
 
@@ -102,8 +110,27 @@ def test_matching_indicated_and_recognized_lang() -> None:
     ) as mock_translate:
         with pytest.raises(ValueError) as exc_info:
             get_translate(input_=translate_request)
-        assert "Your word is" in str(exc_info.value)
+        assert "it means" in str(exc_info.value)
 
-    mock_translate.assert_called_once_with(
-        translate_request.line, target_language=translate_request.native_lang
-    )
+    calls = [
+        call(
+            'assemble',
+            target_language=translate_request.native_lang,
+            source_language=translate_request.foreign_lang
+        ),
+        call(
+            'assemble',
+            target_language=translate_request.foreign_lang,
+            source_language=translate_request.native_lang
+        ),
+        call(
+            'assemble',
+            target_language=translate_request.native_lang,
+            source_language=mock_translate_return_value["detectedSourceLanguage"]
+        ),
+        call(
+            'assemble',
+            target_language=translate_request.native_lang
+        )
+    ]
+    mock_translate.assert_has_calls(calls)
