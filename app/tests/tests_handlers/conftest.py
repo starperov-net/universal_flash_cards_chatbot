@@ -1,5 +1,4 @@
 import asyncio
-from asyncio import AbstractEventLoop
 from typing import AsyncGenerator, Generator
 
 import pytest

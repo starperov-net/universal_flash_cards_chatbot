@@ -56,7 +56,7 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> 
         & (Card.item_relation.id == item_relation_id)
     )
     return bool(card)
-#9ab6de97-1464-4b9a-985f-e5ec229d091f
+
 
 async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) -> UUID:
     item: Item = await Item.objects().get_or_create(
@@ -81,19 +81,6 @@ async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
 async def get_context_id_db(name_alfa2: str) -> UUID:
     context: Context = await Context.objects().get(Context.name_alfa2 == name_alfa2)
     return context.id
-
-#
-# async def get_item_relation_with_related_author_by_id_db(item_relation_id: UUID) -> ItemRelation:
-#     '''
-#     return: {ItemRelation}:
-#             author = {User}
-#             id = {UUID}
-#             item_1 = {UUID}
-#             item_2 = {UUID}
-#     '''
-#     item_relation: ItemRelation = await ItemRelation.objects(ItemRelation.author)\
-#         .get(ItemRelation.id == item_relation_id)
-#     return item_relation
 
 
 async def get_item_relation_with_related_items_by_id_db(item_relation_id: UUID) -> ItemRelation:
@@ -174,42 +161,3 @@ async def get_translated_text_from_item_relation(text: str, item_relation: ItemR
     text1, text2 = item_relation.item_1.text, item_relation.item_2.text
     translated_text: str = list(set((text1, text2)) - set((text,)))[0]
     return translated_text
-
-
-# async def add_user_db(data_telegram: aiogram.types.User) -> User:
-#     user: User = User(
-#         telegram_user_id=data_telegram.id,
-#         telegram_language=data_telegram.language_code or "",
-#         user_name=data_telegram.username or "",
-#         first_name=data_telegram.first_name,
-#         last_name=data_telegram.last_name or "",
-#     )
-#     await user.save()
-#     return user
-
-# async def get_user_db(telegram_user_id: int) -> Optional[User]:
-#     user: Optional[User] = await User.objects(User.all_related()).get(
-#         User.telegram_user_id == telegram_user_id
-#     )
-#     return user
-
-
-#
-# async def add_item_db(text: str, context_id: UUID, author: UUID) -> Item:
-#     item: Item = Item(
-#         author=author,
-#         context=context_id,
-#         text=text
-#     )
-#     await item.save()
-#     return item
-#
-# async def is_exist_item_db(text: str, context_id: UUID) -> bool:
-#     return await Item.exists().where((Item.text == text) & (Item.context == context_id))
-
-# def get_context_name_db(name_alfa2: str) -> str:
-#     '''
-#     for sync functions, for example for base_function.translator.translate_text
-#     '''
-#     context: Context = Context.objects().get(Context.name_alfa2 == name_alfa2).run_sync()
-#     return context.name

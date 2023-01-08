@@ -1,5 +1,5 @@
 from collections import deque
-from typing import TYPE_CHECKING, AsyncGenerator, Deque, Optional, Type, Any
+from typing import TYPE_CHECKING, AsyncGenerator, Deque, Optional, Type
 
 from aiogram import Bot
 from aiogram.client.session.base import BaseSession

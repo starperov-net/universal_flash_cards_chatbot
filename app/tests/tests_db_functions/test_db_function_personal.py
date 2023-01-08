@@ -112,26 +112,26 @@ class TestGetTranslatedText(IsolatedAsyncioTestCase):
                 'машина',
                 USER_CONTEXT_3_ru_de
             ),
-           (
-               'автомобіль',
+            (
+                'автомобіль',
+                'auto',
+                USER_CONTEXT_1_uk_en
+            ),
+            (
                'auto',
-               USER_CONTEXT_1_uk_en
-           ),
-           (
-               'auto',
                'автомобіль',
                USER_CONTEXT_1_uk_en
-           ),
-           (
+            ),
+            (
                'auto',
                'автомобіль',
                USER_CONTEXT_2_uk_en
-           ),
-           (
+            ),
+            (
                'машина',
                'auto',
                USER_CONTEXT_3_ru_de
-           ),
+            ),
         ]
     )
     @pytest.mark.asyncio
