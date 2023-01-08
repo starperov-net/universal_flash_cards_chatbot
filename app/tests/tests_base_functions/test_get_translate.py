@@ -5,6 +5,7 @@ from pydantic import ValidationError
 
 from app.base_functions.translator import get_translate, translate_client
 from app.scheme.transdata import ISO639_1, TranslateRequest
+
 # used to load the environment variables required for the function get_translate
 from app.settings import settings  # noqa !!!
 
@@ -14,7 +15,9 @@ from app.settings import settings  # noqa !!!
     (
         (
             TranslateRequest(
-                native_lang=ISO639_1.English, foreign_lang=ISO639_1.Ukrainian, line="makes"
+                native_lang=ISO639_1.English,
+                foreign_lang=ISO639_1.Ukrainian,
+                line="makes",
             ),
             {
                 "translatedText": "робить",
@@ -59,15 +62,19 @@ def test_get_translate(
         translate_client, "translate", return_value=mock_translate_return_value
     ) as mock_translate:
         assert get_translate(input_=translate_request).translated_text == right_answer
-    calls = [call(translate_request.line, target_language=translate_request.native_lang),
-             call(translate_request.line, target_language=translate_request.foreign_lang)]
+    calls = [
+        call(translate_request.line, target_language=translate_request.native_lang),
+        call(translate_request.line, target_language=translate_request.foreign_lang),
+    ]
     mock_translate.assert_has_calls(calls)
 
 
 def test_validate_in_data() -> None:
     with pytest.raises(ValidationError) as exc_info:
         TranslateRequest(
-            native_lang=ISO639_1.English, foreign_lang=ISO639_1.English, line="    assemble  "
+            native_lang=ISO639_1.English,
+            foreign_lang=ISO639_1.English,
+            line="    assemble  ",
         )
     assert exc_info.value.errors() == [
         {
@@ -80,7 +87,9 @@ def test_validate_in_data() -> None:
 
 def test_matching_indicated_and_recognized_lang() -> None:
     translate_request = TranslateRequest(
-        native_lang=ISO639_1.Haitian, foreign_lang=ISO639_1.Ukrainian, line="    assemble  "
+        native_lang=ISO639_1.Haitian,
+        foreign_lang=ISO639_1.Ukrainian,
+        line="    assemble  ",
     )
     mock_translate_return_value = {
         "translatedText": "зібрати",
@@ -96,5 +105,5 @@ def test_matching_indicated_and_recognized_lang() -> None:
         assert "Your word is" in str(exc_info.value)
 
     mock_translate.assert_called_once_with(
-        translate_request.line,  target_language=translate_request.native_lang
+        translate_request.line, target_language=translate_request.native_lang
     )

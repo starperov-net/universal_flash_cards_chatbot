@@ -8,18 +8,26 @@ from aiogram.fsm.state import State, StatesGroup
 
 import app.handlers.personal.keyboards as kb
 from app.base_functions.translator import get_translate
-from app.db_functions.personal import (add_user_context_db,
-                                       get_or_create_item_db,
-                                       get_user_context_db,
-                                       add_item_relation_db, get_context_id_db,
-                                       get_translated_text_from_item_relation, add_card_db,
-                                       get_item_relation_by_text_db, is_words_in_card_db,
-                                       get_google_user_id_db, get_or_create_user_db,
-                                       get_item_relation_with_related_items_by_id_db)
+
+from app.db_functions.personal import (
+    add_user_context_db,
+    get_or_create_item_db,
+    get_or_create_user_db,
+    get_user_context_db,
+    add_item_relation_db,
+    get_context_id_db,
+    get_google_user_id_db,
+    get_translated_text_from_item_relation,
+    add_card_db,
+    get_item_relation_by_text_db,
+    is_words_in_card_db,
+    get_item_relation_with_related_items_by_id_db,
+)
+
 from app.handlers.personal.callback_data_states import ToStudyCallbackData
 
 from app.scheme.transdata import TranslateRequest, TranslateResponse
-from app.tables import User, UserContext, Item, ItemRelation
+from app.tables import User, UserContext, ItemRelation
 from app.tests.utils import TELEGRAM_USER_GOOGLE
 
 
@@ -48,10 +56,11 @@ async def get_user_data(msg: types.Message, state: FSMContext) -> types.Message:
 
     user_context_db: Optional[UserContext] = await get_user_context_db(msg.from_user.id)
     if user_context_db:
-        return await msg.answer(text=f"{user_context_db.user.first_name}, "
-                                     f"your native language is {user_context_db.context_1.name}, "
-                                     f"your target - {user_context_db.context_2.name}",
-                                )
+        return await msg.answer(
+            text=f"{user_context_db.user.first_name}, "
+                 f"your native language is {user_context_db.context_1.name}, "
+                 f"your target - {user_context_db.context_2.name}",
+        )
 
     await state.set_state(FSMChooseLanguage.native_language)
     return await msg.answer(
@@ -90,16 +99,16 @@ async def select_target_language(
 
     return await callback_query.message.answer(
         text=f"{user_db.first_name}, "
-             f"your native language is {user_context_db.context_1.name}, "
-             f"your target - {user_context_db.context_2.name}",
+        f"your native language is {user_context_db.context_1.name}, "
+        f"your target - {user_context_db.context_2.name}",
     )
 
 
 async def google_translate(user_context: UserContext, text: str) -> ItemRelation:
-    '''
+    """
     Exception ValueError raise when language of the inputted word
     is not in [user_context.context_1, user_context.context_2]
-    '''
+    """
     request = TranslateRequest(
         native_lang=user_context.context_1.name_alfa2,
         foreign_lang=user_context.context_2.name_alfa2,
@@ -113,13 +122,18 @@ async def google_translate(user_context: UserContext, text: str) -> ItemRelation
 
     else:
 
-        input_text_context_id: UUID = await get_context_id_db(translate.input_text_language)
-        translated_text_context_id: UUID = await get_context_id_db(translate.translated_text_language)
-
-        item_1: UUID = await get_or_create_item_db(translate.input_text, input_text_context_id,
-                                                   user_context.user.id)
-        item_2: UUID = await get_or_create_item_db(translate.translated_text, translated_text_context_id,
-                                                   user_context.user.id)
+        input_text_context_id: UUID = await get_context_id_db(
+            translate.input_text_language
+        )
+        translated_text_context_id: UUID = await get_context_id_db(
+            translate.translated_text_language
+        )
+        item_1: UUID = await get_or_create_item_db(
+            translate.input_text, input_text_context_id, user_context.user.id
+        )
+        item_2: UUID = await get_or_create_item_db(
+            translate.translated_text, translated_text_context_id, user_context.user.id
+        )
         google: UUID = await get_google_user_id_db(TELEGRAM_USER_GOOGLE.id)
         item_relation_id: UUID = await add_item_relation_db(google, item_1, item_2)
         item_relation_with_related_items: ItemRelation = await get_item_relation_with_related_items_by_id_db(
@@ -130,7 +144,7 @@ async def google_translate(user_context: UserContext, text: str) -> ItemRelation
 
 
 async def translate_text(msg: types.Message) -> types.Message:
-    '''
+    """
     1.received text for translation converts to lowercase.
     2.getting translate from our own database.
       return item_relation
@@ -141,7 +155,7 @@ async def translate_text(msg: types.Message) -> types.Message:
       If the language of the entered word is not in [user_context.context_1, user_context.context_2]
       raises an Exception ValueError and shows the translation, but indicating from
       which language the translation was made.
-    '''
+    """
     # from_user is None if messages sent to channels
     if msg.from_user is None:
         return await msg.answer("Messages sent to channels")
@@ -163,31 +177,38 @@ async def translate_text(msg: types.Message) -> types.Message:
     except ValueError as er:
         return await msg.answer(er.args[0])
 
-    translated_text: str = await get_translated_text_from_item_relation(inputted_text_lowercase, item_relation)
-    return await msg.answer(translated_text,
-                            reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id))
+    translated_text: str = await get_translated_text_from_item_relation(
+        inputted_text_lowercase, item_relation
+    )
+    return await msg.answer(
+        translated_text, reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id)
+    )
 
 
-async def add_words_to_study(callback_query: types.CallbackQuery, callback_data: ToStudyCallbackData) -> None:
-    '''
+async def add_words_to_study(
+        callback_query: types.CallbackQuery, callback_data: ToStudyCallbackData
+) -> None:
+    """
     Creates an in 'card'.
     Before doing this, check if the user already has a pair of such words in the item_relation (with point context)
     to study. If the couple is already in the "card", then it informs about it.
-    '''
-    is_words_in_card: bool = await is_words_in_card_db(callback_query.from_user.id, callback_data.item_relation_id)
+    """
+    is_words_in_card: bool = await is_words_in_card_db(
+        callback_query.from_user.id, callback_data.item_relation_id
+    )
     if is_words_in_card:
-        await callback_query.answer('Already under study!')
+        await callback_query.answer("Already under study!")
     else:
         await add_card_db(callback_data.item_relation_id)
         await callback_query.answer('Added to study.')
 
 
 async def my_variant(callback_query: types.CallbackQuery) -> None:
-    await callback_query.answer('it is example')
+    await callback_query.answer("it is example")
 
 
 async def nothing_to_do(callback_query: types.CallbackQuery) -> None:
-    await callback_query.answer('nothing_to_do')
+    await callback_query.answer("nothing_to_do")
 
 
 def register_handler_start(dp: Dispatcher) -> None:
@@ -200,6 +221,6 @@ def register_handler_start(dp: Dispatcher) -> None:
         select_target_language, FSMChooseLanguage.target_language
     )
     dp.callback_query.register(add_words_to_study, ToStudyCallbackData.filter())
-    dp.callback_query.register(my_variant, F.data == 'my_variant')
-    dp.callback_query.register(nothing_to_do, F.data == 'nothing_to_do')
+    dp.callback_query.register(my_variant, F.data == "my_variant")
+    dp.callback_query.register(nothing_to_do, F.data == "nothing_to_do")
     dp.message.register(translate_text)  # F.test.regexp("[a-zA-Z ]"))

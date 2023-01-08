@@ -8,18 +8,39 @@ from parameterized import parameterized  # type: ignore
 from piccolo.conf.apps import Finder
 from piccolo.table import Table, create_db_tables_sync, drop_db_tables_sync
 
-from app.db_functions.personal import add_item_relation_db, get_or_create_user_db, get_or_create_item_db, \
-    get_item_relation_by_text_db, get_translated_text_from_item_relation
+from app.db_functions.personal import (
+    add_item_relation_db,
+    get_or_create_user_db,
+    get_or_create_item_db,
+    get_item_relation_by_text_db,
+    get_translated_text_from_item_relation
+)
+
 from app.tables import User, ItemRelation, Item, UserContext, Context
-from app.tests.utils import (TELEGRAM_USER_1, TELEGRAM_USER_2)
-from app.tests.tests_db_functions.utils import (USER_1, USER_2, USER_3, USER_GOOGLE,
-                                                USER_CONTEXT_1_uk_en, USER_CONTEXT_2_uk_en, USER_CONTEXT_3_ru_de,
-                                                ITEM_en_auto, ITEM_de_auto, ITEM_de_wagen,
-                                                ITEM_uk_automobil, ITEM_ru_mashina,
-                                                CONTEXT_en, CONTEXT_de, CONTEXT_uk, CONTEXT_ru,
-                                                ITEM_RELATION_1_ru_de, ITEM_RELATION_1_uk_en,
-                                                ITEM_RELATION_GOOGLE_en_uk, ITEM_RELATION_GOOGLE_ru_de,
-                                                ITEM_RELATION_3_ru_de)
+from app.tests.utils import TELEGRAM_USER_1, TELEGRAM_USER_2
+from app.tests.tests_db_functions.utils import (
+    USER_1,
+    USER_2,
+    USER_3,
+    USER_GOOGLE,
+    USER_CONTEXT_1_uk_en,
+    USER_CONTEXT_2_uk_en,
+    USER_CONTEXT_3_ru_de,
+    ITEM_en_auto,
+    ITEM_de_auto,
+    ITEM_de_wagen,
+    ITEM_uk_automobil,
+    ITEM_ru_mashina,
+    CONTEXT_en,
+    CONTEXT_de,
+    CONTEXT_uk,
+    CONTEXT_ru,
+    ITEM_RELATION_1_ru_de,
+    ITEM_RELATION_1_uk_en,
+    ITEM_RELATION_GOOGLE_en_uk,
+    ITEM_RELATION_GOOGLE_ru_de,
+    ITEM_RELATION_3_ru_de,
+)
 
 
 TABLES: t.List[t.Type[Table]] = Finder().get_table_classes()
@@ -61,56 +82,67 @@ class TestGetTranslatedText(IsolatedAsyncioTestCase):
     def setUp(self) -> None:
         drop_db_tables_sync(*TABLES)
         create_db_tables_sync(*TABLES)
-        Context.insert(
-            CONTEXT_en,
-            CONTEXT_de,
-            CONTEXT_uk,
-            CONTEXT_ru
-        ).run_sync()
-        User.insert(
-            USER_GOOGLE,
-            USER_1,
-            USER_2,
-            USER_3
-        ).run_sync()
+        Context.insert(CONTEXT_en, CONTEXT_de, CONTEXT_uk, CONTEXT_ru).run_sync()
+        User.insert(USER_GOOGLE, USER_1, USER_2, USER_3).run_sync()
         UserContext.insert(
-            USER_CONTEXT_1_uk_en,
-            USER_CONTEXT_2_uk_en,
-            USER_CONTEXT_3_ru_de
+            USER_CONTEXT_1_uk_en, USER_CONTEXT_2_uk_en, USER_CONTEXT_3_ru_de
         ).run_sync()
         Item.insert(
             ITEM_en_auto,
             ITEM_de_auto,
             ITEM_de_wagen,
             ITEM_uk_automobil,
-            ITEM_ru_mashina
+            ITEM_ru_mashina,
         ).run_sync()
         ItemRelation.insert(
             ITEM_RELATION_1_uk_en,
             ITEM_RELATION_1_ru_de,
             ITEM_RELATION_GOOGLE_en_uk,
             ITEM_RELATION_3_ru_de,
-            ITEM_RELATION_GOOGLE_ru_de
+            ITEM_RELATION_GOOGLE_ru_de,
         ).run_sync()
 
     def tearDown(self) -> None:
         drop_db_tables_sync(*TABLES)
 
-    @parameterized.expand([('wagen', 'машина', USER_CONTEXT_3_ru_de),
-                           ('автомобіль', 'auto', USER_CONTEXT_1_uk_en),
-                           ('auto', 'автомобіль', USER_CONTEXT_1_uk_en),
-                           ('auto', 'автомобіль', USER_CONTEXT_2_uk_en),
-                           ('машина', 'auto', USER_CONTEXT_3_ru_de),
-                           ])
+    @parameterized.expand(
+        [
+            (
+                'wagen',
+                'машина',
+                USER_CONTEXT_3_ru_de
+            ),
+           (
+               'автомобіль',
+               'auto',
+               USER_CONTEXT_1_uk_en
+           ),
+           (
+               'auto',
+               'автомобіль',
+               USER_CONTEXT_1_uk_en
+           ),
+           (
+               'auto',
+               'автомобіль',
+               USER_CONTEXT_2_uk_en
+           ),
+           (
+               'машина',
+               'auto',
+               USER_CONTEXT_3_ru_de
+           ),
+        ]
+    )
     @pytest.mark.asyncio
     async def test_get_translated_text_from_db(
-            self, word: str, translated_word: str, user_context: UserContext) -> None:
+            self, word: str, translated_word: str, user_context: UserContext
+    ) -> None:
         item_relation: t.Optional[ItemRelation] = await get_item_relation_by_text_db(word, user_context)
         answer: str = await get_translated_text_from_item_relation(word, item_relation)  # type: ignore
         assert answer == translated_word
 
-    async def test_get_item_relation_by_text_return_None(
-            self) -> None:
+    async def test_get_item_relation_by_text_return_None(self) -> None:
         word: str = 'машина'
         user_context: UserContext = USER_CONTEXT_1_uk_en
         item_relation: t.Optional[ItemRelation] = await get_item_relation_by_text_db(word, user_context)
