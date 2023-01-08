@@ -14,7 +14,7 @@ from app.handlers.personal.start import (
 
 
 @pytest.mark.asyncio
-async def test_greeting_handler():
+async def test_greeting_handler() -> None:
     msg: AsyncMock = AsyncMock()
 
     await greeting(msg)
@@ -22,7 +22,7 @@ async def test_greeting_handler():
 
 
 @pytest.mark.asyncio
-async def test_get_user_data_user_not_exist(state: FSMContext):
+async def test_get_user_data_user_not_exist(state: FSMContext) -> None:
     msg: AsyncMock = AsyncMock(name="msg")
     with patch.object(
         start, "get_user_context_db", return_value=False
@@ -37,7 +37,7 @@ async def test_get_user_data_user_not_exist(state: FSMContext):
 
 
 @pytest.mark.asyncio
-async def test_get_user_data_user_exist(state: FSMContext):
+async def test_get_user_data_user_exist(state: FSMContext) -> None:
     msg: AsyncMock = AsyncMock(name="msg")
     user_context_db: AsyncMock = AsyncMock(name="user_cont")
     with patch.object(
@@ -54,7 +54,7 @@ async def test_get_user_data_user_exist(state: FSMContext):
 
 
 @pytest.mark.asyncio
-async def test_select_native_language(state: FSMContext):
+async def test_select_native_language(state: FSMContext) -> None:
     call: AsyncMock = AsyncMock()
 
     await select_native_language(callback_query=call, state=state)

@@ -1,4 +1,5 @@
 import asyncio
+from typing import AsyncGenerator, Generator
 
 import pytest
 import pytest_asyncio
@@ -13,7 +14,7 @@ from app.tests.utils import TELEGRAM_USER_1 as TEST_USER
 
 
 @pytest_asyncio.fixture(scope="session")
-async def storage():
+async def storage() -> AsyncGenerator:
     tmp_storage = MemoryStorage()
     try:
         yield tmp_storage
@@ -22,7 +23,7 @@ async def storage():
 
 
 @pytest_asyncio.fixture(scope="session")
-def bot():
+def bot() -> Generator:
     bot = MockedBot()
     token = Bot.set_current(bot)
     try:
@@ -32,7 +33,7 @@ def bot():
 
 
 @pytest_asyncio.fixture()
-async def dispatcher():
+async def dispatcher() -> AsyncGenerator:
     dp = Dispatcher()
     await dp.emit_startup()
     try:
@@ -42,7 +43,7 @@ async def dispatcher():
 
 
 @pytest.fixture(scope="session")
-def event_loop():
+def event_loop() -> Generator:
     policy = asyncio.get_event_loop_policy()
     loop = policy.new_event_loop()
     yield loop
@@ -50,7 +51,7 @@ def event_loop():
 
 
 @pytest.fixture(scope="session")
-def state(bot, storage):
+def state(bot: MockedBot, storage: MemoryStorage) -> FSMContext:
 
     return FSMContext(
         bot=bot,

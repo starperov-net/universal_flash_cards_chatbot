@@ -1,6 +1,6 @@
 from google.cloud import translate_v2 as translate  # type: ignore
 
-from app.scheme.transdata import TranslateRequest, TranslateResponse  # type: ignore
+from app.scheme.transdata import TranslateRequest, TranslateResponse
 
 # noqa !!!used to load the environment variables required for the function get_translateimporta
 from app.settings import settings  # noqa !!!
@@ -42,9 +42,9 @@ def get_translate(
         )
 
     # attempt to translate from native language to foreign language
-    result: dict = translate_client.translate(
+    result: dict = translate_client.translate(  # type: ignore
         input_.line,
-        target_language=input_.foreign_lang,  # type: ignore
+        target_language=input_.foreign_lang,
         source_language=input_.native_lang,
     )
 
