@@ -1,6 +1,6 @@
 from uuid import UUID
 from zoneinfo import ZoneInfo
-from typing import List, Optional
+from typing import List, Optional, AsyncGenerator
 from datetime import datetime, timedelta
 from app.tables import Card
 
@@ -9,7 +9,7 @@ async def get_actual_card(
     user_id: UUID,
     authors: Optional[List[UUID]],
     interval: timedelta = timedelta(seconds=300),
-):
+) -> AsyncGenerator:
     """
     ideal: this is a generator of which at each step return one actual card
     generator will raise StopIteration when card1s of time are exhausted
