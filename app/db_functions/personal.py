@@ -105,10 +105,12 @@ async def get_context_id_db(name_alfa2: str) -> UUID:
 
 
 def get_context_name_db(name_alfa2: str) -> str:
-    '''
+    """
     for sync functions, for example for base_function.translator.translate_text
-    '''
-    context: Context = Context.objects().get(Context.name_alfa2 == name_alfa2).run_sync()
+    """
+    context: Context = (
+        Context.objects().get(Context.name_alfa2 == name_alfa2).run_sync()
+    )
     return context.name
 
 
