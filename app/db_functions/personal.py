@@ -9,13 +9,13 @@ from app.tables import Context, User, UserContext, Item, ItemRelation, Card
 
 
 async def add_card_db(
-        item_relation_id: UUID, author: Optional[int] = None
+        telegram_user_id: int, item_relation_id: UUID, author: Optional[int] = None
 ) -> Card:
-    item_relation: ItemRelation = await get_item_relation_with_related_author_by_id_db(item_relation_id)
+    user: UUID = await get_existing_user_id_db(telegram_user_id)
     card: Card = Card(
-        user=item_relation.author,
+        user=user,
         item_relation=item_relation_id,
-        author=author or item_relation.author
+        author=author or user
     )
     await card.save()
     return card
@@ -56,7 +56,7 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> 
         & (Card.item_relation.id == item_relation_id)
     )
     return bool(card)
-
+#9ab6de97-1464-4b9a-985f-e5ec229d091f
 
 async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) -> UUID:
     item: Item = await Item.objects().get_or_create(
@@ -82,18 +82,18 @@ async def get_context_id_db(name_alfa2: str) -> UUID:
     context: Context = await Context.objects().get(Context.name_alfa2 == name_alfa2)
     return context.id
 
-
-async def get_item_relation_with_related_author_by_id_db(item_relation_id: UUID) -> ItemRelation:
-    '''
-    return: {ItemRelation}:
-            author = {User}
-            id = {UUID}
-            item_1 = {UUID}
-            item_2 = {UUID}
-    '''
-    item_relation: ItemRelation = await ItemRelation.objects(ItemRelation.author)\
-        .get(ItemRelation.id == item_relation_id)
-    return item_relation
+#
+# async def get_item_relation_with_related_author_by_id_db(item_relation_id: UUID) -> ItemRelation:
+#     '''
+#     return: {ItemRelation}:
+#             author = {User}
+#             id = {UUID}
+#             item_1 = {UUID}
+#             item_2 = {UUID}
+#     '''
+#     item_relation: ItemRelation = await ItemRelation.objects(ItemRelation.author)\
+#         .get(ItemRelation.id == item_relation_id)
+#     return item_relation
 
 
 async def get_item_relation_with_related_items_by_id_db(item_relation_id: UUID) -> ItemRelation:
@@ -161,8 +161,7 @@ async def get_user_context_db(telegram_user_id: int) -> Optional[UserContext]:
     return user_context
 
 
-async def get_google_user_id_db(telegram_user_id: int) -> UUID:
-    # When the bot started, the google user was added to the database, so 'user' variable cannot return None.
+async def get_existing_user_id_db(telegram_user_id: int) -> UUID:
     user: User = await User.objects().get(User.telegram_user_id == telegram_user_id)
     return user.id
 

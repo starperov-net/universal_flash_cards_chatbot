@@ -16,12 +16,11 @@ from app.db_functions.personal import (
     get_user_context_db,
     add_item_relation_db,
     get_context_id_db,
-    get_google_user_id_db,
     get_translated_text_from_item_relation,
     add_card_db,
     get_item_relation_by_text_db,
     is_words_in_card_db,
-    get_item_relation_with_related_items_by_id_db,
+    get_item_relation_with_related_items_by_id_db, get_existing_user_id_db,
 )
 
 from app.handlers.personal.callback_data_states import ToStudyCallbackData
@@ -134,7 +133,7 @@ async def google_translate(user_context: UserContext, text: str) -> ItemRelation
         item_2: UUID = await get_or_create_item_db(
             translate.translated_text, translated_text_context_id, user_context.user.id
         )
-        google: UUID = await get_google_user_id_db(TELEGRAM_USER_GOOGLE.id)
+        google: UUID = await get_existing_user_id_db(TELEGRAM_USER_GOOGLE.id)
         item_relation_id: UUID = await add_item_relation_db(google, item_1, item_2)
         item_relation_with_related_items: ItemRelation = await get_item_relation_with_related_items_by_id_db(
             item_relation_id
@@ -199,7 +198,7 @@ async def add_words_to_study(
     if is_words_in_card:
         await callback_query.answer("Already under study!")
     else:
-        await add_card_db(callback_data.item_relation_id)
+        await add_card_db(callback_query.from_user.id, callback_data.item_relation_id)
         await callback_query.answer('Added to study.')
 
 
