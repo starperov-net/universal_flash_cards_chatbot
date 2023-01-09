@@ -48,7 +48,7 @@ async def set_res_studying_card(
 
 async def get_actual_card(
     user_id: UUID,
-    authors: Optional[List[UUID]],
+    authors: Optional[List[UUID]] = None,
     interval: timedelta = timedelta(seconds=300),
 ) -> AsyncGenerator:
     """
@@ -76,14 +76,13 @@ async def get_actual_card(
     )
     query = f"""
     WITH actual_card AS (
-        SELECT (
+        SELECT
             card.id AS id,
             card.memorization_stage,
             card.repetition_level,
             card.last_date,
             item_1.text AS item_1,
             item_2.text AS item_2
-        )
         FROM card
         JOIN item_relation ON card.item_relation = item_relation.id
         JOIN item AS item_1 ON item_1.id = item_relation.item_1

@@ -1,9 +1,10 @@
 import random
-from typing import Optional, Any
+from typing import Optional, Any, Union
 
 from uuid import UUID
 
 import aiogram
+import piccolo
 
 from app.tables import Context, User, UserContext, Item, ItemRelation, Card
 from app import serializers
@@ -158,8 +159,9 @@ async def get_list_cards_to_study_db(telegram_user_id: int) -> list[Card]:
     #     Card.user.telegram_user_id == telegram_user_id
     # )
     # NEW
-    cards: list[Card] = await \
-        Card.objects(Card.all_related()).where( Card.user.telegram_user_id == telegram_user_id )
+    cards: list[Card] = await Card.objects(Card.all_related()).where(
+        Card.user.telegram_user_id == telegram_user_id
+    )
     k = 10 if len(cards) >= 10 else len(cards)
     cards_10_pcs: list[Card] = random.sample(cards, k)
     return cards_10_pcs
@@ -179,6 +181,13 @@ async def get_user_context_db(telegram_user_id: int) -> Optional[UserContext]:
 async def get_existing_user_id_db(telegram_user_id: int) -> UUID:
     user: User = await User.objects().get(User.telegram_user_id == telegram_user_id)
     return user.id
+
+
+async def get_user_id_db(telegram_user_id: int) -> Optional[UUID]:
+    user: Optional[User] = await User.objects().get(
+        User.telegram_user_id == telegram_user_id
+    )
+    return user.id if user else None
 
 
 async def get_translated_text_from_item_relation(
