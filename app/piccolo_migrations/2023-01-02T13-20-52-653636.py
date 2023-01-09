@@ -10,8 +10,10 @@ VERSION = "0.96.0"
 DESCRIPTION = ""
 
 
-async def forwards():
-    manager = MigrationManager(migration_id=ID, app_name="app", description=DESCRIPTION)
+async def forwards() -> MigrationManager:
+    manager = MigrationManager(
+        migration_id=ID, app_name="app", description=DESCRIPTION
+    )
 
     manager.alter_column(
         table_class_name="UserContext",

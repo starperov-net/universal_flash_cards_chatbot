@@ -11,7 +11,7 @@ from app.tables import Context
 from app.tests.utils import TELEGRAM_USER_GOOGLE
 
 
-async def set_default_commands():
+async def set_default_commands() -> None:
     await bot.set_my_commands(
         [
             types.BotCommand(command="study", description="study"),
@@ -20,7 +20,7 @@ async def set_default_commands():
     )
 
 
-async def add_languages_to_context():
+async def add_languages_to_context() -> None:
     cont_name = await Context.select()
     if not cont_name:
         for language in ISO639_1:
@@ -28,11 +28,11 @@ async def add_languages_to_context():
             await new_language.save()
 
 
-async def add_user_google():
+async def add_user_google() -> None:
     await get_or_create_user_db(TELEGRAM_USER_GOOGLE)
 
 
-async def on_startup():
+async def on_startup() -> None:
     await set_default_commands()
     await add_languages_to_context()
     await add_user_google()

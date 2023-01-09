@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Optional
 
 from aiogram.types import CallbackQuery, Chat, Message, Update
 
@@ -30,7 +31,7 @@ TEST_USER_CHAT = Chat(
 )
 
 
-def get_message(text: str):
+def get_message(text: str) -> Message:
     return Message(
         message_id=123,
         date=datetime.now(),
@@ -94,7 +95,7 @@ def get_message(text: str):
     )
 
 
-def get_update(message: Message = None, callback_query: CallbackQuery = None):
+def get_update(message: Optional[Message] = None, callback_query: Optional[CallbackQuery] = None) -> Update:
     return Update(
         update_id=187,
         message=message or None,

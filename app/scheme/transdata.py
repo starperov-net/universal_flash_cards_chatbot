@@ -231,13 +231,13 @@ class TranslateRequest(BaseModel):
     line: str
 
     @validator("foreign_lang")
-    def foreign_lang_must_not_be_equal_native_lang(cls, foreign_lang, values):
+    def foreign_lang_must_not_be_equal_native_lang(cls, foreign_lang: ISO639_1, values: dict) -> ISO639_1:
         if foreign_lang == values["native_lang"]:
             raise ValueError("foreign_lang must not be equal to native_lang")
         return foreign_lang
 
     @validator("line")
-    def prepare_line(cls, line):
+    def prepare_line(cls, line: str) -> str:
         """Strip spaces before and after, convert to lowercase."""
         return line.strip().lower()
 
