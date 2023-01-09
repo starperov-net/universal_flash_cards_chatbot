@@ -1,14 +1,18 @@
 from typing import Optional
 # from uuid import UUID
 import logging
+from uuid import UUID
+
 from aiogram import Dispatcher, types
 from aiogram.filters import Command
+
+from app.base_functions.learning_sets import get_actual_card
 # from aiogram.fsm.context import FSMContext
 # from aiogram.fsm.state import State, StatesGroup
 #
 # import app.handlers.personal.keyboards as kb
 # from app.base_functions.translator import get_translate
-from app.db_functions.personal import get_list_cards_to_study_db
+from app.db_functions.personal import get_list_cards_to_study_db, get_user_id_db
 # from app.handlers.personal.callback_data_states import ToStudyCallbackData
 #
 # from app.scheme.transdata import TranslateRequest, TranslateResponse
@@ -30,16 +34,38 @@ async def study(msg: types.Message) -> types.Message:
     logging.info(msg.from_user)
     logging.info(f'==========================================')
 
+    user_id: Optional[UUID] = await get_user_id_db(msg.from_user.id)
+    if user_id is None:
+        return await msg.answer("To start studying follow /start command's way first")
+
     await msg.answer(text=f"Welcome to study, {msg.from_user.full_name}!")
-    list_cards_for_studying: list[Card] = await get_list_cards_to_study_db(msg.from_user.id)
-    for card in list_cards_for_studying:
-        logging.info('******************************************* CARD START')
-        logging.info(card.__dict__)
-        logging.info('------------------------------------------------------')
-        logging.info(card.user.__dict__)
-        # logging.info(card.author)
-        logging.info('******************************************* CARD FINISH')
-    logging.info(f'-----------------{list_cards_for_studying}')
+
+    """
+    output: all data for last usercontext
+        dict {
+            'id': UUID (for actual Card),
+            'memorization_stage': int (for actual Card),
+            'repetition_level': int (for actual Card),
+            'last_date': datetime (for actual Card),
+            'item_1': str,
+            'item_2': str
+    }
+    """
+    async for card in get_actual_card(user_id, authors=None):
+        await msg.answer(text=f"ITEM_1 - {card['item_1']}")
+        await msg.answer(text=f"ITEM_1 - {card['item_2']}")
+
+
+
+    # list_cards_for_studying: list[Card] = await get_list_cards_to_study_db(msg.from_user.id)
+    # for card in list_cards_for_studying:
+    #     logging.info('******************************************* CARD START')
+    #     logging.info(card.__dict__)
+    #     logging.info('------------------------------------------------------')
+    #     logging.info(card.user.__dict__)
+    #     # logging.info(card.author)
+    #     logging.info('******************************************* CARD FINISH')
+    # logging.info(f'-----------------{list_cards_for_studying}')
 
 
 # async def study_greeting(msg: types.Message) -> None:
