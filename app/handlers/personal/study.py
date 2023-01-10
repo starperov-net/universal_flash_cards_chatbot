@@ -3,6 +3,7 @@ from typing import Optional
 import logging
 from uuid import UUID
 
+import piccolo
 from aiogram import Dispatcher, types
 from aiogram.filters import Command
 
@@ -13,6 +14,7 @@ from app.base_functions.learning_sets import get_actual_card
 # import app.handlers.personal.keyboards as kb
 # from app.base_functions.translator import get_translate
 from app.db_functions.personal import get_list_cards_to_study_db, get_user_id_db
+from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
 # from app.handlers.personal.callback_data_states import ToStudyCallbackData
 #
 # from app.scheme.transdata import TranslateRequest, TranslateResponse
@@ -52,8 +54,22 @@ async def study(msg: types.Message) -> types.Message:
     }
     """
     async for card in get_actual_card(user_id, authors=None):
-        await msg.answer(text=f"ITEM_1 - {card['item_1']}")
-        await msg.answer(text=f"ITEM_1 - {card['item_2']}")
+        query = f"""
+        SELECT i.text
+        FROM item i
+        WHERE(i.context='{str(card['context_item_2'])}')
+        ORDER BY random()
+        ASC
+        LIMIT 3;
+        """
+        res = await Item.raw(query)
+        words_to_show = [el['text'] for el in res]
+        words_to_show.append(card['item_2'])
+        # words_to_learn = Item.select(Item.text).where(Item.context == card['context_item_2']).order_by(OrderByRaw('random()')).limit(3).run_sync()
+        # await msg.answer(text=f"DICT - {card}")
+        await msg.answer(text=f"ITEM_1 - {card['item_1']}", reply_markup=check_one_correct_from_four_study_keyboard(words_to_show))
+        # await msg.answer(text=f"ITEM_2 - {card['item_2']}")
+
 
 
 
