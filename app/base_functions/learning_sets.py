@@ -11,6 +11,13 @@ from app.db_functions.personal import update_card_db
 async def set_res_studying_card(
     current_card_status: serializers.Card, result: bool
 ) -> None:
+    if (
+        current_card_status.repetition_level is None
+        or current_card_status.memorization_stage is None
+    ):
+        raise ValueError(
+            "'repetition_level' and 'memorisation_stage' attributes cannot be None for 'current_card_status'"
+        )
     if result:
         repetition_level = (
             current_card_status.repetition_level + 1
