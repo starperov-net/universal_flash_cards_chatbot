@@ -3,6 +3,25 @@ from zoneinfo import ZoneInfo
 from typing import List, Optional, AsyncGenerator
 from datetime import datetime, timedelta
 from app.tables import Card
+from app import serializers
+from app.db_functions.personal import update_card_db
+
+
+async def set_res_studying_card(current_card_status: serializers.Card, result: bool) -> None:
+    if result:
+        repetition_level = current_card_status.repetition_level + 1 if current_card_status.repetition_level < 8 else 8
+    else:
+        repetition_level = current_card_status.repetition_level - 1 if current_card_status.repetition_level > 0 else 0
+    memorisation_stage = current_card_status.memorization_stage + 1 if current_card_status.memorization_stage < 7 else 7
+    last_date = datetime.now(tz=ZoneInfo("UTC"))
+    
+    card_data = serializers.Card(
+        id=current_card_status.id,
+        last_date=last_date,
+        memorization_stage=memorisation_stage,
+        repetition_level=repetition_level
+    )
+    await update_card_db(card_data)
 
 
 async def get_actual_card(

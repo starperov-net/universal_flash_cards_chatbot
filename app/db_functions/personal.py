@@ -1,11 +1,14 @@
 import random
 from typing import Optional, Any
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from uuid import UUID
 
 import aiogram
 
 from app.tables import Context, User, UserContext, Item, ItemRelation, Card
+from app import serializers
 
 
 async def add_card_db(
@@ -19,6 +22,10 @@ async def add_card_db(
     )
     await card.save()
     return card
+
+
+async def update_card_db(card: serializers.Card):
+    await Card.update(card.dict()).where(Card.id == card.id)
 
 
 async def add_item_relation_db(
