@@ -13,7 +13,7 @@ from app.db_functions.personal import (
     get_or_create_user_db,
     get_or_create_item_db,
     get_item_relation_by_text_db,
-    get_translated_text_from_item_relation
+    get_translated_text_from_item_relation,
 )
 
 from app.tables import User, ItemRelation, Item, UserContext, Context
@@ -65,13 +65,11 @@ class TestVerificationOfRecordedDataToDB(IsolatedAsyncioTestCase):
         assert user.telegram_language == (telegram_user.language_code or "")
 
     async def test_get_or_create_item_db(self) -> None:
-        text: str = 'window'
+        text: str = "window"
         await CONTEXT_en.save()
         await USER_1.save()
         await get_or_create_item_db(
-            author_id=USER_1.id,
-            context_id=CONTEXT_en.id,
-            text=text
+            author_id=USER_1.id, context_id=CONTEXT_en.id, text=text
         )
         item: Item = await Item.objects().get(Item.text == text)
         assert item.author == USER_1.id
@@ -107,56 +105,40 @@ class TestGetTranslatedText(IsolatedAsyncioTestCase):
 
     @parameterized.expand(
         [
-            (
-                'wagen',
-                'машина',
-                USER_CONTEXT_3_ru_de
-            ),
-            (
-                'автомобіль',
-                'auto',
-                USER_CONTEXT_1_uk_en
-            ),
-            (
-               'auto',
-               'автомобіль',
-               USER_CONTEXT_1_uk_en
-            ),
-            (
-               'auto',
-               'автомобіль',
-               USER_CONTEXT_2_uk_en
-            ),
-            (
-               'машина',
-               'auto',
-               USER_CONTEXT_3_ru_de
-            ),
+            ("wagen", "машина", USER_CONTEXT_3_ru_de),
+            ("автомобіль", "auto", USER_CONTEXT_1_uk_en),
+            ("auto", "автомобіль", USER_CONTEXT_1_uk_en),
+            ("auto", "автомобіль", USER_CONTEXT_2_uk_en),
+            ("машина", "auto", USER_CONTEXT_3_ru_de),
         ]
     )
     @pytest.mark.asyncio
     async def test_get_translated_text_from_db(
-            self, word: str, translated_word: str, user_context: UserContext
+        self, word: str, translated_word: str, user_context: UserContext
     ) -> None:
-        item_relation: t.Optional[ItemRelation] = await get_item_relation_by_text_db(word, user_context)
+        item_relation: t.Optional[ItemRelation] = await get_item_relation_by_text_db(
+            word, user_context
+        )
         answer: str = await get_translated_text_from_item_relation(word, item_relation)  # type: ignore
         assert answer == translated_word
 
     async def test_get_item_relation_by_text_return_None(self) -> None:
-        word: str = 'машина'
+        word: str = "машина"
         user_context: UserContext = USER_CONTEXT_1_uk_en
-        item_relation: t.Optional[ItemRelation] = await get_item_relation_by_text_db(word, user_context)
+        item_relation: t.Optional[ItemRelation] = await get_item_relation_by_text_db(
+            word, user_context
+        )
         assert item_relation is None
 
 
 @pytest.mark.asyncio
 async def test_add_item_relation_db(user: User, item_uk: Item, item_en: Item) -> None:
     item_relation_id: UUID = await add_item_relation_db(
-        author_id=user.id,
-        item_1_id=item_en.id,
-        item_2_id=item_uk.id
+        author_id=user.id, item_1_id=item_en.id, item_2_id=item_uk.id
     )
-    item_relation: ItemRelation = await ItemRelation.objects().get(ItemRelation.id == item_relation_id)
+    item_relation: ItemRelation = await ItemRelation.objects().get(
+        ItemRelation.id == item_relation_id
+    )
     assert item_relation.author == user.id
     assert item_relation.item_1 == item_en.id
     assert item_relation.item_2 == item_uk.id

@@ -11,9 +11,7 @@ DESCRIPTION = "Change and added columns in card-table"
 
 
 async def forwards() -> MigrationManager:
-    manager = MigrationManager(
-        migration_id=ID, app_name="app", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="app", description=DESCRIPTION)
 
     manager.add_column(
         table_class_name="Card",
