@@ -66,7 +66,10 @@ async def get_actual_card(
             'repetition_level': int (for actual Card),
             'last_date': datetime (for actual Card),
             'item_1': str,
-            'item_2': str
+            'item_2': str,
+            #######################
+            'context_item_1': UUID,
+            'context_item_2': UUID
     }
     """
     authors_str = (
@@ -82,7 +85,9 @@ async def get_actual_card(
             card.repetition_level,
             card.last_date,
             item_1.text AS item_1,
-            item_2.text AS item_2
+            item_2.text AS item_2,
+            item_1.context AS context_item_1,
+            item_2.context AS context_item_2
         FROM card
         JOIN item_relation ON card.item_relation = item_relation.id
         JOIN item AS item_1 ON item_1.id = item_relation.item_1
