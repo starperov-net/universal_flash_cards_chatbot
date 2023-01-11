@@ -1,3 +1,5 @@
+import random
+
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder,
     InlineKeyboardButton,
@@ -53,12 +55,25 @@ def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarku
 
 
 # --------keyboard "know", "don't know" for train card
-
-
 def what_to_do_with_card(card_id: UUID) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="know", callback_data=StudyCardCallbackData(card_id=card_id))
     builder.button(
         text="don't know", callback_data=StudyCardCallbackData(card_id=card_id)
+    )
+    return builder.as_markup()
+
+
+# ------ keyboard correct or wrong choice for study keyboard
+def check_one_correct_from_four_study_keyboard(words_list: list) -> InlineKeyboardMarkup:
+    random.shuffle(words_list)
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text=words_list[0]["text"], callback_data=words_list[0]["state"]),
+        InlineKeyboardButton(text=words_list[1]["text"], callback_data=words_list[1]["state"]),
+    )
+    builder.row(
+        InlineKeyboardButton(text=words_list[2]["text"], callback_data=words_list[2]["state"]),
+        InlineKeyboardButton(text=words_list[3]["text"], callback_data=words_list[3]["state"]),
     )
     return builder.as_markup()

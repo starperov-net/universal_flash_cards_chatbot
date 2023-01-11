@@ -1,42 +1,72 @@
 from typing import Optional
-# from uuid import UUID
-import logging
-from aiogram import Dispatcher, types
+
+from uuid import UUID
+
+from aiogram import Dispatcher, types, F
 from aiogram.filters import Command
-# from aiogram.fsm.context import FSMContext
-# from aiogram.fsm.state import State, StatesGroup
-#
-# import app.handlers.personal.keyboards as kb
-# from app.base_functions.translator import get_translate
-from app.db_functions.personal import get_list_cards_to_study_db
-# from app.handlers.personal.callback_data_states import ToStudyCallbackData
-#
-# from app.scheme.transdata import TranslateRequest, TranslateResponse
-from app.tables import Card, User, UserContext, Item, ItemRelation
-# from app.tests.utils import TELEGRAM_USER_GOOGLE
+
+from app.base_functions.learning_sets import get_actual_card
+from app.db_functions.personal import get_user_id_db
+from app.exceptions.custom_exceptions import NotFullSetException
+from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
+from app.tables import Item
 
 
 async def study(msg: types.Message) -> types.Message:
+    """
+    handler to show and activate <study> mode inside the menu
+
+    as a result we have one word to study and to this word we
+    have a keyboard of four words to choose one  correct
+    """
     # from_user is None if messages sent to channels
-    logging.info('>' * 75, ' ENTERED')
-
     if msg.from_user is None:
-
-        logging.info('*' * 75, ' NONE')
-
         return await msg.answer("Messages sent to channels")
 
-    logging.info(f'==========================================')
+    user_id: Optional[UUID] = await get_user_id_db(msg.from_user.id)
+    if user_id is None:
+        return await msg.answer("To start studying follow /start command's way first")
 
     await msg.answer(text=f"Welcome to study, {msg.from_user.full_name}!")
-    list_cards_for_studying: list[Card] = await get_list_cards_to_study_db(msg.from_user.id)
 
-    logging.info(f'-----------------{list_cards_for_studying}')
+    async for card in get_actual_card(user_id, authors=None):
+        query = f"""
+        SELECT i.text
+        FROM item i
+        WHERE(i.context='{str(card['context_item_2'])}')
+        ORDER BY random()
+        ASC
+        LIMIT 3;
+        """
+        res = await Item.raw(query)
+
+        words_to_show = [{'text': el['text'], 'state': 'False'} for el in res]
+
+        words_to_show.append({'text': card['item_2'], 'state': 'True'})
+
+        try:
+            if len(words_to_show) < 4:
+                raise NotFullSetException
+        except NotFullSetException:
+            return await msg.answer(text=f"Minimum amount of words for studying mode is 4, enter required amount.")
+        return await msg.answer(text=card['item_1'],
+                                reply_markup=check_one_correct_from_four_study_keyboard(words_to_show))
 
 
-# async def study_greeting(msg: types.Message) -> None:
-#     await msg.answer(text=f"{msg.from_user.full_name}, welcome to study!")
+async def handle_reply_after_four_words_studying(
+        callback_query: types.CallbackQuery,
+) -> None:
+    """
+    In order to get <True> or <False> after user pics option
+    use -> callback_query.data with returning types as True or
+    False in type<str> not bool
+    """
+    pass
 
 
 def register_handler_study(dp: Dispatcher) -> None:
     dp.message.register(study, Command(commands=["study", "изучение", "вивчення"]))
+
+    # register handler two times for getting <True> or <False> reply from buttons
+    dp.callback_query.register(handle_reply_after_four_words_studying, F.data == 'True')
+    dp.callback_query.register(handle_reply_after_four_words_studying, F.data == 'False')

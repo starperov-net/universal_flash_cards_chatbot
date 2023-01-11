@@ -3,6 +3,7 @@ from typing import Callable
 from aiogram import Dispatcher
 
 # тут додавати импорт нових регістраторов
+from app.handlers.personal.study import register_handler_study
 from app.handlers.personal.start import register_handler_start
 from app.handlers.personal.study import register_handler_study
 
@@ -10,5 +11,6 @@ from app.handlers.personal.study import register_handler_study
 def register_handlers_personal(dp: Dispatcher) -> None:
     # тут теж треба додати цей регістратор
     handlers: tuple = (register_handler_start, register_handler_study,)
+
     for handler in handlers:
         handler(dp)
