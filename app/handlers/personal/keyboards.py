@@ -69,11 +69,11 @@ def check_one_correct_from_four_study_keyboard(words_list: list) -> InlineKeyboa
     random.shuffle(words_list)
     builder = InlineKeyboardBuilder()
     builder.row(
-        InlineKeyboardButton(text=words_list[0], callback_data=words_list[0]),
-        InlineKeyboardButton(text=words_list[1], callback_data=words_list[1]),
+        InlineKeyboardButton(text=words_list[0]["text"], callback_data=words_list[0]["state"]),
+        InlineKeyboardButton(text=words_list[1]["text"], callback_data=words_list[1]["state"]),
     )
     builder.row(
-        InlineKeyboardButton(text=words_list[2], callback_data=words_list[2]),
-        InlineKeyboardButton(text=words_list[3], callback_data=words_list[3]),
+        InlineKeyboardButton(text=words_list[2]["text"], callback_data=words_list[2]["state"]),
+        InlineKeyboardButton(text=words_list[3]["text"], callback_data=words_list[3]["state"]),
     )
     return builder.as_markup()
