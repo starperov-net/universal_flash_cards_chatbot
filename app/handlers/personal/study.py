@@ -1,9 +1,13 @@
+from datetime import datetime, timedelta
 from typing import Optional
 
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 from aiogram import Dispatcher, types
 from aiogram.filters import Command
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 
 from app.base_functions.learning_sets import get_actual_card
 from app.db_functions.personal import get_user_id_db
@@ -13,7 +17,11 @@ from app.handlers.personal.keyboards import check_one_correct_from_four_study_ke
 from app.tables import Item
 
 
-async def study(msg: types.Message) -> types.Message:
+class FSMStudyOneFromFour(StatesGroup):
+    study_one_from_four = State()
+
+
+async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message:
     """
     handler to show and activate <study> mode inside the menu
 
@@ -29,7 +37,15 @@ async def study(msg: types.Message) -> types.Message:
         return await msg.answer("To start studying follow /start command's way first")
 
     await msg.answer(text=f"Welcome to study, {msg.from_user.full_name}!")
+    start_time = datetime.now(tz=ZoneInfo("UTC"))
+    end_time = start_time + timedelta(seconds=300)
+    await state.set_data({'end_time': end_time, 'user_id': user_id})
+    await state.set_state(FSMStudyOneFromFour.study_one_from_four)
+    await msg.answer(text='ku ku')
 
+
+async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Message:
+    user_id = state.get_data()
     async for card in get_actual_card(user_id, authors=None):
         query = f"""
         SELECT i.text
@@ -73,7 +89,8 @@ async def handle_reply_after_four_words_studying(
 
 
 def register_handler_study(dp: Dispatcher) -> None:
-    dp.message.register(study, Command(commands=["study", "изучение", "вивчення"]))
+    dp.message.register(study_greeting, Command(commands=["study", "изучение", "вивчення"]))
+    dp.message.register(study_one_from_four, FSMStudyOneFromFour.study_one_from_four)
 
     # register handler two times for getting <True> or <False> reply from buttons
     dp.callback_query.register(
