@@ -1,3 +1,5 @@
+from enum import Flag, Enum
+
 from aiogram.filters.callback_data import CallbackData
 from uuid import UUID
 
@@ -21,3 +23,13 @@ class StudyCardCallbackData(CallbackData, prefix="study_card"):
     """
 
     card_id: UUID
+
+
+class StudyFourOptionsCallbackData(CallbackData, prefix="study_four_options"):
+    """
+    CallbackData for studying four words mode.
+    """
+    state: int
+    card_id: UUID
+    memorization_stage: int
+    repetition_level: int
