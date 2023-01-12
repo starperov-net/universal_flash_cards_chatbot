@@ -1,5 +1,6 @@
 import random
 
+from aiogram.types import ReplyKeyboardMarkup
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder,
     InlineKeyboardButton,
@@ -9,7 +10,7 @@ from uuid import UUID
 
 from app.handlers.personal.callback_data_states import (
     ToStudyCallbackData,
-    StudyCardCallbackData,
+    StudyCardCallbackData, StudyFourOptionsCallbackData,
 )
 
 # ------- keyboard for choice languages
@@ -65,15 +66,45 @@ def what_to_do_with_card(card_id: UUID) -> InlineKeyboardMarkup:
 
 
 # ------ keyboard correct or wrong choice for study keyboard
-def check_one_correct_from_four_study_keyboard(words_list: list) -> InlineKeyboardMarkup:
+def check_one_correct_from_four_study_keyboard(
+        words_list: list[dict], card_id: UUID, memorization_stage: int, repetition_level: int
+) -> InlineKeyboardMarkup:
     random.shuffle(words_list)
     builder = InlineKeyboardBuilder()
-    builder.row(
-        InlineKeyboardButton(text=words_list[0]["text"], callback_data=words_list[0]["state"]),
-        InlineKeyboardButton(text=words_list[1]["text"], callback_data=words_list[1]["state"]),
+    builder.button(
+        text=words_list[0]["text"],
+        callback_data=StudyFourOptionsCallbackData(
+            state=words_list[0]["state"],
+            card_id=card_id,
+            memorization_stage=memorization_stage,
+            repetition_level=repetition_level
+        ),
     )
-    builder.row(
-        InlineKeyboardButton(text=words_list[2]["text"], callback_data=words_list[2]["state"]),
-        InlineKeyboardButton(text=words_list[3]["text"], callback_data=words_list[3]["state"]),
+    builder.button(
+        text=words_list[1]["text"],
+        callback_data=StudyFourOptionsCallbackData(
+            state=words_list[1]["state"],
+            card_id=card_id,
+            memorization_stage=memorization_stage,
+            repetition_level=repetition_level
+        )
+    )
+    builder.button(
+        text=words_list[2]["text"],
+        callback_data=StudyFourOptionsCallbackData(
+            state=words_list[2]["state"],
+            card_id=card_id,
+            memorization_stage=memorization_stage,
+            repetition_level=repetition_level
+        )
+    )
+    builder.button(
+        text=words_list[3]["text"],
+        callback_data=StudyFourOptionsCallbackData(
+            state=words_list[3]["state"],
+            card_id=card_id,
+            memorization_stage=memorization_stage,
+            repetition_level=repetition_level
+        )
     )
     return builder.as_markup()
