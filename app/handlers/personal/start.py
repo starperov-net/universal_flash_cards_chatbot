@@ -20,7 +20,8 @@ from app.db_functions.personal import (
     add_card_db,
     get_item_relation_by_text_db,
     is_words_in_card_db,
-    get_item_relation_with_related_items_by_id_db, get_existing_user_id_db,
+    get_item_relation_with_related_items_by_id_db,
+    get_existing_user_id_db,
 )
 
 from app.handlers.personal.callback_data_states import ToStudyCallbackData
@@ -57,8 +58,8 @@ async def get_user_data(msg: types.Message, state: FSMContext) -> types.Message:
     if user_context_db:
         return await msg.answer(
             text=f"{user_context_db.user.first_name}, "
-                 f"your native language is {user_context_db.context_1.name}, "
-                 f"your target - {user_context_db.context_2.name}",
+            f"your native language is {user_context_db.context_1.name}, "
+            f"your target - {user_context_db.context_2.name}",
         )
 
     await state.set_state(FSMChooseLanguage.native_language)
@@ -68,7 +69,7 @@ async def get_user_data(msg: types.Message, state: FSMContext) -> types.Message:
 
 
 async def select_native_language(
-        callback_query: types.CallbackQuery, state: FSMContext
+    callback_query: types.CallbackQuery, state: FSMContext
 ) -> Union[types.Message, bool]:
     # message is None if the message is too old
     if callback_query.message is None:
@@ -83,7 +84,7 @@ async def select_native_language(
 
 
 async def select_target_language(
-        callback_query: types.CallbackQuery, state: FSMContext
+    callback_query: types.CallbackQuery, state: FSMContext
 ) -> Union[types.Message, bool]:
     # message is None if the message is too old
     if callback_query.message is None:
@@ -135,8 +136,8 @@ async def google_translate(user_context: UserContext, text: str) -> ItemRelation
         )
         google: UUID = await get_existing_user_id_db(TELEGRAM_USER_GOOGLE.id)
         item_relation_id: UUID = await add_item_relation_db(google, item_1, item_2)
-        item_relation_with_related_items: ItemRelation = await get_item_relation_with_related_items_by_id_db(
-            item_relation_id
+        item_relation_with_related_items: ItemRelation = (
+            await get_item_relation_with_related_items_by_id_db(item_relation_id)
         )
 
         return item_relation_with_related_items
@@ -185,7 +186,7 @@ async def translate_text(msg: types.Message) -> types.Message:
 
 
 async def add_words_to_study(
-        callback_query: types.CallbackQuery, callback_data: ToStudyCallbackData
+    callback_query: types.CallbackQuery, callback_data: ToStudyCallbackData
 ) -> None:
     """
     Creates an in 'card'.
@@ -199,7 +200,7 @@ async def add_words_to_study(
         await callback_query.answer("Already under study!")
     else:
         await add_card_db(callback_query.from_user.id, callback_data.item_relation_id)
-        await callback_query.answer('Added to study.')
+        await callback_query.answer("Added to study.")
 
 
 async def my_variant(callback_query: types.CallbackQuery) -> None:

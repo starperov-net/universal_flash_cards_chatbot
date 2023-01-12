@@ -51,21 +51,21 @@ USER_CONTEXT_1_uk_en = tables.UserContext(
     context_1=CONTEXT_uk,
     context_2=CONTEXT_en,
     user=USER_1,
-    last_date=datetime(2022, 2, 24)
+    last_date=datetime(2022, 2, 24),
 )
 
 USER_CONTEXT_2_uk_en = tables.UserContext(
     context_1=CONTEXT_uk,
     context_2=CONTEXT_en,
     user=USER_2,
-    last_date=datetime(2022, 2, 24)
+    last_date=datetime(2022, 2, 24),
 )
 
 USER_CONTEXT_3_ru_de = tables.UserContext(
     context_1=CONTEXT_ru,
     context_2=CONTEXT_de,
     user=USER_3,
-    last_date=datetime(2022, 2, 24)
+    last_date=datetime(2022, 2, 24),
 )
 
 ITEM_en_auto = tables.Item(author=USER_1.id, context=CONTEXT_en.id, text="auto")
