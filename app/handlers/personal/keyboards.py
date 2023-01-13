@@ -1,6 +1,5 @@
 import random
 
-from aiogram.types import ReplyKeyboardMarkup
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder,
     InlineKeyboardButton,
@@ -107,4 +106,5 @@ def check_one_correct_from_four_study_keyboard(
             repetition_level=repetition_level
         )
     )
+    builder.adjust(2)
     return builder.as_markup()
