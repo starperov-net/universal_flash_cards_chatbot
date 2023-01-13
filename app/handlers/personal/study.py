@@ -41,12 +41,12 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
     end_time = start_time + timedelta(seconds=300)
     await state.set_data({'end_time': end_time, 'user_id': user_id})
     await state.set_state(FSMStudyOneFromFour.study_one_from_four)
-    await msg.answer(text='ku ku')
+    a = await study_one_from_four(msg, state)
 
 
 async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Message:
-    user_id = state.get_data()
-    async for card in get_actual_card(user_id, authors=None):
+    state_data = await state.get_data()
+    async for card in get_actual_card(state_data['user_id'], authors=None):
         query = f"""
         SELECT i.text
         FROM item i
