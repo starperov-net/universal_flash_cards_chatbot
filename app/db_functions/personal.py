@@ -6,6 +6,7 @@ from uuid import UUID
 import aiogram
 import piccolo
 
+from app.exceptions.custom_exceptions import NotFullSetException
 from app.tables import Context, User, UserContext, Item, ItemRelation, Card
 from app import serializers
 
@@ -200,3 +201,19 @@ async def get_translated_text_from_item_relation(
     text1, text2 = item_relation.item_1.text, item_relation.item_2.text
     translated_text: str = list(set((text1, text2)) - set((text,)))[0]
     return translated_text
+
+
+async def get_three_random_words(context_id: UUID) -> list[dict]:
+    """Return dict like """
+    query = f"""
+    SELECT i.text
+    FROM item i
+    WHERE(i.context='{str(context_id)}')
+    ORDER BY random()
+    ASC
+    LIMIT 3;
+    """
+    random_words: list[dict] = await Item.raw(query)
+    if len(random_words) < 3:
+        raise NotFullSetException
+    return random_words

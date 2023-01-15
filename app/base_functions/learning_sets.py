@@ -50,7 +50,7 @@ async def get_actual_card(
     user_id: UUID,
     authors: Optional[List[UUID]] = None,
     interval: timedelta = timedelta(seconds=300),
-) -> AsyncGenerator:
+) -> dict:
     """
     this is a generator of which at each step return one actual card
     generator will raise StopIteration when card1s of time are exhausted
@@ -130,10 +130,13 @@ async def get_actual_card(
     ORDER BY memorization_stage, repetition_level, last_date
     LIMIT 1;
     """
-    start_time = datetime.now(tz=ZoneInfo("UTC"))
-    while (start_time + interval) > datetime.now(tz=ZoneInfo("UTC")):
-        res = await Card.raw(query)
-        if not res:
-            break
-        yield res[0]  # type: ignore
-    raise StopIteration
+    res = await Card.raw(query)
+    return res[0]
+
+    # start_time = datetime.now(tz=ZoneInfo("UTC"))
+    # while (start_time + interval) > datetime.now(tz=ZoneInfo("UTC")):
+    #     res = await Card.raw(query)
+    #     if not res:
+    #         break
+    #     yield res[0]
+    # raise StopIteration
