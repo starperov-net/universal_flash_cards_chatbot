@@ -44,14 +44,22 @@ select_language_keyboard = select_language_keyboard_builder.as_markup(
 
 # ------ keyboard add new item to train
 def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(
-        text="to train",
-        callback_data=ToStudyCallbackData(item_relation_id=item_relation_id),
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="to train",
+                    callback_data=ToStudyCallbackData(item_relation_id=item_relation_id).pack()
+                ),
+                InlineKeyboardButton(
+                    text="my_variant", callback_data="my_variant"
+                ),
+                InlineKeyboardButton(
+                    text="nothing to do", callback_data="nothing_to_do"
+                )
+            ]
+        ]
     )
-    builder.button(text="my_variant", callback_data="my_variant")
-    builder.button(text="nothing to do", callback_data="nothing_to_do")
-    return builder.as_markup()
 
 
 # --------keyboard "know", "don't know" for train card
@@ -70,41 +78,18 @@ def check_one_correct_from_four_study_keyboard(
 ) -> InlineKeyboardMarkup:
     random.shuffle(words_list)
     builder = InlineKeyboardBuilder()
-    builder.button(
-        text=words_list[0]["text"],
-        callback_data=StudyFourOptionsCallbackData(
-            state=words_list[0]["state"],
-            card_id=card_id,
-            memorization_stage=memorization_stage,
-            repetition_level=repetition_level
-        ),
-    )
-    builder.button(
-        text=words_list[1]["text"],
-        callback_data=StudyFourOptionsCallbackData(
-            state=words_list[1]["state"],
-            card_id=card_id,
-            memorization_stage=memorization_stage,
-            repetition_level=repetition_level
+
+    # words_list = [{"text": "some_word", "state": 0}, ...]
+    for el in words_list:
+        builder.button(
+            text=el["text"],
+            callback_data=StudyFourOptionsCallbackData(
+                state=el["state"],
+                card_id=card_id,
+                memorization_stage=memorization_stage,
+                repetition_level=repetition_level
+            ),
         )
-    )
-    builder.button(
-        text=words_list[2]["text"],
-        callback_data=StudyFourOptionsCallbackData(
-            state=words_list[2]["state"],
-            card_id=card_id,
-            memorization_stage=memorization_stage,
-            repetition_level=repetition_level
-        )
-    )
-    builder.button(
-        text=words_list[3]["text"],
-        callback_data=StudyFourOptionsCallbackData(
-            state=words_list[3]["state"],
-            card_id=card_id,
-            memorization_stage=memorization_stage,
-            repetition_level=repetition_level
-        )
-    )
+
     builder.adjust(2)
     return builder.as_markup()
