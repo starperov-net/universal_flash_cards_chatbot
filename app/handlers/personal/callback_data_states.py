@@ -1,5 +1,3 @@
-from enum import Flag, Enum
-
 from aiogram.filters.callback_data import CallbackData
 from uuid import UUID
 

@@ -8,7 +8,6 @@ from aiogram import Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.methods import AnswerCallbackQuery
 
 from app.base_functions.learning_sets import get_actual_card
 from app.db_functions.personal import get_user_id_db, get_three_random_words
@@ -58,12 +57,12 @@ async def study_one_from_four(
         card: dict = await get_actual_card(state_data['user_id'])
         if not card:
             await state.clear()
-            return await msg.answer(text=f"Run out of words to study")
+            return await msg.answer(text="Run out of words to study")
         try:
             three_random_words: list[dict] = await get_three_random_words(card['context_item_2'], card['item_2'])
         except NotFullSetException:
             await state.clear()
-            return await msg.answer(text=f"Minimum amount of words for studying mode is 4, enter required amount.")
+            return await msg.answer(text="Minimum amount of words for studying mode is 4, enter required amount.")
 
         # generating a list of 4 dict like {"text": "some_word", "state": 0}
         words_to_show: list[dict] = [{'text': el['text'], 'state': 0} for el in three_random_words]
@@ -80,7 +79,7 @@ async def study_one_from_four(
         )
     else:
         await state.clear()
-        return await msg.answer(text=f"Training time has expired.")
+        return await msg.answer(text="Training time has expired.")
 
 
 async def handle_reply_after_four_words_studying(
@@ -94,7 +93,7 @@ async def handle_reply_after_four_words_studying(
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
-    await callback_query.answer(f"{bool(callback_data.state)}") # response will be processed here
+    await callback_query.answer(f"{bool(callback_data.state)}")  # response will be processed here
 
     symbol = '👍' if callback_data.state else '👎'
     await callback_query.message.edit_text(f"{callback_query.message.text} {symbol}")
