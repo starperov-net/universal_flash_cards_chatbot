@@ -1,14 +1,12 @@
 from uuid import UUID
-from zoneinfo import ZoneInfo
-from typing import List, Optional, AsyncGenerator
-from datetime import datetime, timedelta
+from typing import List, Optional
 from app.tables import Card
 
 
 async def get_actual_card(
     user_id: UUID,
     authors: Optional[List[UUID]] = None,
-    interval: timedelta = timedelta(seconds=300),
+    # interval: timedelta = timedelta(seconds=300),
 ) -> dict:
     """
     ideal: this is a generator of which at each step return one actual card
