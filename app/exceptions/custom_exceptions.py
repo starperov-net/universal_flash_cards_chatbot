@@ -4,4 +4,3 @@ class NotFullSetException(IndexError):
     to check amount of words for learning process
     """
     pass
-

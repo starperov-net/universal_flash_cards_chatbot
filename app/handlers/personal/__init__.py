@@ -1,7 +1,6 @@
 from aiogram import Dispatcher
 
 # тут додавати импорт нових регістраторов
-from app.handlers.personal.study import register_handler_study
 from app.handlers.personal.start import register_handler_start
 
 

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Union
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -7,7 +7,6 @@ from aiogram import Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.methods import AnswerCallbackQuery
 
 from app.base_functions.learning_sets import get_actual_card
 from app.db_functions.personal import get_user_id_db, get_three_random_words
@@ -55,7 +54,7 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         card: dict = await get_actual_card(state_data["user_id"])
         if not card:
             await state.clear()
-            return await msg.answer(text=f"Run out of words to study")
+            return await msg.answer(text="Run out of words to study")
         try:
             three_random_words: list[dict] = await get_three_random_words(
                 card["context_item_2"], card["item_2"]
@@ -83,7 +82,7 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         )
     else:
         await state.clear()
-        return await msg.answer(text=f"Training time has expired.")
+        return await msg.answer(text="Training time has expired.")
 
 
 async def handle_reply_after_four_words_studying(
