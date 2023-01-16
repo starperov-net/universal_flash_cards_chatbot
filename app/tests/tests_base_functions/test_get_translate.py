@@ -55,7 +55,9 @@ from app.settings import settings  # noqa !!!
     ),
 )
 def test_get_translate(
-        translate_request: TranslateRequest, mock_translate_return_value: dict, right_answer: str
+    translate_request: TranslateRequest,
+    mock_translate_return_value: dict,
+    right_answer: str,
 ) -> None:
 
     with patch.object(
@@ -66,12 +68,12 @@ def test_get_translate(
         call(
             translate_request.line,
             target_language=translate_request.native_lang,
-            source_language=translate_request.foreign_lang
+            source_language=translate_request.foreign_lang,
         ),
         call(
             translate_request.line,
             target_language=translate_request.foreign_lang,
-            source_language=translate_request.native_lang
+            source_language=translate_request.native_lang,
         ),
     ]
     mock_translate.assert_has_calls(calls)
@@ -114,23 +116,20 @@ def test_matching_indicated_and_recognized_lang() -> None:
 
     calls = [
         call(
-            'assemble',
+            "assemble",
             target_language=translate_request.native_lang,
-            source_language=translate_request.foreign_lang
+            source_language=translate_request.foreign_lang,
         ),
         call(
-            'assemble',
+            "assemble",
             target_language=translate_request.foreign_lang,
-            source_language=translate_request.native_lang
+            source_language=translate_request.native_lang,
         ),
         call(
-            'assemble',
+            "assemble",
             target_language=translate_request.native_lang,
-            source_language=mock_translate_return_value["detectedSourceLanguage"]
+            source_language=mock_translate_return_value["detectedSourceLanguage"],
         ),
-        call(
-            'assemble',
-            target_language=translate_request.native_lang
-        )
+        call("assemble", target_language=translate_request.native_lang),
     ]
     mock_translate.assert_has_calls(calls)

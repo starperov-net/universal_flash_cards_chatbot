@@ -1,6 +1,47 @@
+# mypy: allow-untyped-defs
 from uuid import UUID
 from typing import List, Optional
 from app.tables import Card
+from app import serializers
+from app.db_functions.personal import update_card_db
+
+
+async def set_res_studying_card(
+    current_card_status: serializers.Card, result: bool
+) -> None:
+    if (
+        current_card_status.repetition_level is None
+        or current_card_status.memorization_stage is None
+    ):
+        raise ValueError(
+            "'repetition_level' and 'memorisation_stage' attributes cannot be None for 'current_card_status'"
+        )
+    if result:
+        repetition_level = (
+            current_card_status.repetition_level + 1
+            if current_card_status.repetition_level < 8
+            else 8
+        )
+    else:
+        repetition_level = (
+            current_card_status.repetition_level - 1
+            if current_card_status.repetition_level > 0
+            else 0
+        )
+    memorisation_stage = (
+        current_card_status.memorization_stage + 1
+        if current_card_status.memorization_stage < 7
+        else 7
+    )
+    last_date = datetime.now(tz=ZoneInfo("UTC"))
+
+    card_data = serializers.Card(
+        id=current_card_status.id,
+        last_date=last_date,
+        memorization_stage=memorisation_stage,
+        repetition_level=repetition_level,
+    )
+    await update_card_db(card_data)
 
 
 async def get_actual_card(
@@ -9,7 +50,7 @@ async def get_actual_card(
     # interval: timedelta = timedelta(seconds=300),
 ) -> dict:
     """
-    ideal: this is a generator of which at each step return one actual card
+    this is a generator of which at each step return one actual card
     generator will raise StopIteration when card1s of time are exhausted
 
     general algorythm:
@@ -87,6 +128,7 @@ async def get_actual_card(
     ORDER BY memorization_stage, repetition_level, last_date
     LIMIT 1;
     """
+
     res = await Card.raw(query)
     return res[0]
 

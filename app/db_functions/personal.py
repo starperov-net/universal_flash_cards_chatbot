@@ -1,30 +1,33 @@
 import random
-from typing import Optional, Any, Union
+from typing import Optional, Any
 
 from uuid import UUID
 
 import aiogram
-import piccolo
 
 from app.exceptions.custom_exceptions import NotFullSetException
 from app.tables import Context, User, UserContext, Item, ItemRelation, Card
+from app import serializers
 
 
 async def add_card_db(
-        telegram_user_id: int, item_relation_id: UUID, author: Optional[int] = None
+    telegram_user_id: int, item_relation_id: UUID, author: Optional[int] = None
 ) -> Card:
     user: UUID = await get_existing_user_id_db(telegram_user_id)
-    card: Card = Card(
-        user=user,
-        item_relation=item_relation_id,
-        author=author or user
-    )
+    card: Card = Card(user=user, item_relation=item_relation_id, author=author or user)
     await card.save()
     return card
 
 
+async def update_card_db(card: serializers.Card) -> None:
+    """Updates tables.Card row.
+
+    As argument uses serializers.Cart type for checkin in possible types for fields."""
+    await Card.update(card.to_dict_ignore_none()).where(Card.id == card.id)
+
+
 async def add_item_relation_db(
-        author_id: UUID, item_1_id: UUID, item_2_id: UUID
+    author_id: UUID, item_1_id: UUID, item_2_id: UUID
 ) -> UUID:
     item_relation: ItemRelation = ItemRelation(
         author=author_id, item_1=item_1_id, item_2=item_2_id
@@ -33,7 +36,9 @@ async def add_item_relation_db(
     return item_relation.id
 
 
-async def add_user_context_db(data_callback_query: dict[str, Any], user_db: User) -> UserContext:
+async def add_user_context_db(
+    data_callback_query: dict[str, Any], user_db: User
+) -> UserContext:
     context_1 = await Context.objects().get(
         Context.name == data_callback_query["native_lang"]
     )
@@ -63,7 +68,8 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> 
 async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) -> UUID:
     item: Item = await Item.objects().get_or_create(
         (Item.text == text) & (Item.context == context_id),
-        defaults={'author': author_id, 'context': context_id, 'text': text})
+        defaults={"author": author_id, "context": context_id, "text": text},
+    )
     return item.id
 
 
@@ -85,21 +91,25 @@ async def get_context_id_db(name_alfa2: str) -> UUID:
     return context.id
 
 
-async def get_item_relation_with_related_items_by_id_db(item_relation_id: UUID) -> ItemRelation:
-    '''
+async def get_item_relation_with_related_items_by_id_db(
+    item_relation_id: UUID,
+) -> ItemRelation:
+    """
     return: {ItemRelation}:
             author = {UUID}
             id = {UUID}
             item_1 = {Item}
             item_2 = {Item}
-    '''
+    """
     item_relation: ItemRelation = await ItemRelation.objects(
         [ItemRelation.item_1, ItemRelation.item_2]
     ).get(ItemRelation.id == item_relation_id)
     return item_relation
 
 
-async def get_item_relation_by_text_db(text: str, user_context: UserContext) -> Optional[ItemRelation]:
+async def get_item_relation_by_text_db(
+    text: str, user_context: UserContext
+) -> Optional[ItemRelation]:
     """
     беремо всі переклади авторства юзера чи гугла(telegram_iser_id=0)
     додаемо умову пошуку тільки тих слів, де мови такі ж як і у user_context
@@ -117,12 +127,25 @@ async def get_item_relation_by_text_db(text: str, user_context: UserContext) -> 
     item_relation: ItemRelation = (
         await ItemRelation.objects([ItemRelation.item_1, ItemRelation.item_2])
         .where(
-            (ItemRelation.author.telegram_user_id.is_in([user_context.user.telegram_user_id, 0]))
-            & (ItemRelation.item_1.context.is_in([user_context.context_1.id, user_context.context_2.id]))
-            & (ItemRelation.item_2.context.is_in([user_context.context_1.id, user_context.context_2.id]))
+            (
+                ItemRelation.author.telegram_user_id.is_in(
+                    [user_context.user.telegram_user_id, 0]
+                )
+            )
+            & (
+                ItemRelation.item_1.context.is_in(
+                    [user_context.context_1.id, user_context.context_2.id]
+                )
+            )
+            & (
+                ItemRelation.item_2.context.is_in(
+                    [user_context.context_1.id, user_context.context_2.id]
+                )
+            )
         )
         .where((ItemRelation.item_1.text == text) | (ItemRelation.item_2.text == text))
-        .order_by(ItemRelation.author.telegram_user_id, ascending=False).first()
+        .order_by(ItemRelation.author.telegram_user_id, ascending=False)
+        .first()
     )
     return item_relation
 
@@ -131,13 +154,8 @@ async def get_list_cards_to_study_db(telegram_user_id: int) -> list[Card]:
     """
     The function returns a list with up to 10 random user cards.
     """
-    # # OLD
-    # cards: list[Card] = await Card.objects().where(
-    #     Card.user.telegram_user_id == telegram_user_id
-    # )
-    # NEW
     cards: list[Card] = await \
-        Card.objects(Card.all_related()).where( Card.user.telegram_user_id == telegram_user_id )
+        Card.objects(Card.all_related()).where(Card.user.telegram_user_id == telegram_user_id)
     k = 10 if len(cards) >= 10 else len(cards)
     cards_10_pcs: list[Card] = random.sample(cards, k)
     return cards_10_pcs

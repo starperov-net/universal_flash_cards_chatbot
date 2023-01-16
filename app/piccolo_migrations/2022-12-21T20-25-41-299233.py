@@ -91,9 +91,7 @@ DESCRIPTION = ""
 
 
 async def forwards() -> MigrationManager:
-    manager = MigrationManager(
-        migration_id=ID, app_name="app", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="app", description=DESCRIPTION)
 
     manager.add_table("ItemRelation", tablename="item_relation")
 

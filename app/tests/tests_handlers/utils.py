@@ -95,7 +95,9 @@ def get_message(text: str) -> Message:
     )
 
 
-def get_update(message: Optional[Message] = None, callback_query: Optional[CallbackQuery] = None) -> Update:
+def get_update(
+    message: Optional[Message] = None, callback_query: Optional[CallbackQuery] = None
+) -> Update:
     return Update(
         update_id=187,
         message=message or None,
