@@ -7,13 +7,13 @@ from aiogram import Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+from aiogram.methods import AnswerCallbackQuery
 
 from app.base_functions.learning_sets import get_actual_card
 from app.db_functions.personal import get_user_id_db, get_three_random_words
 from app.exceptions.custom_exceptions import NotFullSetException
 from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
 from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
-from app.tables import Item
 
 
 class FSMStudyOneFromFour(StatesGroup):
@@ -27,6 +27,7 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
     as a result we have one word to study and to this word we
     have a keyboard of four words to choose one  correct
     """
+
     # from_user is None if messages sent to channels
     if msg.from_user is None:
         return await msg.answer("Messages sent to channels")
@@ -36,11 +37,15 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
         return await msg.answer("To start studying follow /start command's way first")
 
     await msg.answer(text=f"Welcome to study, {msg.from_user.full_name}!")
+
     start_time = datetime.now(tz=ZoneInfo("UTC"))
-    end_time = start_time + timedelta(seconds=300)
+    end_time = start_time + timedelta(seconds=15)
+
+    # here data gets into <MACHINE STATE> of the Telegram bot
     await state.set_data({"end_time": end_time, "user_id": user_id})
     await state.set_state(FSMStudyOneFromFour.studying)
-    await study_one_from_four(msg, state)
+
+    return await study_one_from_four(msg, state)
 
 
 async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Message:
@@ -53,7 +58,7 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             return await msg.answer(text=f"Run out of words to study")
         try:
             three_random_words: list[dict] = await get_three_random_words(
-                card["context_item_2"]
+                card["context_item_2"], card["item_2"]
             )
         except NotFullSetException:
             await state.clear()
@@ -78,25 +83,30 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         )
     else:
         await state.clear()
-        await msg.answer(text=f"Training time expired.")
+        return await msg.answer(text=f"Training time has expired.")
 
 
 async def handle_reply_after_four_words_studying(
     callback_query: types.CallbackQuery,
     callback_data: StudyFourOptionsCallbackData,
     state: FSMContext,
-) -> None:
+) -> Union[types.Message, bool]:
     """
-    In order to get <True> or <False> after user pics option
-    use -> callback_query.data with returning types as True or
-    False in type<str> not bool
+    In order to get <1> or <0> after user pics option
+    use -> callback_query.data with returning types as 1 or
+    0 in type<int> not bool
     """
+    if callback_query.message is None:
+        return await callback_query.answer("Pay attention the message is too old.")
 
     await callback_query.answer(
         f"{bool(callback_data.state)}"
     )  # response will be processed here
 
-    await study_one_from_four(callback_query.message, state)
+    symbol = "👍" if callback_data.state else "👎"
+    await callback_query.message.edit_text(f"{callback_query.message.text} {symbol}")
+
+    return await study_one_from_four(callback_query.message, state)
 
 
 def register_handler_study(dp: Dispatcher) -> None:
@@ -105,7 +115,9 @@ def register_handler_study(dp: Dispatcher) -> None:
     )
     # dp.message.register(study_one_from_four, FSMStudyOneFromFour.studying)
 
-    # register handler two times for getting <True> or <False> reply from buttons
+    # register handler two times for getting <1> or <0> reply from buttons
     dp.callback_query.register(
-        handle_reply_after_four_words_studying, StudyFourOptionsCallbackData.filter()
+        handle_reply_after_four_words_studying,
+        StudyFourOptionsCallbackData.filter(),
+        FSMStudyOneFromFour.studying,
     )
