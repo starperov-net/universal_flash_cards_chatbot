@@ -1,6 +1,8 @@
-# mypy: allow-untyped-defs
+from datetime import datetime
 from uuid import UUID
 from typing import List, Optional
+from zoneinfo import ZoneInfo
+
 from app.tables import Card
 from app import serializers
 from app.db_functions.personal import update_card_db
