@@ -1,14 +1,12 @@
-import random
-from typing import Optional, Any, Union
-
+from typing import Any, Optional
 from uuid import UUID
 
 import aiogram
 import piccolo
 
-from app.exceptions.custom_exceptions import NotFullSetException
-from app.tables import Context, User, UserContext, Item, ItemRelation, Card
 from app import serializers
+from app.exceptions.custom_exceptions import NotFullSetException
+from app.tables import Card, Context, Item, ItemRelation, User, UserContext
 
 
 async def add_card_db(

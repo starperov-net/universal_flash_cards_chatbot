@@ -1,16 +1,11 @@
 import random
-
-from aiogram.utils.keyboard import (
-    InlineKeyboardBuilder,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
 from uuid import UUID
 
+from aiogram.utils.keyboard import (InlineKeyboardBuilder,
+                                    InlineKeyboardButton, InlineKeyboardMarkup)
+
 from app.handlers.personal.callback_data_states import (
-    ToStudyCallbackData,
-    StudyCardCallbackData, StudyFourOptionsCallbackData,
-)
+    StudyCardCallbackData, StudyFourOptionsCallbackData, ToStudyCallbackData)
 
 # ------- keyboard for choice languages
 languages = [
@@ -49,14 +44,14 @@ def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarku
             [
                 InlineKeyboardButton(
                     text="to train",
-                    callback_data=ToStudyCallbackData(item_relation_id=item_relation_id).pack()
+                    callback_data=ToStudyCallbackData(
+                        item_relation_id=item_relation_id
+                    ).pack(),
                 ),
-                InlineKeyboardButton(
-                    text="my_variant", callback_data="my_variant"
-                ),
+                InlineKeyboardButton(text="my_variant", callback_data="my_variant"),
                 InlineKeyboardButton(
                     text="nothing to do", callback_data="nothing_to_do"
-                )
+                ),
             ]
         ]
     )
@@ -74,7 +69,10 @@ def what_to_do_with_card(card_id: UUID) -> InlineKeyboardMarkup:
 
 # ------ keyboard correct or wrong choice for study keyboard
 def check_one_correct_from_four_study_keyboard(
-        words_list: list[dict], card_id: UUID, memorization_stage: int, repetition_level: int
+    words_list: list[dict],
+    card_id: UUID,
+    memorization_stage: int,
+    repetition_level: int,
 ) -> InlineKeyboardMarkup:
     random.shuffle(words_list)
     builder = InlineKeyboardBuilder()
@@ -87,7 +85,7 @@ def check_one_correct_from_four_study_keyboard(
                 state=el["state"],
                 card_id=card_id,
                 memorization_stage=memorization_stage,
-                repetition_level=repetition_level
+                repetition_level=repetition_level,
             ),
         )
 

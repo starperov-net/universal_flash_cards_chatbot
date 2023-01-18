@@ -1,5 +1,6 @@
-from aiogram.filters.callback_data import CallbackData
 from uuid import UUID
+
+from aiogram.filters.callback_data import CallbackData
 
 
 class ToStudyCallbackData(CallbackData, prefix="to_study"):
@@ -27,6 +28,7 @@ class StudyFourOptionsCallbackData(CallbackData, prefix="study_four_options"):
     """
     CallbackData for studying four words mode.
     """
+
     state: int
     card_id: UUID
     memorization_stage: int

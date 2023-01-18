@@ -6,10 +6,10 @@ from zoneinfo import ZoneInfo
 from aiogram import Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.state import State, StatesGroup
 
 from app.base_functions.learning_sets import get_actual_card
-from app.db_functions.personal import get_user_id_db, get_three_random_words
+from app.db_functions.personal import get_three_random_words, get_user_id_db
 from app.exceptions.custom_exceptions import NotFullSetException
 from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
 from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
@@ -62,7 +62,7 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         except NotFullSetException:
             await state.clear()
             return await msg.answer(
-                text=f"Minimum amount of words for studying mode is 4, enter required amount."
+                text="Minimum amount of words for studying mode is 4, enter required amount."
             )
 
         # generating a list of 4 dict like {"text": "some_word", "state": 0}
@@ -112,7 +112,6 @@ def register_handler_study(dp: Dispatcher) -> None:
     dp.message.register(
         study_greeting, Command(commands=["study", "изучение", "вивчення"])
     )
-    # dp.message.register(study_one_from_four, FSMStudyOneFromFour.studying)
 
     # register handler two times for getting <1> or <0> reply from buttons
     dp.callback_query.register(
