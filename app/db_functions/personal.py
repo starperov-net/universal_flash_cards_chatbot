@@ -184,19 +184,14 @@ async def get_translated_text_from_item_relation(
     return translated_text
 
 
-async def get_three_random_words(context_id: UUID, correct_text: str) -> list[dict]:
+async def get_all_items_according_context(context_id: UUID) -> list[dict]:
     """
     Return list of 4 dict like {"text": "some_word", "state": 0}
     """
     query = f"""
-    SELECT unicue_text_values.text
-    FROM(
-        SELECT DISTINCT i.text
-        FROM item i
-        WHERE i.context='{str(context_id)}' AND NOT i.text='{correct_text}'
-    ) AS unicue_text_values
-    ORDER BY random()
-    LIMIT 3;
+    SELECT DISTINCT i.text
+    FROM item i
+    WHERE i.context='{str(context_id)}';
     """
     random_words: list[dict] = await Item.raw(query)
     if len(random_words) < 3:
