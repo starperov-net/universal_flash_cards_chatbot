@@ -9,11 +9,19 @@ from aiogram.fsm.state import State, StatesGroup
 import app.handlers.personal.keyboards as kb
 from app.base_functions.translator import get_translate
 from app.db_functions.personal import (
-    add_card_db, add_item_relation_db, add_user_context_db, get_context_id_db,
-    get_existing_user_id_db, get_item_relation_by_text_db,
-    get_item_relation_with_related_items_by_id_db, get_or_create_item_db,
-    get_or_create_user_db, get_translated_text_from_item_relation,
-    get_user_context_db, is_words_in_card_db)
+    add_card_db,
+    add_item_relation_db,
+    add_user_context_db,
+    get_context_id_db,
+    get_existing_user_id_db,
+    get_item_relation_by_text_db,
+    get_item_relation_with_related_items_by_id_db,
+    get_or_create_item_db,
+    get_or_create_user_db,
+    get_translated_text_from_item_relation,
+    get_user_context_db,
+    is_words_in_card_db,
+)
 from app.handlers.personal.callback_data_states import ToStudyCallbackData
 from app.scheme.transdata import TranslateRequest, TranslateResponse
 from app.tables import ItemRelation, User, UserContext

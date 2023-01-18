@@ -8,13 +8,12 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
+from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
+from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
+
 from app.base_functions.learning_sets import get_actual_card
-from app.db_functions.personal import get_three_random_words, get_user_id_db
+from app.db_functions.personal import get_user_id_db, get_all_items_according_context
 from app.exceptions.custom_exceptions import NotFullSetException
-from app.handlers.personal.callback_data_states import \
-    StudyFourOptionsCallbackData
-from app.handlers.personal.keyboards import \
-    check_one_correct_from_four_study_keyboard
 
 
 class FSMStudyOneFromFour(StatesGroup):
@@ -58,8 +57,8 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             await state.clear()
             return await msg.answer(text="Run out of words to study")
         try:
-            three_random_words: list[dict] = await get_three_random_words(
-                card["context_item_2"], card["item_2"]
+            three_random_words: list[dict] = await get_all_items_according_context(
+                card["context_item_2"]
             )
         except NotFullSetException:
             await state.clear()
