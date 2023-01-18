@@ -1,11 +1,11 @@
 from datetime import datetime
-from uuid import UUID
 from typing import List, Optional
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from app.tables import Card
 from app import serializers
 from app.db_functions.personal import update_card_db
+from app.tables import Card
 
 
 async def set_res_studying_card(
@@ -46,10 +46,7 @@ async def set_res_studying_card(
     await update_card_db(card_data)
 
 
-async def get_actual_card(
-    user_id: UUID,
-    authors: Optional[List[UUID]] = None
-) -> dict:
+async def get_actual_card(user_id: UUID, authors: Optional[List[UUID]] = None) -> dict:
     """
     func return one actual card
 

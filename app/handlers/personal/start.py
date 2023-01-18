@@ -1,33 +1,22 @@
-from typing import Optional, Union, Any
+from typing import Any, Optional, Union
 from uuid import UUID
 
-from aiogram import Dispatcher, types, F
+from aiogram import Dispatcher, F, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
 import app.handlers.personal.keyboards as kb
 from app.base_functions.translator import get_translate
-
 from app.db_functions.personal import (
-    add_user_context_db,
-    get_or_create_item_db,
-    get_or_create_user_db,
-    get_user_context_db,
-    add_item_relation_db,
-    get_context_id_db,
-    get_translated_text_from_item_relation,
-    add_card_db,
-    get_item_relation_by_text_db,
-    is_words_in_card_db,
-    get_item_relation_with_related_items_by_id_db,
-    get_existing_user_id_db,
-)
-
+    add_card_db, add_item_relation_db, add_user_context_db, get_context_id_db,
+    get_existing_user_id_db, get_item_relation_by_text_db,
+    get_item_relation_with_related_items_by_id_db, get_or_create_item_db,
+    get_or_create_user_db, get_translated_text_from_item_relation,
+    get_user_context_db, is_words_in_card_db)
 from app.handlers.personal.callback_data_states import ToStudyCallbackData
-
 from app.scheme.transdata import TranslateRequest, TranslateResponse
-from app.tables import User, UserContext, ItemRelation
+from app.tables import ItemRelation, User, UserContext
 from app.tests.utils import TELEGRAM_USER_GOOGLE
 
 
@@ -99,8 +88,8 @@ async def select_target_language(
 
     return await callback_query.message.answer(
         text=f"{user_db.first_name}, "
-             f"your native language is {user_context_db.context_1.name}, "
-             f"your target - {user_context_db.context_2.name}",
+        f"your native language is {user_context_db.context_1.name}, "
+        f"your target - {user_context_db.context_2.name}",
     )
 
 

@@ -1,12 +1,5 @@
-from piccolo.columns.column_types import (
-    UUID,
-    BigInt,
-    ForeignKey,
-    Integer,
-    Text,
-    Varchar,
-    Timestamptz,
-)
+from piccolo.columns.column_types import (UUID, BigInt, ForeignKey, Integer,
+                                          Text, Timestamptz, Varchar)
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.table import Table
 

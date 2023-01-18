@@ -1,13 +1,11 @@
-import random
-from typing import Optional, Any
-
+from typing import Any, Optional
 from uuid import UUID
 
 import aiogram
 
-from app.exceptions.custom_exceptions import NotFullSetException
-from app.tables import Context, User, UserContext, Item, ItemRelation, Card
 from app import serializers
+from app.exceptions.custom_exceptions import NotFullSetException
+from app.tables import Card, Context, Item, ItemRelation, User, UserContext
 
 
 async def add_card_db(
@@ -167,15 +165,19 @@ async def get_existing_user_id_db(telegram_user_id: int) -> UUID:
 
 
 async def get_user_id_db(telegram_user_id: int) -> Optional[UUID]:
-    user: Optional[User] = await User.objects().get(User.telegram_user_id == telegram_user_id)
+    user: Optional[User] = await User.objects().get(
+        User.telegram_user_id == telegram_user_id
+    )
     return user.id if user else None
 
 
-async def get_translated_text_from_item_relation(text: str, item_relation: ItemRelation) -> str:
-    '''
-     Із item_relation беру два слова і із них прибираю те слово, яке користувач ввів для перекладу(text),
-     значить інше слово і є переклад.
-    '''
+async def get_translated_text_from_item_relation(
+    text: str, item_relation: ItemRelation
+) -> str:
+    """
+    Із item_relation беру два слова і із них прибираю те слово, яке користувач ввів для перекладу(text),
+    значить інше слово і є переклад.
+    """
     text1, text2 = item_relation.item_1.text, item_relation.item_2.text
     translated_text: str = list(set((text1, text2)) - set((text,)))[0]
     return translated_text

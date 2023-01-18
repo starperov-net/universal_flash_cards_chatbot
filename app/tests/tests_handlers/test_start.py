@@ -5,12 +5,8 @@ from aiogram.fsm.context import FSMContext
 
 import app.handlers.personal.keyboards as kb
 from app.handlers.personal import start
-from app.handlers.personal.start import (
-    FSMChooseLanguage,
-    get_user_data,
-    greeting,
-    select_native_language,
-)
+from app.handlers.personal.start import (FSMChooseLanguage, get_user_data,
+                                         greeting, select_native_language)
 
 
 @pytest.mark.asyncio
