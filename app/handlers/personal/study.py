@@ -9,11 +9,12 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-from app.base_functions.learning_sets import get_actual_card
+from app.base_functions.learning_sets import get_actual_card, set_res_studying_card
 from app.db_functions.personal import get_user_id_db, get_three_random_words
-from app.exceptions.custom_exceptions import NotFullSetException
+from app.exceptions.custom_exceptions import NotFullSetException, NotNoneValueError
 from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
 from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
+from app.serializers import Card
 
 
 class FSMStudyOneFromFour(StatesGroup):
@@ -39,7 +40,7 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
     await msg.answer(text=f"Welcome to study, {msg.from_user.full_name}!")
 
     start_time = datetime.now(tz=ZoneInfo("UTC"))
-    end_time = start_time + timedelta(seconds=15)
+    end_time = start_time + timedelta(seconds=150)
 
     # here data gets into <MACHINE STATE> of the Telegram bot
     await state.set_data({'end_time': end_time, 'user_id': user_id})
@@ -93,9 +94,22 @@ async def handle_reply_after_four_words_studying(
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
-    await callback_query.answer(f"{bool(callback_data.state)}")  # response will be processed here
+    # await callback_query.answer(f"{bool(callback_data.state)}")  # response will be processed here
+    try:
+        await set_res_studying_card(
+        Card(
+            id = callback_data.card_id,
+            memorization_stage = callback_data.memorization_stage,
+            repetition_level = callback_data.repetition_level
+        ),
+        result = bool(callback_data.state)
+        )
+    except NotNoneValueError:
+        await state.clear()
+        return await callback_query.answer("😢 Something went wrong 😢")
 
-    symbol = '👍' if callback_data.state else '👎'
+
+    symbol = '        👍' if callback_data.state else '        👎'
     await callback_query.message.edit_text(f"{callback_query.message.text} {symbol}")
 
     return await study_one_from_four(callback_query.message, state)

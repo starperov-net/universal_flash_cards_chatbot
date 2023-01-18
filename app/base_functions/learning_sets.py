@@ -3,6 +3,7 @@ from uuid import UUID
 from typing import List, Optional
 from zoneinfo import ZoneInfo
 
+from app.exceptions.custom_exceptions import NotNoneValueError
 from app.tables import Card
 from app import serializers
 from app.db_functions.personal import update_card_db
@@ -15,7 +16,7 @@ async def set_res_studying_card(
         current_card_status.repetition_level is None
         or current_card_status.memorization_stage is None
     ):
-        raise ValueError(
+        raise NotNoneValueError(
             "'repetition_level' and 'memorisation_stage' attributes cannot be None for 'current_card_status'"
         )
     if result:
