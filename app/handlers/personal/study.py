@@ -12,9 +12,8 @@ from aiogram.fsm.state import State, StatesGroup
 from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
 from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
 
-from app.base_functions.learning_sets import get_actual_card, get_three_random_words
+from app.base_functions.learning_sets import get_actual_card
 from app.db_functions.personal import (
-    get_user_id_db,
     get_all_items_according_context,
     get_user_context_db,
 )
@@ -38,17 +37,11 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
     if msg.from_user is None:
         return await msg.answer("Messages sent to channels")
 
-    user_id: Optional[UUID] = await get_user_id_db(msg.from_user.id)
     user_context: Optional[UserContext] = await get_user_context_db(msg.from_user.id)
-    if user_id is None or user_context is None:
+    if user_context is None or user_context.user.id is None:
         return await msg.answer("To start studying follow /start command's way first")
 
     await msg.answer(text=f"Welcome to study, {msg.from_user.full_name}!")
-
-    await state.set_state(FSMStudyOneFromFour.studying)
-
-    start_time = datetime.now(tz=ZoneInfo("UTC"))
-    end_time = start_time + timedelta(seconds=100)
 
     # getting lists of dict with text which according to user`s contexts, like [{'text': 'car'}, ...]
     try:
@@ -59,16 +52,20 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
             user_context.context_2.id
         )
     except NotFullSetException:
-        await state.clear()
         return await msg.answer(
             text="Minimum amount of words for studying mode is 4, enter required amount."
         )
+
+    start_time = datetime.now(tz=ZoneInfo("UTC"))
+    end_time = start_time + timedelta(seconds=100)
+
+    await state.set_state(FSMStudyOneFromFour.studying)
 
     # here data gets into <MACHINE STATE> of the Telegram bot
     await state.set_data(
         {
             "end_time": end_time,
-            "user_id": user_id,
+            "user_id": user_context.user.id,
             "texts_context_1": texts_context_1,
             "texts_context_2": texts_context_2,
             "context_1": user_context.context_1.id,
@@ -88,8 +85,10 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             await state.clear()
             return await msg.answer(text="Run out of words to study")
 
+        # depending on which word (card["item_1"] or card["item_2"]) is displayed for studying,
+        # the opposite context and the corresponding list of text are determined
         text_for_show: str = card["item_1"]
-        right_answer: str = (
+        correct_answer: str = (
             card["item_2"] if text_for_show == card["item_1"] else card["item_1"]
         )
         context_answer: UUID = (
@@ -108,12 +107,12 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             [
                 {"text": el["text"], "state": 0}
                 for el in all_texts_answer
-                if el["text"] != right_answer
+                if el["text"] != correct_answer
             ],
             k=3,
         )
-        # adding right answer
-        texts_answer_for_show.append({"text": right_answer, "state": 1})
+        # adding correct answer
+        texts_answer_for_show.append({"text": correct_answer, "state": 1})
 
         return await msg.answer(
             text=card["item_1"],
