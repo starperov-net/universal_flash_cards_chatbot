@@ -1,12 +1,10 @@
-import random
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from app import serializers
-from app.db_functions.personal import update_card_db, get_all_items_according_context
-from app.exceptions.custom_exceptions import NotFullSetException
+from app.db_functions.personal import update_card_db
 from app.tables import Card
 
 
@@ -129,11 +127,3 @@ async def get_actual_card(user_id: UUID, authors: Optional[List[UUID]] = None) -
 
     res = await Card.raw(query)
     return res[0]
-
-
-async def get_three_random_words(context_id):
-    all_words = await get_all_items_according_context(context_id)
-    while True:
-        if len(all_words) < 3:
-            raise NotFullSetException
-        yield random.sample(all_words, k=3)
