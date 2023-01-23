@@ -47,8 +47,7 @@ async def set_res_studying_card(
 
 
 async def get_actual_card(user_id: UUID, authors: Optional[List[UUID]] = None) -> dict:
-    """
-    func return one actual card
+    """Func return one actual card.
 
     algorythm:
     https://github.com/starperov-net/universal_flash_cards_chatbot/wiki/Card-selection-algorithm-for-studying%5Crepetition

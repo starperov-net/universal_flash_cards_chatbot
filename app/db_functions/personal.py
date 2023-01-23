@@ -185,13 +185,23 @@ async def get_translated_text_from_item_relation(
 
 
 async def get_all_items_according_context(context_id: UUID) -> list[dict]:
+    """Collects all items.text
+
+    Parameters:
+        context_id:
+            user's context identifier
+
+    Returns:
+        list[dict]:
+            list of items from all items in db with shown context
+            example:
+                [{'text': 'Например'}, {'text': 'быстрый'}, ...]
     """
-    Return list of 4 dict like {"text": "some_word", "state": 0}
-    """
+
     query = f"""
-    SELECT DISTINCT i.text
-    FROM item i
-    WHERE i.context='{str(context_id)}';
+    SELECT DISTINCT text
+    FROM item
+    WHERE context='{str(context_id)}';
     """
     random_words: list[dict] = await Item.raw(query)
     if len(random_words) < 3:

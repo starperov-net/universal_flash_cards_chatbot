@@ -80,6 +80,27 @@ def check_one_correct_from_four_study_keyboard(
     memorization_stage: int,
     repetition_level: int,
 ) -> InlineKeyboardMarkup:
+    """A keyboard for four words study mode.
+
+    Creates and adjusts a keyboard object for four words
+    studying mode.
+
+    Parameters:
+        words_list:
+            a list of four dicts for picking on correct option
+            from four given options
+        card_id:
+            card identifier in <UUID> format
+        memorization_stage:
+            memorization stage according to user's db data
+        repetition_level:
+            repetition level according to user's db data
+
+    Returns:
+        InlineKeyboardMarkup:
+            see base class
+    """
+
     random.shuffle(words_list)
     builder = InlineKeyboardBuilder()
 
