@@ -1,6 +1,6 @@
 import random
 from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Optional, Union, Any
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -22,15 +22,86 @@ from app.tables import UserContext
 
 
 class FSMStudyOneFromFour(StatesGroup):
+    """Creates <State Machine> for <study> handler.
+
+    Inherits from <StateGroup> class
+    """
+
     studying = State()
 
 
-async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message:
-    """
-    handler to show and activate <study> mode inside the menu
+async def collect_data_for_fsm(user_context: UserContext) -> dict[str, Any]:
+    """Collects data for storing in a <state machine> FSM.
 
-    as a result we have one word to study and to this word we
-    have a keyboard of four words to choose one  correct
+    According UserContext the func collects
+        end_time -> time when the study ends
+        user_id -> a user identifier
+        texts_context_1 -> a word to study in particular context
+        texts_context_2 -> a word to study in opposite to texts_context_1 context
+        context_1, context_2 -> two user's contexts
+
+    Parameters:
+        user_context:
+            The <UserContext> class instance using the all_related() method
+            https://piccolo-orm.readthedocs.io/en/latest/piccolo/query_types/objects.html#prefetching-related-objects.
+
+    Returns:
+        dict:
+            example:
+                {
+                'end_time': datetime.datetime(2023, 1, 23, 18, 31, 2, 458654, tzinfo=zoneinfo.ZoneInfo(key='UTC')),
+                'user_id': UUID('ea89c754-61de-4f97-91f0-06a770d939b0'),
+                'texts_context_1': [{'text': 'Например'}, {'text': 'быстрый'}],
+                'texts_context_2': [{'text': 'break'}, {'text': 'but'}],
+                'context_1': UUID('7eea0089-1dbb-4222-9184-37c22519c7bb'),
+                'context_2': UUID('7a575cb2-b970-4396-a67b-3b6d8b809584')
+                }
+    """
+
+    texts_context_1: list[dict] = await get_all_items_according_context(
+        user_context.context_1.id
+    )
+    texts_context_2: list[dict] = await get_all_items_according_context(
+        user_context.context_2.id
+    )
+
+    start_time = datetime.now(tz=ZoneInfo("UTC"))
+    end_time = start_time + timedelta(seconds=100)
+
+    return {
+        "end_time": end_time,
+        "user_id": user_context.user.id,
+        "texts_context_1": texts_context_1,
+        "texts_context_2": texts_context_2,
+        "context_1": user_context.context_1.id,
+        "context_2": user_context.context_2.id,
+    }
+
+
+async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message:
+    """A handler to start <study> mode.
+
+    Activates studying mode with </study> command.
+    As a result on a GUI we have one word to study
+    and to this word we have a keyboard of four
+    words to choose which one is correct.
+
+    Parameters:
+        msg:
+            see base class
+            Source: https://core.telegram.org/bots/api#message
+        state:
+            State Machine
+            see base class
+
+    Returns:
+        msg:
+            see base class
+            Source: https://core.telegram.org/bots/api#message
+
+    Raises:
+        NotFullSetException:
+             Minimum amount of words for studying mode is 4, enter required amount.
     """
 
     # from_user is None if messages sent to channels
@@ -43,51 +114,52 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
 
     await msg.answer(text=f"Welcome to study, {msg.from_user.full_name}!")
 
-    # getting lists of dict with text which according to user`s contexts, like [{'text': 'car'}, ...]
     try:
-        texts_context_1: list[dict] = await get_all_items_according_context(
-            user_context.context_1.id
-        )
-        texts_context_2: list[dict] = await get_all_items_according_context(
-            user_context.context_2.id
-        )
+        data_for_fsm: dict[str, Any] = await collect_data_for_fsm(user_context)
     except NotFullSetException:
         return await msg.answer(
             text="Minimum amount of words for studying mode is 4, enter required amount."
         )
 
-    start_time = datetime.now(tz=ZoneInfo("UTC"))
-    end_time = start_time + timedelta(seconds=100)
-
     await state.set_state(FSMStudyOneFromFour.studying)
 
     # here data gets into <MACHINE STATE> of the Telegram bot
-    await state.set_data(
-        {
-            "end_time": end_time,
-            "user_id": user_context.user.id,
-            "texts_context_1": texts_context_1,
-            "texts_context_2": texts_context_2,
-            "context_1": user_context.context_1.id,
-            "context_2": user_context.context_2.id,
-        }
-    )
+    await state.set_data(data_for_fsm)
 
     return await study_one_from_four(msg, state)
 
 
 async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Message:
-    state_data: dict = await state.get_data()
+    """Creates and displays user's keyboard.
+
+    Creates and displays one word to study and
+    to this word a keyboard of four words for choosing
+    which one is correct OR a message that studying
+    has expired.
+
+    Parameters:
+        msg:
+            see base class
+            Source: https://core.telegram.org/bots/api#message
+        state:
+            State Machine
+            see base class
+
+    Returns:
+        msg:
+            see base class
+            Source: https://core.telegram.org/bots/api#message
+    """
+
+    state_data: dict[str, Any] = await state.get_data()
 
     if state_data["end_time"] > datetime.now(tz=ZoneInfo("UTC")):
-        card: dict = await get_actual_card(state_data["user_id"])
+        card: dict[str, Any] = await get_actual_card(state_data["user_id"])
         if not card:
             await state.clear()
             return await msg.answer(text="Run out of words to study")
 
-        # depending on which word (card["item_1"] or card["item_2"]) is displayed for studying,
-        # the opposite context and the corresponding list of text are determined
-        text_for_show: str = card["item_1"]
+        text_for_show: str = random.choice([card["item_1"], card["item_2"]])
         correct_answer: str = (
             card["item_2"] if text_for_show == card["item_1"] else card["item_1"]
         )
@@ -103,7 +175,7 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         )
 
         # generating a list of 3 dict like {"text": "some_word", "state": 0}
-        texts_answer_for_show: list[dict] = random.sample(
+        texts_answer_for_show: list[dict[str, Any]] = random.sample(
             [
                 {"text": el["text"], "state": 0}
                 for el in all_texts_answer
@@ -111,11 +183,11 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             ],
             k=3,
         )
-        # adding correct answer
+
         texts_answer_for_show.append({"text": correct_answer, "state": 1})
 
         return await msg.answer(
-            text=card["item_1"],
+            text=text_for_show,
             reply_markup=check_one_correct_from_four_study_keyboard(
                 words_list=texts_answer_for_show,
                 card_id=card["id"],
@@ -128,6 +200,7 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         return await msg.answer(text="Training time has expired.")
 
 
+#  the handler is for task 52, do not pay attention for docs
 async def handle_reply_after_four_words_studying(
     callback_query: types.CallbackQuery,
     callback_data: StudyFourOptionsCallbackData,
@@ -138,6 +211,7 @@ async def handle_reply_after_four_words_studying(
     use -> callback_query.data with returning types as 1 or
     0 in type<int> not bool
     """
+
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
@@ -152,6 +226,16 @@ async def handle_reply_after_four_words_studying(
 
 
 def register_handler_study(dp: Dispatcher) -> None:
+    """A handler's registrator.
+
+    Parameters:
+        dp:
+            see base class
+
+    Returns:
+        None
+    """
+
     dp.message.register(
         study_greeting, Command(commands=["study", "изучение", "вивчення"])
     )

@@ -25,9 +25,7 @@ class StudyCardCallbackData(CallbackData, prefix="study_card"):
 
 
 class StudyFourOptionsCallbackData(CallbackData, prefix="study_four_options"):
-    """
-    CallbackData for studying four words mode.
-    """
+    """CallbackData for studying four words mode."""
 
     state: int
     card_id: UUID
