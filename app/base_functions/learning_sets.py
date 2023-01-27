@@ -131,5 +131,5 @@ async def get_actual_card(
         res = await Card.raw(query)
         if not res:
             break
-        yield res[0]  # type: ignore
+        yield res[0] if res else None  # type: ignore
     raise StopIteration
