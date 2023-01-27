@@ -160,10 +160,10 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             await state.clear()
             return await msg.answer(text="Run out of words to study")
 
-        text_for_show: str = random.choice([card["item_1"], card["item_2"]])
-        correct_answer: str = (
-            card["item_2"] if text_for_show == card["item_1"] else card["item_1"]
-        )
+        texts: list[str] = [card["item_1"], card["item_2"]]
+        random.shuffle(texts)
+        text_for_show, correct_answer = texts
+
         context_answer: UUID = (
             card["context_item_2"]
             if text_for_show == card["item_1"]
