@@ -2,7 +2,6 @@ from typing import Any, Optional
 from uuid import UUID
 
 import aiogram
-import piccolo
 
 from app import serializers
 from app.exceptions.custom_exceptions import NotFullSetException
@@ -163,13 +162,6 @@ async def get_user_context_db(telegram_user_id: int) -> Optional[UserContext]:
 async def get_existing_user_id_db(telegram_user_id: int) -> UUID:
     user: User = await User.objects().get(User.telegram_user_id == telegram_user_id)
     return user.id
-
-
-async def get_user_id_db(telegram_user_id: int) -> Optional[UUID]:
-    user: Optional[User] = await User.objects().get(
-        User.telegram_user_id == telegram_user_id
-    )
-    return user.id if user else None
 
 
 async def get_translated_text_from_item_relation(

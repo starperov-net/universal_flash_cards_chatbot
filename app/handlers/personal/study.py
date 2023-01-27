@@ -202,32 +202,43 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
 
 
 async def handle_reply_after_four_words_studying(
-        callback_query: types.CallbackQuery, callback_data: StudyFourOptionsCallbackData, state: FSMContext
+    callback_query: types.CallbackQuery,
+    callback_data: StudyFourOptionsCallbackData,
+    state: FSMContext,
 ) -> Union[types.Message, bool]:
+    """Processes the result for study mode keyboard work.
+
+    Up to dates DB data in Card table according to:
+    - memorization_stage
+    - repetition_level
+    - result answer (True, False).
+
+    Parameters:
+        callback_query:
+            see base class
+        callback_data:
+            see base class
+        state:
+            see base class
     """
-    In order to get <1> or <0> after user pics option
-    use -> callback_query.data with returning types as 1 or
-    0 in type<int> not bool
-    """
+
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
-    # await callback_query.answer(f"{bool(callback_data.state)}")  # response will be processed here
     try:
         await set_res_studying_card(
-        Card(
-            id = callback_data.card_id,
-            memorization_stage = callback_data.memorization_stage,
-            repetition_level = callback_data.repetition_level
-        ),
-        result = bool(callback_data.state)
+            Card(
+                id=callback_data.card_id,
+                memorization_stage=callback_data.memorization_stage,
+                repetition_level=callback_data.repetition_level,
+            ),
+            result=bool(callback_data.state),
         )
     except NotNoneValueError:
         await state.clear()
         return await callback_query.answer("😢 Something went wrong 😢")
 
-
-    symbol = '        👍' if callback_data.state else '        👎'
+    symbol = "        👍" if callback_data.state else "        👎"
     await callback_query.message.edit_text(f"{callback_query.message.text} {symbol}")
 
     return await study_one_from_four(callback_query.message, state)
