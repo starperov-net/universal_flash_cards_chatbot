@@ -1,13 +1,12 @@
-import random
-from typing import Optional, Any
-
+from typing import Any, Optional
 from uuid import UUID
 
 import aiogram
+import piccolo
 
-from app.exceptions.custom_exceptions import NotFullSetException
-from app.tables import Context, User, UserContext, Item, ItemRelation, Card
 from app import serializers
+from app.exceptions.custom_exceptions import NotFullSetException
+from app.tables import Card, Context, Item, ItemRelation, User, UserContext
 
 
 async def add_card_db(
@@ -150,17 +149,6 @@ async def get_item_relation_by_text_db(
     return item_relation
 
 
-async def get_list_cards_to_study_db(telegram_user_id: int) -> list[Card]:
-    """
-    The function returns a list with up to 10 random user cards.
-    """
-    cards: list[Card] = await \
-        Card.objects(Card.all_related()).where(Card.user.telegram_user_id == telegram_user_id)
-    k = 10 if len(cards) >= 10 else len(cards)
-    cards_10_pcs: list[Card] = random.sample(cards, k)
-    return cards_10_pcs
-
-
 async def get_user_context_db(telegram_user_id: int) -> Optional[UserContext]:
     user_context: Optional[UserContext] = (
         await UserContext.objects(UserContext.all_related())  # type: ignore
@@ -178,33 +166,42 @@ async def get_existing_user_id_db(telegram_user_id: int) -> UUID:
 
 
 async def get_user_id_db(telegram_user_id: int) -> Optional[UUID]:
-    user: Optional[User] = await User.objects().get(User.telegram_user_id == telegram_user_id)
+    user: Optional[User] = await User.objects().get(
+        User.telegram_user_id == telegram_user_id
+    )
     return user.id if user else None
 
 
-async def get_translated_text_from_item_relation(text: str, item_relation: ItemRelation) -> str:
-    '''
-     Із item_relation беру два слова і із них прибираю те слово, яке користувач ввів для перекладу(text),
-     значить інше слово і є переклад.
-    '''
+async def get_translated_text_from_item_relation(
+    text: str, item_relation: ItemRelation
+) -> str:
+    """
+    Із item_relation беру два слова і із них прибираю те слово, яке користувач ввів для перекладу(text),
+    значить інше слово і є переклад.
+    """
     text1, text2 = item_relation.item_1.text, item_relation.item_2.text
     translated_text: str = list(set((text1, text2)) - set((text,)))[0]
     return translated_text
 
 
-async def get_three_random_words(context_id: UUID, correct_text: str) -> list[dict]:
+async def get_all_items_according_context(context_id: UUID) -> list[dict]:
+    """Collects all items.text
+
+    Parameters:
+        context_id:
+            user's context identifier
+
+    Returns:
+        list[dict]:
+            list of items from all items in db with shown context
+            example:
+                [{'text': 'Например'}, {'text': 'быстрый'}, ...]
     """
-    Return list of 4 dict like {"text": "some_word", "state": 0}
-    """
+
     query = f"""
-    SELECT unicue_text_values.text
-    FROM(
-        SELECT DISTINCT i.text
-        FROM item i
-        WHERE i.context='{str(context_id)}' AND NOT i.text='{correct_text}'
-    ) AS unicue_text_values
-    ORDER BY random()
-    LIMIT 3;
+    SELECT DISTINCT text
+    FROM item
+    WHERE context='{str(context_id)}';
     """
     random_words: list[dict] = await Item.raw(query)
     if len(random_words) < 3:

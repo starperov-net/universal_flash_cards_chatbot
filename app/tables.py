@@ -4,8 +4,8 @@ from piccolo.columns.column_types import (
     ForeignKey,
     Integer,
     Text,
-    Varchar,
     Timestamptz,
+    Varchar,
 )
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.table import Table

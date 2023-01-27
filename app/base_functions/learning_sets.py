@@ -1,12 +1,13 @@
 from datetime import datetime
-from uuid import UUID
 from typing import List, Optional
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
+
 from app.exceptions.custom_exceptions import NotNoneValueError
-from app.tables import Card
 from app import serializers
 from app.db_functions.personal import update_card_db
+from app.tables import Card
 
 
 async def set_res_studying_card(
@@ -47,20 +48,14 @@ async def set_res_studying_card(
     await update_card_db(card_data)
 
 
-async def get_actual_card(
-    user_id: UUID,
-    authors: Optional[List[UUID]] = None,
-    # interval: timedelta = timedelta(seconds=300),
-) -> dict:
-    """
-    this is a generator of which at each step return one actual card
-    generator will raise StopIteration when card1s of time are exhausted
+async def get_actual_card(user_id: UUID, authors: Optional[List[UUID]] = None) -> dict:
+    """Func return one actual card.
 
-    general algorythm:
+    algorythm:
     https://github.com/starperov-net/universal_flash_cards_chatbot/wiki/Card-selection-algorithm-for-studying%5Crepetition
 
-    input: userid (UUID) - obligatory, authors (list(UUID)) - optional, interval (timedelta) - optional
-    output: all data for last usercontext
+    input: user_id (UUID) - obligatory, authors (list(UUID)) - optional
+    output: all data for last user_context
         dict {
             'id': UUID (for actual Card),
             'memorization_stage': int (for actual Card),
@@ -68,10 +63,9 @@ async def get_actual_card(
             'last_date': datetime (for actual Card),
             'item_1': str,
             'item_2': str,
-            #######################
             'context_item_1': UUID,
             'context_item_2': UUID
-    }
+        }
     """
     authors_str = (
         ({", ".join(map(lambda x: "'" + str(x) + "'", authors))})
@@ -131,14 +125,5 @@ async def get_actual_card(
     ORDER BY memorization_stage, repetition_level, last_date
     LIMIT 1;
     """
-
     res = await Card.raw(query)
     return res[0]
-
-    # start_time = datetime.now(tz=ZoneInfo("UTC"))
-    # while (start_time + interval) > datetime.now(tz=ZoneInfo("UTC")):
-    #     res = await Card.raw(query)
-    #     if not res:
-    #         break
-    #     yield res[0]
-    # raise StopIteration

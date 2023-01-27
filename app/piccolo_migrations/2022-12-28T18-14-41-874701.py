@@ -1,10 +1,7 @@
 from piccolo.apps.migrations.auto.migration_manager import MigrationManager
-from piccolo.columns.column_types import Timestamp
-from piccolo.columns.column_types import Timestamptz
-from piccolo.columns.defaults.timestamp import TimestampCustom
-from piccolo.columns.defaults.timestamp import TimestampNow
+from piccolo.columns.column_types import Timestamp, Timestamptz
+from piccolo.columns.defaults.timestamp import TimestampCustom, TimestampNow
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
-
 
 ID = "2022-12-28T18:14:41:874701"
 VERSION = "0.96.0"
