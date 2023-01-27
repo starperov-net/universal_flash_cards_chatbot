@@ -15,6 +15,7 @@ async def set_default_commands() -> None:
     await bot.set_my_commands(
         [
             types.BotCommand(command="start", description="start"),
+            types.BotCommand(command="study", description="study"),
         ]
     )
 

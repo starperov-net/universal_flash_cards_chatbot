@@ -1,13 +1,16 @@
+import random
+from uuid import UUID
+
 from aiogram.utils.keyboard import (
     InlineKeyboardBuilder,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
-from uuid import UUID
 
 from app.handlers.personal.callback_data_states import (
-    ToStudyCallbackData,
     StudyCardCallbackData,
+    StudyFourOptionsCallbackData,
+    ToStudyCallbackData,
 )
 
 # ------- keyboard for choice languages
@@ -42,23 +45,76 @@ select_language_keyboard = select_language_keyboard_builder.as_markup(
 
 # ------ keyboard add new item to train
 def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(
-        text="to train",
-        callback_data=ToStudyCallbackData(item_relation_id=item_relation_id),
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="to train",
+                    callback_data=ToStudyCallbackData(
+                        item_relation_id=item_relation_id
+                    ).pack(),
+                ),
+                InlineKeyboardButton(text="my_variant", callback_data="my_variant"),
+                InlineKeyboardButton(
+                    text="nothing to do", callback_data="nothing_to_do"
+                ),
+            ]
+        ]
     )
-    builder.button(text="my_variant", callback_data="my_variant")
-    builder.button(text="nothing to do", callback_data="nothing_to_do")
-    return builder.as_markup()
 
 
 # --------keyboard "know", "don't know" for train card
-
-
 def what_to_do_with_card(card_id: UUID) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="know", callback_data=StudyCardCallbackData(card_id=card_id))
     builder.button(
         text="don't know", callback_data=StudyCardCallbackData(card_id=card_id)
     )
+    return builder.as_markup()
+
+
+# ------ keyboard correct or wrong choice for study keyboard
+def check_one_correct_from_four_study_keyboard(
+    words_list: list[dict],
+    card_id: UUID,
+    memorization_stage: int,
+    repetition_level: int,
+) -> InlineKeyboardMarkup:
+    """A keyboard for four words study mode.
+
+    Creates and adjusts a keyboard object for four words
+    studying mode.
+
+    Parameters:
+        words_list:
+            a list of four dicts for picking on correct option
+            from four given options
+        card_id:
+            card identifier in <UUID> format
+        memorization_stage:
+            memorization stage according to user's db data
+        repetition_level:
+            repetition level according to user's db data
+
+    Returns:
+        InlineKeyboardMarkup:
+            see base class
+    """
+
+    random.shuffle(words_list)
+    builder = InlineKeyboardBuilder()
+
+    # words_list = [{"text": "some_word", "state": 0}, ...]
+    for el in words_list:
+        builder.button(
+            text=el["text"],
+            callback_data=StudyFourOptionsCallbackData(
+                state=el["state"],
+                card_id=card_id,
+                memorization_stage=memorization_stage,
+                repetition_level=repetition_level,
+            ),
+        )
+
+    builder.adjust(2)
     return builder.as_markup()

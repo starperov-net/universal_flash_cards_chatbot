@@ -1,11 +1,13 @@
-# mypy: allow-untyped-defs
+from datetime import datetime
+from typing import List, Optional
 from uuid import UUID
 from zoneinfo import ZoneInfo
-from typing import List, Optional, AsyncGenerator
-from datetime import datetime, timedelta
-from app.tables import Card
+
+
+from app.exceptions.custom_exceptions import NotNoneValueError
 from app import serializers
 from app.db_functions.personal import update_card_db
+from app.tables import Card
 
 
 async def set_res_studying_card(
@@ -15,7 +17,7 @@ async def set_res_studying_card(
         current_card_status.repetition_level is None
         or current_card_status.memorization_stage is None
     ):
-        raise ValueError(
+        raise NotNoneValueError(
             "'repetition_level' and 'memorisation_stage' attributes cannot be None for 'current_card_status'"
         )
     if result:
@@ -46,28 +48,24 @@ async def set_res_studying_card(
     await update_card_db(card_data)
 
 
-async def get_actual_card(
-    user_id: UUID,
-    authors: Optional[List[UUID]],
-    interval: timedelta = timedelta(seconds=300),
-) -> AsyncGenerator:
-    """
-    this is a generator of which at each step return one actual card
-    generator will raise StopIteration when card1s of time are exhausted
+async def get_actual_card(user_id: UUID, authors: Optional[List[UUID]] = None) -> dict:
+    """Func return one actual card.
 
-    general algorythm:
+    algorythm:
     https://github.com/starperov-net/universal_flash_cards_chatbot/wiki/Card-selection-algorithm-for-studying%5Crepetition
 
-    input: userid (UUID) - obligatory, authors (list(UUID)) - optional, interval (timedelta) - optional
-    output: all data for last usercontext
+    input: user_id (UUID) - obligatory, authors (list(UUID)) - optional
+    output: all data for last user_context
         dict {
             'id': UUID (for actual Card),
             'memorization_stage': int (for actual Card),
             'repetition_level': int (for actual Card),
             'last_date': datetime (for actual Card),
             'item_1': str,
-            'item_2': str
-    }
+            'item_2': str,
+            'context_item_1': UUID,
+            'context_item_2': UUID
+        }
     """
     authors_str = (
         ({", ".join(map(lambda x: "'" + str(x) + "'", authors))})
@@ -76,14 +74,15 @@ async def get_actual_card(
     )
     query = f"""
     WITH actual_card AS (
-        SELECT (
+        SELECT
             card.id AS id,
             card.memorization_stage,
             card.repetition_level,
             card.last_date,
             item_1.text AS item_1,
-            item_2.text AS item_2
-        )
+            item_2.text AS item_2,
+            item_1.context AS context_item_1,
+            item_2.context AS context_item_2
         FROM card
         JOIN item_relation ON card.item_relation = item_relation.id
         JOIN item AS item_1 ON item_1.id = item_relation.item_1
@@ -126,10 +125,5 @@ async def get_actual_card(
     ORDER BY memorization_stage, repetition_level, last_date
     LIMIT 1;
     """
-    start_time = datetime.now(tz=ZoneInfo("UTC"))
-    while (start_time + interval) > datetime.now(tz=ZoneInfo("UTC")):
-        res = await Card.raw(query)
-        if not res:
-            break
-        yield res[0] if res else None  # type: ignore
-    raise StopIteration
+    res = await Card.raw(query)
+    return res[0] if res else None

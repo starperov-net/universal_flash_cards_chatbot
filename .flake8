@@ -4,6 +4,7 @@ exclude =
     .venv,
     __pycache__,
     .pytest_cache,
+    .data,
 filename =
     *.py
 max-complexity = 12
