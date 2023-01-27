@@ -10,7 +10,7 @@ from aiogram.utils.keyboard import (
 from app.handlers.personal.callback_data_states import (
     StudyCardCallbackData,
     StudyFourOptionsCallbackData,
-    ToStudyCallbackData,
+    ToStudyCallbackData, KnowDontKnowCallbackData,
 )
 
 # ------- keyboard for choice languages
@@ -70,6 +70,16 @@ def what_to_do_with_card(card_id: UUID) -> InlineKeyboardMarkup:
     builder.button(
         text="don't know", callback_data=StudyCardCallbackData(card_id=card_id)
     )
+    return builder.as_markup()
+
+
+def know_dont_know(card_id: UUID,) -> InlineKeyboardMarkup:
+    builder = InlineKeyboardBuilder()
+    builder.button(text="👍",
+                   state=el["state"],
+                   card_id=card_id,
+                   callback_data=KnowDontKnowCallbackData(state=state, card_id=card_id))
+
     return builder.as_markup()
 
 

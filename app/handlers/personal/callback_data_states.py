@@ -23,6 +23,14 @@ class StudyCardCallbackData(CallbackData, prefix="study_card"):
 
     card_id: UUID
 
+class KnowDontKnowCallbackData(CallbackData, prefix="self_test"):
+    """
+    CallbackQuerry  - "know", "don't know"
+    data - 'state', 'card_id'
+    """
+    state: int
+    card_id: UUID
+
 
 class StudyFourOptionsCallbackData(CallbackData, prefix="study_four_options"):
     """CallbackData for studying four words mode."""
