@@ -1,8 +1,11 @@
 from datetime import datetime
+from uuid import UUID
 from typing import List, Optional
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
+
+from app.exceptions.custom_exceptions import NotNoneValueError
 from app import serializers
 from app.db_functions.personal import update_card_db
 from app.tables import Card
@@ -15,7 +18,7 @@ async def set_res_studying_card(
         current_card_status.repetition_level is None
         or current_card_status.memorization_stage is None
     ):
-        raise ValueError(
+        raise NotNoneValueError(
             "'repetition_level' and 'memorisation_stage' attributes cannot be None for 'current_card_status'"
         )
     if result:
@@ -61,6 +64,7 @@ async def get_actual_card(user_id: UUID, authors: Optional[List[UUID]] = None) -
             'last_date': datetime (for actual Card),
             'item_1': str,
             'item_2': str,
+            #######################
             'context_item_1': UUID,
             'context_item_2': UUID
         }
@@ -123,6 +127,5 @@ async def get_actual_card(user_id: UUID, authors: Optional[List[UUID]] = None) -
     ORDER BY memorization_stage, repetition_level, last_date
     LIMIT 1;
     """
-
     res = await Card.raw(query)
-    return res[0]
+    return res[0] if res else None

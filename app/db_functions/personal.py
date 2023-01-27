@@ -164,13 +164,6 @@ async def get_existing_user_id_db(telegram_user_id: int) -> UUID:
     return user.id
 
 
-async def get_user_id_db(telegram_user_id: int) -> Optional[UUID]:
-    user: Optional[User] = await User.objects().get(
-        User.telegram_user_id == telegram_user_id
-    )
-    return user.id if user else None
-
-
 async def get_translated_text_from_item_relation(
     text: str, item_relation: ItemRelation
 ) -> str:

@@ -12,12 +12,13 @@ from aiogram.fsm.state import State, StatesGroup
 from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
 from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
 
-from app.base_functions.learning_sets import get_actual_card
+from app.base_functions.learning_sets import get_actual_card, set_res_studying_card
 from app.db_functions.personal import (
     get_all_items_according_context,
     get_user_context_db,
 )
-from app.exceptions.custom_exceptions import NotFullSetException
+from app.exceptions.custom_exceptions import NotFullSetException, NotNoneValueError
+from app.serializers import Card
 from app.tables import UserContext
 
 
@@ -159,10 +160,10 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             await state.clear()
             return await msg.answer(text="Run out of words to study")
 
-        text_for_show: str = random.choice([card["item_1"], card["item_2"]])
-        correct_answer: str = (
-            card["item_2"] if text_for_show == card["item_1"] else card["item_1"]
-        )
+        texts: list[str] = [card["item_1"], card["item_2"]]
+        random.shuffle(texts)
+        text_for_show, correct_answer = texts
+
         context_answer: UUID = (
             card["context_item_2"]
             if text_for_show == card["item_1"]
@@ -200,26 +201,44 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         return await msg.answer(text="Training time has expired.")
 
 
-#  the handler is for task 52, do not pay attention for docs
 async def handle_reply_after_four_words_studying(
     callback_query: types.CallbackQuery,
     callback_data: StudyFourOptionsCallbackData,
     state: FSMContext,
 ) -> Union[types.Message, bool]:
-    """
-    In order to get <1> or <0> after user pics option
-    use -> callback_query.data with returning types as 1 or
-    0 in type<int> not bool
+    """Processes the result for study mode keyboard work.
+
+    Up to dates DB data in Card table according to:
+    - memorization_stage
+    - repetition_level
+    - result answer (True, False).
+
+    Parameters:
+        callback_query:
+            see base class
+        callback_data:
+            see base class
+        state:
+            see base class
     """
 
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
-    await callback_query.answer(
-        f"{bool(callback_data.state)}"
-    )  # response will be processed here
+    try:
+        await set_res_studying_card(
+            Card(
+                id=callback_data.card_id,
+                memorization_stage=callback_data.memorization_stage,
+                repetition_level=callback_data.repetition_level,
+            ),
+            result=bool(callback_data.state),
+        )
+    except NotNoneValueError:
+        await state.clear()
+        return await callback_query.answer("😢 Something went wrong 😢")
 
-    symbol = "👍" if callback_data.state else "👎"
+    symbol = "        👍" if callback_data.state else "        👎"
     await callback_query.message.edit_text(f"{callback_query.message.text} {symbol}")
 
     return await study_one_from_four(callback_query.message, state)

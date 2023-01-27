@@ -6,6 +6,7 @@ from aiogram.utils.keyboard import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
+from uuid import UUID
 
 from app.handlers.personal.callback_data_states import (
     StudyCardCallbackData,
