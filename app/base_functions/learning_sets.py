@@ -126,4 +126,4 @@ async def get_actual_card(user_id: UUID, authors: Optional[List[UUID]] = None) -
     LIMIT 1;
     """
     res = await Card.raw(query)
-    return res[0]
+    return res[0] if res else None
