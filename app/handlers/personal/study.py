@@ -164,6 +164,8 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         random.shuffle(texts)
         text_for_show, correct_answer = texts
 
+        await state.update_data({"correct_answer": correct_answer})
+
         context_answer: UUID = (
             card["context_item_2"]
             if text_for_show == card["item_1"]
@@ -220,6 +222,10 @@ async def handle_reply_after_four_words_studying(
             see base class
         state:
             see base class
+    Return:
+        Updates the previous answer, removes the keyboard from it
+        and adds the correct word and symbol to the answer text -
+        the answer was correct or not.
     """
 
     if callback_query.message is None:
@@ -238,8 +244,15 @@ async def handle_reply_after_four_words_studying(
         await state.clear()
         return await callback_query.answer("😢 Something went wrong 😢")
 
-    symbol = "        👍" if callback_data.state else "        👎"
-    await callback_query.message.edit_text(f"{callback_query.message.text} {symbol}")
+    # getting and deleting 'correct_answer' from FSM
+    state_data: dict[str, Any] = await state.get_data()
+    correct_answer: str = state_data["correct_answer"]
+    await state.update_data({"correct_answer": None})
+
+    symbol = "✅" if callback_data.state else "❎"
+    await callback_query.message.edit_text(
+        f"{callback_query.message.text}    ({correct_answer})        {symbol} "
+    )
 
     return await study_one_from_four(callback_query.message, state)
 
