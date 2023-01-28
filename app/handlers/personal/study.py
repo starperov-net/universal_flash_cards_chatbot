@@ -164,7 +164,7 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         random.shuffle(texts)
         text_for_show, correct_answer = texts
 
-        await state.update_data({"correct_answer": correct_answer})
+        await state.update_data({text_for_show: correct_answer})
 
         context_answer: UUID = (
             card["context_item_2"]
@@ -214,6 +214,8 @@ async def handle_reply_after_four_words_studying(
     - memorization_stage
     - repetition_level
     - result answer (True, False).
+    If the user did not answer in the current session, the data
+    in the DB is not updated.
 
     Parameters:
         callback_query:
@@ -231,6 +233,19 @@ async def handle_reply_after_four_words_studying(
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
+    symbol = "✅" if callback_data.state else "❎"
+
+    # getting 'correct_answer' from FSM
+    state_data: dict[str, Any] = await state.get_data()
+    correct_answer: Optional[str] = state_data.get(callback_query.message.text)  # type: ignore
+
+    # when the user replied not in the current session
+    if correct_answer is None:
+        await callback_query.answer("Message is outdated.")
+        return await callback_query.message.edit_text(
+            f"{callback_query.message.text}            {symbol} "
+        )
+
     try:
         await set_res_studying_card(
             Card(
@@ -244,15 +259,13 @@ async def handle_reply_after_four_words_studying(
         await state.clear()
         return await callback_query.answer("😢 Something went wrong 😢")
 
-    # getting and deleting 'correct_answer' from FSM
-    state_data: dict[str, Any] = await state.get_data()
-    correct_answer: str = state_data["correct_answer"]
-    await state.update_data({"correct_answer": None})
-
-    symbol = "✅" if callback_data.state else "❎"
     await callback_query.message.edit_text(
         f"{callback_query.message.text}    ({correct_answer})        {symbol} "
     )
+
+    # deleting 'correct_answer' from FSM
+    del state_data[callback_query.message.text]  # type: ignore
+    await state.set_data(state_data)
 
     return await study_one_from_four(callback_query.message, state)
 
