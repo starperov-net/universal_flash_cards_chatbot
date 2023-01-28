@@ -55,9 +55,6 @@ def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarku
                     ).pack(),
                 ),
                 InlineKeyboardButton(text="my_variant", callback_data="my_variant"),
-                InlineKeyboardButton(
-                    text="nothing to do", callback_data="nothing_to_do"
-                ),
             ]
         ]
     )
