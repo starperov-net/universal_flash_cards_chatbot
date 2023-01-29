@@ -148,7 +148,7 @@ async def translate_text(msg: types.Message) -> types.Message:
     3.if we don't have an item_relation, using google_translate
       in this case save this text and translates_text as items and item_relation
       return item_relation
-    4.shows the translated text and offers to choose 'add to study'/'my variant'/'nothing to do'.
+    4.shows the translated text and offers to choose 'add to study'/'my variant'.
       If the language of the entered word is not in [user_context.context_1, user_context.context_2]
       raises an Exception ValueError and shows the translation, but indicating from
       which language the translation was made.
@@ -204,10 +204,6 @@ async def my_variant(callback_query: types.CallbackQuery) -> None:
     await callback_query.answer("it is example")
 
 
-async def nothing_to_do(callback_query: types.CallbackQuery) -> None:
-    await callback_query.answer("nothing_to_do")
-
-
 def register_handler_start(dp: Dispatcher) -> None:
     dp.message.register(start, Command(commands=["start", "початок"]))
     dp.message.register(greeting, Command(commands=["hello"]))
@@ -219,5 +215,4 @@ def register_handler_start(dp: Dispatcher) -> None:
     )
     dp.callback_query.register(add_words_to_study, ToStudyCallbackData.filter())
     dp.callback_query.register(my_variant, F.data == "my_variant")
-    dp.callback_query.register(nothing_to_do, F.data == "nothing_to_do")
     dp.message.register(translate_text)  # F.test.regexp("[a-zA-Z ]"))
