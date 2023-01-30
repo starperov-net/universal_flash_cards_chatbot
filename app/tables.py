@@ -1,12 +1,5 @@
-from piccolo.columns.column_types import (
-    UUID,
-    BigInt,
-    ForeignKey,
-    Integer,
-    Text,
-    Timestamptz,
-    Varchar,
-)
+from piccolo.columns.column_types import (UUID, BigInt, Boolean, ForeignKey,
+                                          Integer, Text, Timestamptz, Varchar)
 from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.table import Table
 
@@ -40,6 +33,7 @@ class UserContext(Table):
     context_2 = ForeignKey(references=Context)
     user = ForeignKey(references=User)
     last_date = Timestamptz(default=TimestamptzNow)  # type:ignore
+    active = Boolean(default=True)
 
 
 class Item(Table):

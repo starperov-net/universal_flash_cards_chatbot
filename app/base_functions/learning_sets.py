@@ -3,10 +3,9 @@ from typing import List, Optional
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
-
-from app.exceptions.custom_exceptions import NotNoneValueError
 from app import serializers
 from app.db_functions.personal import update_card_db
+from app.exceptions.custom_exceptions import NotNoneValueError
 from app.tables import Card
 
 

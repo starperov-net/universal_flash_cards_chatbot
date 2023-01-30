@@ -1,14 +1,7 @@
 from piccolo.apps.migrations.auto.migration_manager import MigrationManager
 from piccolo.columns.base import OnDelete, OnUpdate
-from piccolo.columns.column_types import (
-    UUID,
-    BigInt,
-    ForeignKey,
-    Integer,
-    Text,
-    Timestamp,
-    Varchar,
-)
+from piccolo.columns.column_types import (UUID, BigInt, ForeignKey, Integer,
+                                          Text, Timestamp, Varchar)
 from piccolo.columns.defaults.timestamp import TimestampCustom, TimestampNow
 from piccolo.columns.defaults.uuid import UUID4
 from piccolo.columns.indexes import IndexMethod
