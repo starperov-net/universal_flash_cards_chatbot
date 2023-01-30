@@ -1,12 +1,8 @@
 from datetime import datetime
 
 from app import tables
-from app.tests.utils import (
-    TELEGRAM_USER_1,
-    TELEGRAM_USER_2,
-    TELEGRAM_USER_3,
-    TELEGRAM_USER_GOOGLE,
-)
+from app.tests.utils import (TELEGRAM_USER_1, TELEGRAM_USER_2, TELEGRAM_USER_3,
+                             TELEGRAM_USER_GOOGLE)
 
 CONTEXT_en = tables.Context(name="English", name_alfa2="en")
 

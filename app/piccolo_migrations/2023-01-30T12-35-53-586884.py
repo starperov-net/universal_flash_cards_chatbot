@@ -2,16 +2,13 @@ from piccolo.apps.migrations.auto.migration_manager import MigrationManager
 from piccolo.columns.column_types import Boolean
 from piccolo.columns.indexes import IndexMethod
 
-
 ID = "2023-01-30T12:35:53:586884"
 VERSION = "0.96.0"
 DESCRIPTION = "Adding column 'active' in UserContext"
 
 
 async def forwards():
-    manager = MigrationManager(
-        migration_id=ID, app_name="app", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="app", description=DESCRIPTION)
 
     manager.add_column(
         table_class_name="UserContext",

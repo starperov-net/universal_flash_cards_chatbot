@@ -1,17 +1,11 @@
 import random
 from uuid import UUID
 
-from aiogram.utils.keyboard import (
-    InlineKeyboardBuilder,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-)
+from aiogram.utils.keyboard import (InlineKeyboardBuilder,
+                                    InlineKeyboardButton, InlineKeyboardMarkup)
 
 from app.handlers.personal.callback_data_states import (
-    StudyCardCallbackData,
-    StudyFourOptionsCallbackData,
-    ToStudyCallbackData,
-)
+    StudyCardCallbackData, StudyFourOptionsCallbackData, ToStudyCallbackData)
 
 # ------- keyboard for choice languages
 languages = [
