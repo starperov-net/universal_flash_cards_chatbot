@@ -148,7 +148,12 @@ async def quick_self_test(msg: types.Message, state: FSMContext) -> types.Messag
     hidden_answer = HtmlDecoration().spoiler(answer)
     answer = text_for_show + "\n" + hidden_answer
     return await msg.answer(
-        text=answer, parse_mode="HTML", reply_markup=what_to_do_with_card(card_id=card['id']),
+        text=answer, parse_mode="HTML",
+        reply_markup=what_to_do_with_card(card_id=card['id'],
+                                          memorization_stage=card["memorization_stage"],
+                                          repetition_level=card["repetition_level"],
+                                          ),
+
     )
 
 
