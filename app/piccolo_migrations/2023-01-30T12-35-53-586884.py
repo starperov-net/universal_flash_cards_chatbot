@@ -7,7 +7,7 @@ VERSION = "0.96.0"
 DESCRIPTION = "Adding column 'active' in UserContext"
 
 
-async def forwards():
+async def forwards() -> MigrationManager:
     manager = MigrationManager(migration_id=ID, app_name="app", description=DESCRIPTION)
 
     manager.add_column(
