@@ -261,7 +261,7 @@ async def handle_reply_after_four_words_studying(
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
-    symbol = "✅" if callback_data.state else "❎"
+    symbol = "🤓" if callback_data.state else "🤨"
 
     state_data: dict[str, Any] = await state.get_data()
     correct_translation: Optional[dict] = state_data.get("correct_translation")
