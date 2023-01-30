@@ -186,10 +186,12 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             if text_for_show == card["item_1"]
             else card["context_item_1"]
         )
-        all_texts_answer: list[dict] = (
+
+        all_texts_answer: list[dict] = random.sample(
             state_data["texts_context_2"]
             if context_answer == state_data["context_2"]
-            else state_data["texts_context_1"]
+            else state_data["texts_context_1"],
+            k=4,
         )
 
         # generating a list of 3 dict like {"text": "some_word", "state": 0}
