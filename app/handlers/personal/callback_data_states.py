@@ -15,21 +15,15 @@ class ToStudyCallbackData(CallbackData, prefix="to_study"):
     item_relation_id: UUID
 
 
-class StudyCardCallbackData(CallbackData, prefix="study_card"):
-    """
-    CallbackQuerry  - "know", "don't know"
-    data - 'card_id'
-    """
-
-    card_id: UUID
-
 class KnowDontKnowCallbackData(CallbackData, prefix="self_test"):
     """
     CallbackQuerry  - "know", "don't know"
-    data - 'state', 'card_id'
     """
+
     state: int
     card_id: UUID
+    memorization_stage: int
+    repetition_level: int
 
 
 class StudyFourOptionsCallbackData(CallbackData, prefix="study_four_options"):

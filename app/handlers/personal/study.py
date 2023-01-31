@@ -1,6 +1,6 @@
 import random
 from datetime import datetime, timedelta
-from typing import Optional, Union, Any
+from typing import Any, Optional, Union
 from uuid import UUID
 from zoneinfo import ZoneInfo
 
@@ -9,15 +9,14 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 
-from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
-from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
-
 from app.base_functions.learning_sets import get_actual_card, set_res_studying_card
 from app.db_functions.personal import (
     get_all_items_according_context,
     get_user_context_db,
 )
 from app.exceptions.custom_exceptions import NotFullSetException, NotNoneValueError
+from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
+from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
 from app.serializers import Card
 from app.tables import UserContext
 
@@ -143,8 +142,17 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             see base class
             Source: https://core.telegram.org/bots/api#message
         state:
-            State Machine
-            see base class
+            State Machine where save data:
+            {
+                'end_time': datetime.datetime(2023, 1, 30, 9, 45, 22, 55017, tzinfo=zoneinfo.ZoneInfo(key='UTC')), *
+                'user_id': UUID('08ef015a-36d8-49e7-8b0b-8d86f951a78e'), *
+                'texts_context_1': [{'text': 'дієта'}, {'text': 'сюрприз'}, ...], *
+                'texts_context_2': [{'text': 'pen'}, {'text': 'flat'}, ...], *
+                'context_1': UUID('86edaed5-336b-4b3b-b103-7dbb36f1ad34'), *
+                'context_2': UUID('7e831026-0c60-448e-9669-3c085d5f6903') *
+            }
+            * - The value is unchanged throughout the cycle
+
 
     Returns:
         msg:
@@ -163,6 +171,15 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
         texts: list[str] = [card["item_1"], card["item_2"]]
         random.shuffle(texts)
         text_for_show, correct_answer = texts
+
+        await state.update_data(
+            {
+                "correct_translation": {
+                    "text_for_show": text_for_show,
+                    "correct_answer": correct_answer,
+                }
+            }
+        )
 
         context_answer: UUID = (
             card["context_item_2"]
@@ -212,6 +229,8 @@ async def handle_reply_after_four_words_studying(
     - memorization_stage
     - repetition_level
     - result answer (True, False).
+    If the user did not answer in the current session, the data
+    in the DB is not updated.
 
     Parameters:
         callback_query:
@@ -219,11 +238,42 @@ async def handle_reply_after_four_words_studying(
         callback_data:
             see base class
         state:
-            see base class
+            State Machine where save data current session:
+            {
+                'end_time': datetime.datetime(2023, 1, 30, 9, 45, 22, 55017, tzinfo=zoneinfo.ZoneInfo(key='UTC')),
+                'user_id': UUID('08ef015a-36d8-49e7-8b0b-8d86f951a78e'), *
+                'texts_context_1': [{'text': 'дієта'}, {'text': 'сюрприз'}, ...] *
+                'texts_context_2': [{'text': 'pen'}, {'text': 'flat'}, ...] *
+                'context_1': UUID('86edaed5-336b-4b3b-b103-7dbb36f1ad34'), *
+                'context_2': UUID('7e831026-0c60-448e-9669-3c085d5f6903'), *
+                'correct_translation': {'text_for_show': 'виправити', 'correct_answer': 'fix'} **
+            }
+            * - The value is unchanged throughout the cycle
+            ** - Value change on every cycle
+    Return:
+        Updates the previous answer, removes the keyboard from it
+        and adds the correct word and symbol to the answer text -
+        the answer was correct or not.
     """
 
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
+
+    symbol = "✅" if callback_data.state else "❎"
+
+    state_data: dict[str, Any] = await state.get_data()
+    correct_translation: Optional[dict] = state_data.get("correct_translation")
+
+    # when the user replied not in the current session
+    if (
+        correct_translation is None
+        or correct_translation["text_for_show"] != callback_query.message.text
+    ):
+        await callback_query.answer("Message is outdated.")
+        return await callback_query.message.edit_text(
+            f"{callback_query.message.text}            {symbol} "
+        )
+    correct_answer: str = correct_translation["correct_answer"]
 
     try:
         await set_res_studying_card(
@@ -238,8 +288,12 @@ async def handle_reply_after_four_words_studying(
         await state.clear()
         return await callback_query.answer("😢 Something went wrong 😢")
 
-    symbol = "        👍" if callback_data.state else "        👎"
-    await callback_query.message.edit_text(f"{callback_query.message.text} {symbol}")
+    await callback_query.message.edit_text(
+        f"{callback_query.message.text}    ({correct_answer})        {symbol} "
+    )
+
+    del state_data["correct_translation"]
+    await state.set_data(state_data)
 
     return await study_one_from_four(callback_query.message, state)
 

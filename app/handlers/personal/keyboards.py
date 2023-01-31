@@ -6,12 +6,11 @@ from aiogram.utils.keyboard import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
 )
-from uuid import UUID
 
 from app.handlers.personal.callback_data_states import (
-    StudyCardCallbackData,
     StudyFourOptionsCallbackData,
-    ToStudyCallbackData, KnowDontKnowCallbackData,
+    ToStudyCallbackData,
+    KnowDontKnowCallbackData,
 )
 
 # ------- keyboard for choice languages
@@ -56,30 +55,38 @@ def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarku
                     ).pack(),
                 ),
                 InlineKeyboardButton(text="my_variant", callback_data="my_variant"),
-                InlineKeyboardButton(
-                    text="nothing to do", callback_data="nothing_to_do"
-                ),
             ]
         ]
     )
 
 
-# --------keyboard "know", "don't know" for train card
-def what_to_do_with_card(card_id: UUID) -> InlineKeyboardMarkup:
+def know_dont_know(
+    card_id: UUID,
+    memorization_stage: int,
+    repetition_level: int,
+) -> InlineKeyboardMarkup:
+    """
+    keyboard "know", "don't know" for train card
+    """
     builder = InlineKeyboardBuilder()
-    builder.button(text="know", callback_data=StudyCardCallbackData(card_id=card_id))
     builder.button(
-        text="don't know", callback_data=StudyCardCallbackData(card_id=card_id)
+        text="✅",
+        callback_data=KnowDontKnowCallbackData(
+            state=1,
+            card_id=card_id,
+            memorization_stage=memorization_stage,
+            repetition_level=repetition_level,
+        ),
     )
-    return builder.as_markup()
-
-
-def know_dont_know(card_id: UUID,) -> InlineKeyboardMarkup:
-    builder = InlineKeyboardBuilder()
-    builder.button(text="👍",
-                   state=el["state"],
-                   card_id=card_id,
-                   callback_data=KnowDontKnowCallbackData(state=state, card_id=card_id))
+    builder.button(
+        text="❎",
+        callback_data=KnowDontKnowCallbackData(
+            state=0,
+            card_id=card_id,
+            memorization_stage=memorization_stage,
+            repetition_level=repetition_level,
+        ),
+    )
 
     return builder.as_markup()
 

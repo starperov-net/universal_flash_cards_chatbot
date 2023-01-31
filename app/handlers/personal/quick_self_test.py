@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 import random
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from zoneinfo import ZoneInfo
 
 from aiogram import types
@@ -10,22 +10,27 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-from app.base_functions.learning_sets import get_actual_card
-from app.db_functions.personal import get_user_context_db, get_all_items_according_context
-from app.exceptions.custom_exceptions import NotFullSetException
-from app.handlers.personal.keyboards import what_to_do_with_card
+from app.base_functions.learning_sets import get_actual_card, set_res_studying_card
+from app.db_functions.personal import (
+    get_user_context_db,
+    get_all_items_according_context,
+)
+from app.exceptions.custom_exceptions import NotFullSetException, NotNoneValueError
+from app.handlers.personal.callback_data_states import KnowDontKnowCallbackData
+from app.handlers.personal.keyboards import know_dont_know
 from app.tables import UserContext
+from app.serializers import Card
 
 from aiogram.utils.text_decorations import HtmlDecoration
 
 
-class FSMStudyOneFromFour(StatesGroup):
+class FSMSelfTest(StatesGroup):
     """Creates <State Machine> for <study> handler.
 
     Inherits from <StateGroup> class
     """
 
-    studying = State()
+    selftest = State()
 
 
 async def collect_data_for_fsm(user_context: UserContext) -> dict[str, Any]:
@@ -76,7 +81,7 @@ async def collect_data_for_fsm(user_context: UserContext) -> dict[str, Any]:
     }
 
 
-async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message:
+async def self_test_greeting(msg: types.Message, state: FSMContext) -> types.Message:
     """A handler to start <study> mode.
 
     Activates studying mode with </study> command.
@@ -110,7 +115,10 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
     if user_context is None or user_context.user.id is None:
         return await msg.answer("To start studying follow /start command's way first")
 
-    await msg.answer(text=f"Welcome to study, {msg.from_user.full_name}!")
+    await msg.answer(
+        text=f"Check youself, {msg.from_user.full_name}! Recall suggested word."
+             " Click to hidden text. Mark 'know' or 'don/'t know'"
+    )
 
     try:
         data_for_fsm: dict[str, Any] = await collect_data_for_fsm(user_context)
@@ -119,7 +127,7 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
             text="Minimum amount of words for studying mode is 4, enter required amount."
         )
 
-    await state.set_state(FSMStudyOneFromFour.studying)
+    await state.set_state(FSMSelfTest.selftest)
 
     # here data gets into <MACHINE STATE> of the Telegram bot
     await state.set_data(data_for_fsm)
@@ -129,7 +137,37 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
 
 async def quick_self_test(msg: types.Message, state: FSMContext) -> types.Message:
     state_data: dict[str, Any] = await state.get_data()
-    # <tg-spoiler>answer</tg-spoiler>
+    """
+    Creates a text like
+    word
+    <tg-spoiler>translated word</tg-spoiler>
+    The user is asked to recall the translation of this word.
+    After that, click on the hidden text
+    On the proposed keyboard, the user must mark whether
+    he remembers correctly or incorrectly.
+
+    Parameters:
+        msg:
+            see base class
+            Source: https://core.telegram.org/bots/api#message
+        state:
+            State Machine where save data:
+            {
+                'end_time': datetime.datetime(2023, 1, 30, 9, 45, 22, 55017, tzinfo=zoneinfo.ZoneInfo(key='UTC')), *
+                'user_id': UUID('08ef015a-36d8-49e7-8b0b-8d86f951a78e'), *
+                'texts_context_1': [{'text': 'дієта'}, {'text': 'сюрприз'}, ...], *
+                'texts_context_2': [{'text': 'pen'}, {'text': 'flat'}, ...], *
+                'context_1': UUID('86edaed5-336b-4b3b-b103-7dbb36f1ad34'), *
+                'context_2': UUID('7e831026-0c60-448e-9669-3c085d5f6903') *
+            }
+            * - The value is unchanged throughout the cycle
+
+
+    Returns:
+        msg:
+            see base class
+            Source: https://core.telegram.org/bots/api#message
+    """
 
     if state_data["end_time"] < datetime.now(tz=ZoneInfo("UTC")):
         await state.clear()
@@ -140,28 +178,87 @@ async def quick_self_test(msg: types.Message, state: FSMContext) -> types.Messag
         await state.clear()
         return await msg.answer(text="Run out of words to study")
 
-    word = [card["item_1"], card["item_2"]]
-    random.shuffle(word)
-    text_for_show: str
-    answer: str
-    text_for_show, answer = word
-    hidden_answer = HtmlDecoration().spoiler(answer)
-    answer = text_for_show + "\n" + hidden_answer
-    return await msg.answer(
-        text=answer, parse_mode="HTML",
-        reply_markup=what_to_do_with_card(card_id=card['id'],
-                                          memorization_stage=card["memorization_stage"],
-                                          repetition_level=card["repetition_level"],
-                                          ),
+    texts: list[str] = [card["item_1"], card["item_2"]]
+    random.shuffle(texts)
+    text_for_show, correct_answer = texts
 
+    hidden_answer: str = HtmlDecoration().spoiler(correct_answer)
+    answer: str = text_for_show + "\n" + hidden_answer
+    await state.set_state(FSMSelfTest.selftest)
+    return await msg.answer(
+        text=answer,
+        parse_mode="HTML",
+        reply_markup=know_dont_know(
+            card_id=card["id"],
+            memorization_stage=card["memorization_stage"],
+            repetition_level=card["repetition_level"],
+        ),
     )
+
+
+async def handler_know_dont_know(
+        callback_query: types.CallbackQuery,
+        callback_data: KnowDontKnowCallbackData,
+        state: FSMContext,
+) -> Union[types.Message, bool]:
+    """Processes the result for self-test mode keyboard work.
+
+    Up to dates DB data in Card table according to:
+    - memorization_stage
+    - repetition_level
+    - result answer (True, False).
+    If the user did not answer in the current session, the data
+    in the DB is not updated.
+
+    Parameters:
+        callback_query:
+            see base class
+        callback_data:
+            see base class
+        state:
+            State Machine where save data current session:
+            {
+                'end_time': datetime.datetime(2023, 1, 30, 9, 45, 22, 55017, tzinfo=zoneinfo.ZoneInfo(key='UTC')),
+                'user_id': UUID('08ef015a-36d8-49e7-8b0b-8d86f951a78e'), *
+                'texts_context_1': [{'text': 'дієта'}, {'text': 'сюрприз'}, ...] *
+                'texts_context_2': [{'text': 'pen'}, {'text': 'flat'}, ...] *
+                'context_1': UUID('86edaed5-336b-4b3b-b103-7dbb36f1ad34'), *
+                'context_2': UUID('7e831026-0c60-448e-9669-3c085d5f6903'), *
+                'correct_translation': {'text_for_show': 'виправити', 'correct_answer': 'fix'} **
+            }
+            * - The value is unchanged throughout the cycle
+            ** - Value change on every cycle
+    Return:
+        Updates the previous answer, removes the keyboard from it
+        and adds the correct word and symbol to the answer text -
+        the answer was correct or not.
+    """
+    if callback_query.message is None:
+        return await callback_query.answer("Pay attention the message is too old.")
+
+    try:
+        await set_res_studying_card(
+            Card(
+                id=callback_data.card_id,
+                memorization_stage=callback_data.memorization_stage,
+                repetition_level=callback_data.repetition_level,
+            ),
+            result=bool(callback_data.state),
+        )
+    except NotNoneValueError:
+        await state.clear()
+        return await callback_query.answer("😢 Something went wrong 😢")
+
+    return await quick_self_test(callback_query.message, state)
 
 
 def register_handler_quick_selt_test(dp: Dispatcher) -> None:
     dp.message.register(
-        study_greeting, Command(commands=["selftest", "quick self-test", "швидка самоперевірка"])
+        self_test_greeting,
+        Command(commands=["selftest", "quick self-test", "швидка самоперевірка"]),
     )
-
-    # register handler two times for getting <1> or <0> reply from buttons
-    # dp.callback_query.register(...
-    #                            )
+    dp.callback_query.register(
+        handler_know_dont_know,
+        KnowDontKnowCallbackData.filter(),
+        FSMSelfTest.selftest,
+    )

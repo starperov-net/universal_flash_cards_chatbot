@@ -13,7 +13,7 @@ def register_handlers_personal(dp: Dispatcher) -> None:
         register_handler_study,
         register_handler_quick_selt_test,
         register_handler_start,
-        )
+    )
 
     for handler in handlers:
         handler(dp)
