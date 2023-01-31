@@ -186,10 +186,12 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             if text_for_show == card["item_1"]
             else card["context_item_1"]
         )
-        all_texts_answer: list[dict] = (
+
+        all_texts_answer: list[dict] = random.sample(
             state_data["texts_context_2"]
             if context_answer == state_data["context_2"]
-            else state_data["texts_context_1"]
+            else state_data["texts_context_1"],
+            k=4,
         )
 
         # generating a list of 3 dict like {"text": "some_word", "state": 0}
@@ -259,7 +261,7 @@ async def handle_reply_after_four_words_studying(
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
-    symbol = "✅" if callback_data.state else "❎"
+    symbol = "🤓" if callback_data.state else "🤨"
 
     state_data: dict[str, Any] = await state.get_data()
     correct_translation: Optional[dict] = state_data.get("correct_translation")
