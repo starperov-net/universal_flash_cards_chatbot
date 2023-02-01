@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, List
 from uuid import UUID
 
 import aiogram
@@ -199,3 +199,162 @@ async def get_all_items_according_context(context_id: UUID) -> list[dict]:
     if len(random_words) < 3:
         raise NotFullSetException
     return random_words
+
+
+async def get_user_context(
+    user: UUID | int, user_context_id: Optional[UUID] = None
+) -> List[Any]:
+
+    """Get user_context.
+
+    user: user.id (UUID type) or user.telegram_user_id (int type)
+    user_context_id: user_context.id (UUID type) - optional
+
+    return: list of dicts {
+        'id': UserContext.id (UUID),
+        'context_1.id': Context.id (UUID),
+        'context_1.context_class': ContextClass.id (UUID)
+    }
+    """
+    if not isinstance(user, UUID):
+        if not isinstance(user, int):
+            raise TypeError(
+                f"argument 'user' in 'get_user_context' must be 'int' or 'UUID' types, but {type(user)} goten."
+            )
+        if user_context_id is None:
+            return (
+                await UserContext.select(
+                    UserContext.id,
+                    UserContext.last_date,
+                    UserContext.context_1.all_columns(
+                        exclude=[UserContext.context_1.context_class]
+                    ),
+                    UserContext.context_1.context_class.all_columns(),
+                    UserContext.context_2.all_columns(
+                        exclude=[UserContext.context_2.context_class]
+                    ),
+                    UserContext.context_2.context_class.all_columns(),
+                    UserContext.user.id,
+                    UserContext.user.telegram_user_id,
+                )
+                .where(UserContext.user.telegram_user_id == user)
+                .output(nested=True)
+            )
+        else:
+            return (
+                await UserContext.select(
+                    UserContext.id,
+                    UserContext.last_date,
+                    UserContext.context_1.all_columns(
+                        exclude=[UserContext.context_1.context_class]
+                    ),
+                    UserContext.context_1.context_class.all_columns(),
+                    UserContext.context_2.all_columns(
+                        exclude=[UserContext.context_2.context_class]
+                    ),
+                    UserContext.context_2.context_class.all_columns(),
+                    UserContext.user.id,
+                    UserContext.user.telegram_user_id,
+                )
+                .where(
+                    UserContext.id == user_context_id,
+                    UserContext.user.telegram_user_id == user,
+                )
+                .output(nested=True)
+            )
+    if user_context_id is None:
+        return (
+            await UserContext.select(
+                UserContext.id,
+                UserContext.last_date,
+                UserContext.context_1.all_columns(
+                    exclude=[UserContext.context_1.context_class]
+                ),
+                UserContext.context_1.context_class.all_columns(),
+                UserContext.context_2.all_columns(
+                    exclude=[UserContext.context_2.context_class]
+                ),
+                UserContext.context_2.context_class.all_columns(),
+                UserContext.user.id,
+                UserContext.user.telegram_user_id,
+            )
+            .where(UserContext.user.id == user)
+            .output(nested=True)
+        )
+    else:
+        return (
+            await UserContext.select(
+                UserContext.id,
+                UserContext.last_date,
+                UserContext.context_1.all_columns(
+                    exclude=[UserContext.context_1.context_class]
+                ),
+                UserContext.context_1.context_class.all_columns(),
+                UserContext.context_2.all_columns(
+                    exclude=[UserContext.context_2.context_class]
+                ),
+                UserContext.user.id,
+                UserContext.user.telegram_user_id,
+            )
+            .where(UserContext.user.id == user, UserContext.id == user_context_id)
+            .output(nested=True)
+        )
+
+
+if __name__ == "__main__":
+    import asyncio
+
+    # this code uses user_id, telegram_user_id and user_context_id from a locally deployed debug database.
+    # When testing in a different environment, replace their values with the actual ones.
+    user_id_uuid = UUID("bffc39d2-03d2-46ea-93b9-521a602913e5")
+    telegram_user_id = 144371650
+    user_context_id = UUID("9296f4aa-b3b4-4fa0-b97f-ba90f658f576")
+
+    async def test() -> None:
+        res_1 = await get_user_context(user_id_uuid)
+        print(f"user - UUID, user_context=None\n{res_1}")
+
+        res_2 = await get_user_context(telegram_user_id)
+        print(f"user - int, user_context=None\n{res_2}")
+
+        res_3 = await get_user_context(user_id_uuid, user_context_id)
+        print(f"user - UUID, user_context=UUID\n{res_3}")
+
+        res_4 = await get_user_context(telegram_user_id, user_context_id)
+        print(f"user - int, user_context=UUID\n{res_4}")
+
+    asyncio.run(test())
+
+# for examle:
+# user - UUID, user_context=None
+# [
+#   {
+#       'context_1': {
+#           'context_class': {
+#               'description': None,
+#               'id': None,
+#               'name': None
+#               },
+#           'description': '',
+#           'id': UUID('03a8d71f-4b45-46fc-abe4-44cfbf83bedc'),
+#           'name': 'Ukrainian', 'name_alfa2': 'uk'
+#       },
+#       'context_2': {
+#           'context_class': {
+#               'description': None,
+#               'id': None,
+#               'name': None
+#               },
+#           'description': '',
+#           'id': UUID('b8d84138-97d1-40fe-a29f-cc3a312b4a0e'),
+#           'name': 'English',
+#           'name_alfa2': 'en'
+#           },
+#       'id': UUID('9296f4aa-b3b4-4fa0-b97f-ba90f658f576'),
+#       'last_date': datetime.datetime(2023, 1, 5, 13, 8, 44, 783497, tzinfo=datetime.timezone.utc),
+#       'user': {
+#           'id': UUID('bffc39d2-03d2-46ea-93b9-521a602913e5'),
+#           'telegram_user_id': 144371650
+#           }
+#   }
+# ]
