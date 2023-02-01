@@ -236,9 +236,11 @@ async def get_user_context(
                     UserContext.context_2.context_class.all_columns(),
                     UserContext.user.id,
                     UserContext.user.telegram_user_id,
-                )
-                .where(UserContext.user.telegram_user_id == user)
-                .output(nested=True)
+                ).where(
+                    UserContext.user.telegram_user_id == user
+                ).order_by(
+                        UserContext.last_date
+                ).output(nested=True)
             )
         else:
             return (
@@ -259,8 +261,9 @@ async def get_user_context(
                 .where(
                     UserContext.id == user_context_id,
                     UserContext.user.telegram_user_id == user,
-                )
-                .output(nested=True)
+                )order_by(
+                    UserContext.last_date
+                ).output(nested=True)
             )
     if user_context_id is None:
         return (
@@ -277,9 +280,11 @@ async def get_user_context(
                 UserContext.context_2.context_class.all_columns(),
                 UserContext.user.id,
                 UserContext.user.telegram_user_id,
-            )
-            .where(UserContext.user.id == user)
-            .output(nested=True)
+            ).where(
+                UserContext.user.id == user
+            ).order_by(
+                UserContext.last_date
+            ).output(nested=True)
         )
     else:
         return (
@@ -295,9 +300,11 @@ async def get_user_context(
                 ),
                 UserContext.user.id,
                 UserContext.user.telegram_user_id,
-            )
-            .where(UserContext.user.id == user, UserContext.id == user_context_id)
-            .output(nested=True)
+            ).where(
+                UserContext.user.id == user, UserContext.id == user_context_id
+            ).order_by(
+                UserContext.last_date
+            ).output(nested=True)
         )
 
 
