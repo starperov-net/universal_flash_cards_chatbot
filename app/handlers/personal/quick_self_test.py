@@ -84,10 +84,11 @@ async def collect_data_for_fsm(user_context: UserContext) -> dict[str, Any]:
 async def self_test_greeting(msg: types.Message, state: FSMContext) -> types.Message:
     """A handler to start <study> mode.
 
-    Activates studying mode with </study> command.
+    Activates studying mode with </selftest> command.
     As a result on a GUI we have one word to study
-    and to this word we have a keyboard of four
-    words to choose which one is correct.
+    and a hidden translated word
+    When user remind this word, he can tap to hidden text
+    and mark he was right or mistake.
 
     Parameters:
         msg:
@@ -184,7 +185,7 @@ async def quick_self_test(msg: types.Message, state: FSMContext) -> types.Messag
 
     hidden_answer: str = HtmlDecoration().spoiler(correct_answer)
     answer: str = text_for_show + "\n" + hidden_answer
-    await state.set_state(FSMSelfTest.selftest)
+
     return await msg.answer(
         text=answer,
         parse_mode="HTML",
