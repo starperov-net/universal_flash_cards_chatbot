@@ -1,7 +1,7 @@
 from typing import Any, Optional, Union
 from uuid import UUID
 
-from aiogram import Dispatcher, F, types
+from aiogram import Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
@@ -20,10 +20,17 @@ from app.db_functions.personal import (
     get_translated_text_from_item_relation,
     get_user_context_db,
     is_words_in_card_db,
+    add_card_with_custom_translation_db,
 )
-from app.handlers.personal.callback_data_states import ToStudyCallbackData
+from app.handlers.personal.callback_data_states import (
+    ToStudyCallbackData,
+    CustomTranslationCallbackData,
+)
 from app.scheme.transdata import TranslateRequest, TranslateResponse
-from app.states.states import FSMChooseLanguage
+from app.states.states import (
+    FSMChooseLanguage,
+    FSMCustomTranslation,
+)
 from app.tables import ItemRelation, User, UserContext
 from app.tests.utils import TELEGRAM_USER_GOOGLE
 
@@ -96,7 +103,11 @@ async def select_target_language(
     )
 
 
-async def google_translate(user_context: UserContext, text: str) -> ItemRelation:
+async def google_translate(
+    user_context: UserContext,
+    text: str,
+    user_personal_translation: Optional[str] = None,
+) -> ItemRelation:
     """
     Exception ValueError raise when language of the inputted word
     is not in [user_context.context_1, user_context.context_2]
@@ -123,8 +134,15 @@ async def google_translate(user_context: UserContext, text: str) -> ItemRelation
         item_1: UUID = await get_or_create_item_db(
             translate.input_text, input_text_context_id, user_context.user.id
         )
+
+        translated_text = (
+            user_personal_translation
+            if user_personal_translation
+            else translate.translated_text
+        )
+
         item_2: UUID = await get_or_create_item_db(
-            translate.translated_text, translated_text_context_id, user_context.user.id
+            translated_text, translated_text_context_id, user_context.user.id
         )
         google: UUID = await get_existing_user_id_db(TELEGRAM_USER_GOOGLE.id)
         item_relation_id: UUID = await add_item_relation_db(google, item_1, item_2)
@@ -173,7 +191,10 @@ async def translate_text(msg: types.Message) -> types.Message:
         inputted_text_lowercase, item_relation
     )
     return await msg.answer(
-        translated_text, reply_markup=kb.what_to_do_with_text_keyboard(item_relation.id)
+        translated_text,
+        reply_markup=kb.what_to_do_with_text_keyboard(
+            item_relation.id, inputted_text_lowercase
+        ),
     )
 
 
@@ -185,6 +206,7 @@ async def add_words_to_study(
     Before doing this, check if the user already has a pair of such words in the item_relation (with point context)
     to study. If the couple is already in the "card", then it informs about it.
     """
+
     is_words_in_card: bool = await is_words_in_card_db(
         callback_query.from_user.id, callback_data.item_relation_id
     )
@@ -195,8 +217,90 @@ async def add_words_to_study(
         await callback_query.answer("Added to study.")
 
 
-async def my_variant(callback_query: types.CallbackQuery) -> None:
-    await callback_query.answer("it is example")
+async def my_variant(
+    callback_query: types.CallbackQuery,
+    callback_data: CustomTranslationCallbackData,
+    state: FSMContext,
+) -> None:
+    """Button click handler <my_variant>.
+
+    Parameters:
+        callback_query:
+            see base class
+        callback_data:
+            see base class
+        state:
+            State Machine where save data current session:
+                {"incoming_word": "airplane"}
+    Return:
+        None
+    """
+
+    incoming_data: dict[str, Any] = {"incoming_word": callback_data.text}
+
+    await callback_query.message.answer(  # type: ignore
+        text="Enter your custom translation into the message field, please."
+    )
+
+    await state.set_state(FSMCustomTranslation.custom_translation)
+    await state.set_data(incoming_data)
+
+
+async def get_custom_translation(
+    msg: types.Message, state: FSMContext
+) -> types.Message:
+    """Handler to process a word translated by user.
+
+    Parameters:
+        msg:
+            see base class
+        state:
+            State Machine where save data current session:
+                {"incoming_word": "airplane"}
+    Return:
+        msg:
+            see base class
+    """
+
+    if msg.from_user is None:
+        return await msg.answer("Messages sent to channels")
+    if msg.text is None:
+        return await msg.answer("Only text can be entered")
+
+    from_state_data: dict[str, Any] = await state.get_data()
+
+    inputted_text_lowercase = from_state_data["incoming_word"]
+    user_personal_translation_original_case: str = msg.text.strip()
+
+    user_context: Optional[UserContext] = await get_user_context_db(msg.from_user.id)
+    if user_context is None:
+        return await msg.answer("To work with bot use /start command")
+
+    try:
+        # <get_item_relation_by_text_db> func should be modified
+        item_relation: ItemRelation = await google_translate(
+            user_context,
+            inputted_text_lowercase,
+            user_personal_translation=user_personal_translation_original_case,
+        )
+    except ValueError as er:
+        return await msg.answer(er.args[0])
+
+    # even if you already have a word in db the following func returns <False>
+    is_words_in_card: bool = await is_words_in_card_db(
+        msg.from_user.id, item_relation.id
+    )
+    if is_words_in_card:
+        await state.clear()
+        return await msg.answer("You have this pair of words in your words database!")
+    else:
+        await add_card_with_custom_translation_db(msg.from_user.id, item_relation.id)
+        await state.clear()
+        return await msg.answer(
+            f"You entered - {inputted_text_lowercase} - to get translation.\n"
+            f"You pick - {user_personal_translation_original_case} - as your custom translation.\n\n"
+            "Added to study."
+        )
 
 
 def register_handler_start(dp: Dispatcher) -> None:
@@ -209,5 +313,6 @@ def register_handler_start(dp: Dispatcher) -> None:
         select_target_language, FSMChooseLanguage.target_language
     )
     dp.callback_query.register(add_words_to_study, ToStudyCallbackData.filter())
-    dp.callback_query.register(my_variant, F.data == "my_variant")
+    dp.callback_query.register(my_variant, CustomTranslationCallbackData.filter())
+    dp.message.register(get_custom_translation, FSMCustomTranslation.custom_translation)
     dp.message.register(translate_text)  # F.test.regexp("[a-zA-Z ]"))

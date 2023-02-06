@@ -17,6 +17,17 @@ async def add_card_db(
     return card
 
 
+async def add_card_with_custom_translation_db(
+    telegram_user_id: int, item_relation_id: UUID
+) -> Card:
+    """Function adds a card when <user> creates custom translation for word"""
+
+    user: UUID = await get_existing_user_id_db(telegram_user_id)
+    card: Card = Card(user=user, item_relation=item_relation_id, author=user)
+    await card.save()
+    return card
+
+
 async def update_card_db(card: serializers.Card) -> None:
     """Updates tables.Card row.
 
