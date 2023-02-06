@@ -4,7 +4,6 @@ from uuid import UUID
 from aiogram import Dispatcher, F, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 
 import app.handlers.personal.keyboards as kb
 from app.base_functions.translator import get_translate
@@ -24,13 +23,9 @@ from app.db_functions.personal import (
 )
 from app.handlers.personal.callback_data_states import ToStudyCallbackData
 from app.scheme.transdata import TranslateRequest, TranslateResponse
+from app.states.states import FSMChooseLanguage
 from app.tables import ItemRelation, User, UserContext
 from app.tests.utils import TELEGRAM_USER_GOOGLE
-
-
-class FSMChooseLanguage(StatesGroup):
-    native_language = State()
-    target_language = State()
 
 
 async def start(msg: types.Message, state: FSMContext) -> None:
