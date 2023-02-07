@@ -186,6 +186,15 @@ async def quick_self_test(msg: types.Message, state: FSMContext) -> types.Messag
     hidden_answer: str = HtmlDecoration().spoiler(correct_answer)
     answer: str = text_for_show + "\n" + hidden_answer
 
+    await state.update_data(
+        {
+            "correct_translation": {
+                "text_for_show": text_for_show,
+                "correct_answer": correct_answer,
+            }
+        }
+    )
+
     return await msg.answer(
         text=answer,
         parse_mode="HTML",
@@ -234,8 +243,21 @@ async def handler_know_dont_know(
         and adds the correct word and symbol to the answer text -
         the answer was correct or not.
     """
+    await callback_query.answer()
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
+
+    state_data: dict[str, Any] = await state.get_data()
+    correct_translation: Optional[dict] = state_data.get("correct_translation")
+
+    # when the user replied not in the current session
+    if (
+        correct_translation is None
+        or correct_translation["text_for_show"] != callback_query.message.text.split()[0]
+    ):
+        x=await callback_query.answer("Message is outdated.")
+        print(x)
+        return await callback_query.message.answer("answer for last question, please")
 
     try:
         await set_res_studying_card(
