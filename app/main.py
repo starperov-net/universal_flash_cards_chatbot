@@ -3,6 +3,7 @@ import logging
 
 from aiogram import types
 
+from app.base_functions.translator import translate_client
 from app.create_bot import bot, dp
 from app.db_functions.personal import get_or_create_user_db
 from app.handlers import register_all_handlers
@@ -22,10 +23,28 @@ async def set_default_commands() -> None:
 
 async def add_languages_to_context() -> None:
     cont_name = await Context.select()
+    google_languages = translate_client.get_languages()
     if not cont_name:
-        for language in ISO639_1:
-            new_language = Context(name=language.name, name_alfa2=language.value)
+        for language in google_languages:
+            new_language = Context(
+                name=language["name"], name_alfa2=language["language"]
+            )
             await new_language.save()
+
+    # only for the first running of the bot,
+    # to synchronize the data in the 'context' table with Google languages.
+    elif cont_name and len(cont_name) == len(ISO639_1):
+        google_names_alfa2 = [i["language"] for i in google_languages]
+        for i in cont_name:
+            if i["name_alfa2"] in google_names_alfa2:
+                google_names_alfa2.remove(i["name_alfa2"])
+            else:
+                await Context.delete().where(Context.id == i["id"])
+
+        for j in google_languages:
+            if j["language"] in google_names_alfa2:
+                new_language = Context(name=j["name"], name_alfa2=j["language"])
+                await new_language.save()
 
 
 async def add_user_google() -> None:
