@@ -118,7 +118,7 @@ async def self_test_greeting(msg: types.Message, state: FSMContext) -> types.Mes
 
     await msg.answer(
         text=f"Check youself, {msg.from_user.full_name}! Recall suggested word."
-             " Click to hidden text. Mark 'know' or 'don/'t know'"
+        " Click to hidden text. Mark 'know' or 'don/'t know'"
     )
 
     try:
@@ -207,9 +207,9 @@ async def quick_self_test(msg: types.Message, state: FSMContext) -> types.Messag
 
 
 async def handler_know_dont_know(
-        callback_query: types.CallbackQuery,
-        callback_data: KnowDontKnowCallbackData,
-        state: FSMContext,
+    callback_query: types.CallbackQuery,
+    callback_data: KnowDontKnowCallbackData,
+    state: FSMContext,
 ) -> Union[types.Message, bool]:
     """Processes the result for self-test mode keyboard work.
 
@@ -253,10 +253,10 @@ async def handler_know_dont_know(
     # when the user replied not in the current session
     if (
         correct_translation is None
-        or correct_translation["text_for_show"] != callback_query.message.text.split()[0]
+        or correct_translation["text_for_show"]
+        != (callback_query.message.text or " ").split()[0]
     ):
-        x=await callback_query.answer("Message is outdated.")
-        print(x)
+        await callback_query.answer("Message is outdated.")
         return await callback_query.message.answer("answer for last question, please")
 
     try:
