@@ -243,7 +243,7 @@ async def handler_know_dont_know(
         and adds the correct word and symbol to the answer text -
         the answer was correct or not.
     """
-    await callback_query.answer()
+
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
@@ -272,6 +272,7 @@ async def handler_know_dont_know(
         await state.clear()
         return await callback_query.answer("😢 Something went wrong 😢")
 
+    await callback_query.answer()
     return await quick_self_test(callback_query.message, state)
 
 
