@@ -62,6 +62,7 @@ async def get_actual_card(user_id: UUID, authors: Optional[List[UUID]] = None) -
             'last_date': datetime (for actual Card),
             'item_1': str,
             'item_2': str,
+            #######################
             'context_item_1': UUID,
             'context_item_2': UUID
         }
