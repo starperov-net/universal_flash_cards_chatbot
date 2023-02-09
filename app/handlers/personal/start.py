@@ -26,7 +26,6 @@ from app.handlers.personal.callback_data_states import ToStudyCallbackData
 from app.scheme.transdata import TranslateRequest, TranslateResponse
 from app.tables import ItemRelation, User, UserContext
 from app.tests.utils import TELEGRAM_USER_GOOGLE
-from app.handlers.personal.settings import cmd_settings
 
 
 class FSMChooseLanguage(StatesGroup):
