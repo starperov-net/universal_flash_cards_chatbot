@@ -1,33 +1,36 @@
-import random
 from datetime import datetime, timedelta
+import random
 from typing import Any, Optional, Union
-from uuid import UUID
 from zoneinfo import ZoneInfo
 
-from aiogram import Dispatcher, types
+from aiogram import types
+
+from aiogram import Dispatcher
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
+from aiogram.fsm.state import StatesGroup, State
 
 from app.base_functions.learning_sets import get_actual_card, set_res_studying_card
 from app.db_functions.personal import (
-    get_all_items_according_context,
     get_user_context_db,
+    get_all_items_according_context,
 )
 from app.exceptions.custom_exceptions import NotFullSetException, NotNoneValueError
-from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
-from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
-from app.serializers import Card
+from app.handlers.personal.callback_data_states import KnowDontKnowCallbackData
+from app.handlers.personal.keyboards import know_dont_know
 from app.tables import UserContext
+from app.serializers import Card
+
+from aiogram.utils.text_decorations import HtmlDecoration
 
 
-class FSMStudyOneFromFour(StatesGroup):
+class FSMSelfTest(StatesGroup):
     """Creates <State Machine> for <study> handler.
 
     Inherits from <StateGroup> class
     """
 
-    studying = State()
+    selftest = State()
 
 
 async def collect_data_for_fsm(user_context: UserContext) -> dict[str, Any]:
@@ -78,13 +81,14 @@ async def collect_data_for_fsm(user_context: UserContext) -> dict[str, Any]:
     }
 
 
-async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message:
+async def self_test_greeting(msg: types.Message, state: FSMContext) -> types.Message:
     """A handler to start <study> mode.
 
-    Activates studying mode with </study> command.
+    Activates studying mode with </selftest> command.
     As a result on a GUI we have one word to study
-    and to this word we have a keyboard of four
-    words to choose which one is correct.
+    and a hidden translated word
+    When user remind this word, he can tap to hidden text
+    and mark he was right or mistake.
 
     Parameters:
         msg:
@@ -112,7 +116,10 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
     if user_context is None or user_context.user.id is None:
         return await msg.answer("To start studying follow /start command's way first")
 
-    await msg.answer(text=f"Welcome to study, {msg.from_user.full_name}!")
+    await msg.answer(
+        text=f"Check youself, {msg.from_user.full_name}! Recall suggested word."
+        " Click to hidden text. Mark 'know' or 'don/'t know'"
+    )
 
     try:
         data_for_fsm: dict[str, Any] = await collect_data_for_fsm(user_context)
@@ -121,21 +128,24 @@ async def study_greeting(msg: types.Message, state: FSMContext) -> types.Message
             text="Minimum amount of words for studying mode is 4, enter required amount."
         )
 
-    await state.set_state(FSMStudyOneFromFour.studying)
+    await state.set_state(FSMSelfTest.selftest)
 
     # here data gets into <MACHINE STATE> of the Telegram bot
     await state.set_data(data_for_fsm)
 
-    return await study_one_from_four(msg, state)
+    return await quick_self_test(msg, state)
 
 
-async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Message:
-    """Creates and displays user's keyboard.
-
-    Creates and displays one word to study and
-    to this word a keyboard of four words for choosing
-    which one is correct OR a message that studying
-    has expired.
+async def quick_self_test(msg: types.Message, state: FSMContext) -> types.Message:
+    state_data: dict[str, Any] = await state.get_data()
+    """
+    Creates a text like
+    word
+    <tg-spoiler>translated word</tg-spoiler>
+    The user is asked to recall the translation of this word.
+    After that, click on the hidden text
+    On the proposed keyboard, the user must mark whether
+    he remembers correctly or incorrectly.
 
     Parameters:
         msg:
@@ -160,72 +170,48 @@ async def study_one_from_four(msg: types.Message, state: FSMContext) -> types.Me
             Source: https://core.telegram.org/bots/api#message
     """
 
-    state_data: dict[str, Any] = await state.get_data()
-
-    if state_data["end_time"] > datetime.now(tz=ZoneInfo("UTC")):
-        card: dict[str, Any] = await get_actual_card(state_data["user_id"])
-        if not card:
-            await state.clear()
-            return await msg.answer(text="Run out of words to study")
-
-        texts: list[str] = [card["item_1"], card["item_2"]]
-        random.shuffle(texts)
-        text_for_show, correct_answer = texts
-
-        await state.update_data(
-            {
-                "correct_translation": {
-                    "text_for_show": text_for_show,
-                    "correct_answer": correct_answer,
-                }
-            }
-        )
-
-        context_answer: UUID = (
-            card["context_item_2"]
-            if text_for_show == card["item_1"]
-            else card["context_item_1"]
-        )
-
-        all_texts_answer: list[dict] = random.sample(
-            state_data["texts_context_2"]
-            if context_answer == state_data["context_2"]
-            else state_data["texts_context_1"],
-            k=4,
-        )
-
-        # generating a list of 3 dict like {"text": "some_word", "state": 0}
-        texts_answer_for_show: list[dict[str, Any]] = random.sample(
-            [
-                {"text": el["text"], "state": 0}
-                for el in all_texts_answer
-                if el["text"] != correct_answer
-            ],
-            k=3,
-        )
-
-        texts_answer_for_show.append({"text": correct_answer, "state": 1})
-
-        return await msg.answer(
-            text=text_for_show,
-            reply_markup=check_one_correct_from_four_study_keyboard(
-                words_list=texts_answer_for_show,
-                card_id=card["id"],
-                memorization_stage=card["memorization_stage"],
-                repetition_level=card["repetition_level"],
-            ),
-        )
-    else:
+    if state_data["end_time"] < datetime.now(tz=ZoneInfo("UTC")):
         await state.clear()
         return await msg.answer(text="Training time has expired.")
 
+    card: dict[str, Any] = await get_actual_card(state_data["user_id"])
+    if not card:
+        await state.clear()
+        return await msg.answer(text="Run out of words to study")
 
-async def handle_reply_after_four_words_studying(
+    texts: list[str] = [card["item_1"], card["item_2"]]
+    random.shuffle(texts)
+    text_for_show, correct_answer = texts
+
+    hidden_answer: str = HtmlDecoration().spoiler(correct_answer)
+    answer: str = text_for_show + "\n" + hidden_answer
+
+    await state.update_data(
+        {
+            "correct_translation": {
+                "text_for_show": text_for_show,
+                "correct_answer": correct_answer,
+            }
+        }
+    )
+
+    return await msg.answer(
+        text=answer,
+        parse_mode="HTML",
+        reply_markup=know_dont_know(
+            card_id=card["id"],
+            memorization_stage=card["memorization_stage"],
+            repetition_level=card["repetition_level"],
+        ),
+    )
+
+
+async def handler_know_dont_know(
     callback_query: types.CallbackQuery,
-    callback_data: StudyFourOptionsCallbackData,
+    callback_data: KnowDontKnowCallbackData,
     state: FSMContext,
 ) -> Union[types.Message, bool]:
-    """Processes the result for study mode keyboard work.
+    """Processes the result for self-test mode keyboard work.
 
     Up to dates DB data in Card table according to:
     - memorization_stage
@@ -261,21 +247,17 @@ async def handle_reply_after_four_words_studying(
     if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
-    symbol = "🤓" if callback_data.state else "🤨"
-
     state_data: dict[str, Any] = await state.get_data()
     correct_translation: Optional[dict] = state_data.get("correct_translation")
 
     # when the user replied not in the current session
     if (
         correct_translation is None
-        or correct_translation["text_for_show"] != callback_query.message.text
+        or correct_translation["text_for_show"]
+        != (callback_query.message.text or " ").split()[0]
     ):
         await callback_query.answer("Message is outdated.")
-        return await callback_query.message.edit_text(
-            f"{callback_query.message.text}            {symbol} "
-        )
-    correct_answer: str = correct_translation["correct_answer"]
+        return await callback_query.message.answer("answer for last question, please")
 
     try:
         await set_res_studying_card(
@@ -290,34 +272,17 @@ async def handle_reply_after_four_words_studying(
         await state.clear()
         return await callback_query.answer("😢 Something went wrong 😢")
 
-    await callback_query.message.edit_text(
-        f"{callback_query.message.text}    ({correct_answer})        {symbol} "
-    )
-
-    del state_data["correct_translation"]
-    await state.set_data(state_data)
-
-    return await study_one_from_four(callback_query.message, state)
+    await callback_query.answer()
+    return await quick_self_test(callback_query.message, state)
 
 
-def register_handler_study(dp: Dispatcher) -> None:
-    """A handler's registrator.
-
-    Parameters:
-        dp:
-            see base class
-
-    Returns:
-        None
-    """
-
+def register_handler_quick_selt_test(dp: Dispatcher) -> None:
     dp.message.register(
-        study_greeting, Command(commands=["study", "изучение", "вивчення"])
+        self_test_greeting,
+        Command(commands=["selftest", "quick self-test", "швидка самоперевірка"]),
     )
-
-    # register handler two times for getting <1> or <0> reply from buttons
     dp.callback_query.register(
-        handle_reply_after_four_words_studying,
-        StudyFourOptionsCallbackData.filter(),
-        FSMStudyOneFromFour.studying,
+        handler_know_dont_know,
+        KnowDontKnowCallbackData.filter(),
+        FSMSelfTest.selftest,
     )

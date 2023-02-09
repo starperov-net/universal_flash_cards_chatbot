@@ -4,7 +4,11 @@ import pytest
 from pydantic import ValidationError
 
 from app.base_functions.translator import get_translate, translate_client
+<<<<<<< HEAD
 from app.scheme.transdata import ISO639_1, TranslateRequest
+=======
+from app.scheme.transdata import TranslateRequest
+>>>>>>> main
 
 # used to load the environment variables required for the function get_translate
 from app.settings import settings  # noqa !!!
@@ -15,8 +19,8 @@ from app.settings import settings  # noqa !!!
     (
         (
             TranslateRequest(
-                native_lang=ISO639_1.English,
-                foreign_lang=ISO639_1.Ukrainian,
+                native_lang="en",
+                foreign_lang="uk",
                 line="makes",
             ),
             {
@@ -28,8 +32,8 @@ from app.settings import settings  # noqa !!!
         ),
         (
             TranslateRequest(
-                native_lang=ISO639_1.Russian,
-                foreign_lang=ISO639_1.Ukrainian,
+                native_lang="ru",
+                foreign_lang="uk",
                 line="унылая пора",
             ),
             {
@@ -41,8 +45,8 @@ from app.settings import settings  # noqa !!!
         ),
         (
             TranslateRequest(
-                native_lang=ISO639_1.English,
-                foreign_lang=ISO639_1.Ukrainian,
+                native_lang="en",
+                foreign_lang="uk",
                 line="    assemble  ",
             ),
             {
@@ -82,8 +86,8 @@ def test_get_translate(
 def test_validate_in_data() -> None:
     with pytest.raises(ValidationError) as exc_info:
         TranslateRequest(
-            native_lang=ISO639_1.English,
-            foreign_lang=ISO639_1.English,
+            native_lang="en",
+            foreign_lang="en",
             line="    assemble  ",
         )
     assert exc_info.value.errors() == [
@@ -97,8 +101,8 @@ def test_validate_in_data() -> None:
 
 def test_matching_indicated_and_recognized_lang() -> None:
     translate_request = TranslateRequest(
-        native_lang=ISO639_1.Haitian,
-        foreign_lang=ISO639_1.Ukrainian,
+        native_lang="ht",
+        foreign_lang="uk",
         line="    assemble  ",
     )
     mock_translate_return_value = {

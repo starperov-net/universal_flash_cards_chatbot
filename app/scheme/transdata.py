@@ -226,14 +226,14 @@ class ISO639_1(str, Enum):
 class TranslateRequest(BaseModel):
     """Describes data model for the translation request."""
 
-    native_lang: ISO639_1
-    foreign_lang: ISO639_1
+    native_lang: str
+    foreign_lang: str
     line: str
 
     @validator("foreign_lang")
     def foreign_lang_must_not_be_equal_native_lang(
-        cls, foreign_lang: ISO639_1, values: dict
-    ) -> ISO639_1:
+        cls, foreign_lang: str, values: dict
+    ) -> str:
         if foreign_lang == values["native_lang"]:
             raise ValueError("foreign_lang must not be equal to native_lang")
         return foreign_lang

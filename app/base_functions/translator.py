@@ -32,7 +32,7 @@ def get_translate(
 
     if (
         result["translatedText"] != result["input"]
-        and input_detected_language["language"] == input_.foreign_lang.value
+        and input_detected_language["language"] == input_.foreign_lang
     ):
         return TranslateResponse(
             input_text=input_.line,
@@ -67,8 +67,7 @@ def get_translate(
         is_similar_language: bool = True  # type: ignore
 
     if result["translatedText"] != result["input"] and (
-        input_detected_language["language"] == input_.native_lang.value
-        or is_similar_language
+        input_detected_language["language"] == input_.native_lang or is_similar_language
     ):
         return TranslateResponse(
             input_text=input_.line,
