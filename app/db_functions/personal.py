@@ -261,7 +261,6 @@ async def get_user_context(
                     UserContext.id == user_context_id,
                     UserContext.user.telegram_user_id == user,
                 )
-                .order_by(UserContext.last_date)
                 .output(nested=True)
             )
     if user_context_id is None:
