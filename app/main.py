@@ -8,7 +8,7 @@ from app.create_bot import bot, dp
 from app.db_functions.personal import get_or_create_user_db
 from app.handlers import register_all_handlers
 from app.scheme.transdata import ISO639_1
-from app.tables import Context
+from app.tables import Context, ContextClass
 from app.tests.utils import TELEGRAM_USER_GOOGLE
 
 
@@ -48,6 +48,22 @@ async def add_languages_to_context() -> None:
                 await new_language.save()
 
 
+async def fill_context_class() -> None:
+    """
+    It must work only one time for filling field context_class
+    After some time this function must be deleted
+    And we will change properties for field context_class as necessarily
+    """
+    context_class: ContextClass = await ContextClass.objects().get_or_create(
+        (ContextClass.name == "language"),
+        defaults={"description": "learning language. language - language"},
+    )
+
+    await Context.update({Context.context_class: context_class}).where(
+        Context.context_class.is_null()
+    )
+
+
 async def add_user_google() -> None:
     await get_or_create_user_db(TELEGRAM_USER_GOOGLE)
 
@@ -55,6 +71,8 @@ async def add_user_google() -> None:
 async def on_startup() -> None:
     await set_default_commands()
     await add_languages_to_context()
+    # After some time this function must be deleted
+    await fill_context_class()
     await add_user_google()
 
 
