@@ -17,11 +17,7 @@ async def set_default_commands() -> None:
         [
             types.BotCommand(command="start", description="start"),
             types.BotCommand(command="study", description="study"),
-<<<<<<< HEAD
-            types.BotCommand(command="settings", description="settings"),
-=======
             types.BotCommand(command="selftest", description="self-test"),
->>>>>>> main
         ]
     )
 
