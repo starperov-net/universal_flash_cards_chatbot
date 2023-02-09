@@ -4,11 +4,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.base_functions.translator import get_translate, translate_client
-<<<<<<< HEAD
-from app.scheme.transdata import ISO639_1, TranslateRequest
-=======
 from app.scheme.transdata import TranslateRequest
->>>>>>> main
 
 # used to load the environment variables required for the function get_translate
 from app.settings import settings  # noqa !!!
