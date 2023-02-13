@@ -17,17 +17,6 @@ async def add_card_db(
     return card
 
 
-async def add_card_with_custom_translation_db(
-    telegram_user_id: int, item_relation_id: UUID
-) -> Card:
-    """Function adds a card when <user> creates custom translation for word"""
-
-    user: UUID = await get_existing_user_id_db(telegram_user_id)
-    card: Card = Card(user=user, item_relation=item_relation_id, author=user)
-    await card.save()
-    return card
-
-
 async def update_card_db(card: serializers.Card) -> None:
     """Updates tables.Card row.
 
@@ -82,6 +71,35 @@ async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) ->
     return item.id
 
 
+async def get_or_create_item_relation_db(
+    author_id: UUID, item_1: UUID, item_2: UUID
+) -> UUID:
+    """The function creates an item_relation, if there is not one in db,
+    or gets one from db if the exists.
+
+    Parameters:
+        author_id:
+            a text author's id
+
+        item_1:
+            a text id in one of languages from a user's context
+
+        item_2:
+            a text id in one of languages from a user's context
+
+    Return:
+        id for item relation created or from db
+    """
+
+    item_relation: ItemRelation = await ItemRelation.objects().get_or_create(
+        (ItemRelation.author == author_id)
+        & (ItemRelation.item_1 == item_1)
+        & (ItemRelation.item_2 == item_2),
+        defaults={"author": author_id, "item_1": item_1, "item_2": item_2},
+    )
+    return item_relation.id
+
+
 async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
     user = await User.objects().get_or_create(
         User.telegram_user_id == data_telegram.id,
@@ -98,6 +116,18 @@ async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
 async def get_context_id_db(name_alfa2: str) -> UUID:
     context: Context = await Context.objects().get(Context.name_alfa2 == name_alfa2)
     return context.id
+
+
+async def get_item_by_text_and_usercontext_db(
+    text: str, user_context: UserContext
+) -> Optional[Item]:
+    """Some func"""
+
+    item: Optional[Item] = await Item.objects().get_or_create(
+        (Item.text == text)
+        & (Item.context.is_in([user_context.context_1, user_context.context_2]))
+    )
+    return item
 
 
 async def get_item_relation_with_related_items_by_id_db(

@@ -20,7 +20,8 @@ from app.db_functions.personal import (
     get_translated_text_from_item_relation,
     get_user_context_db,
     is_words_in_card_db,
-    add_card_with_custom_translation_db,
+    get_item_by_text_and_usercontext_db,
+    get_or_create_item_relation_db,
 )
 from app.handlers.personal.callback_data_states import (
     ToStudyCallbackData,
@@ -31,7 +32,7 @@ from app.states.states import (
     FSMChooseLanguage,
     FSMCustomTranslation,
 )
-from app.tables import ItemRelation, User, UserContext
+from app.tables import ItemRelation, User, UserContext, Item
 from app.tests.utils import TELEGRAM_USER_GOOGLE
 
 
@@ -103,11 +104,7 @@ async def select_target_language(
     )
 
 
-async def google_translate(
-    user_context: UserContext,
-    text: str,
-    user_personal_translation: Optional[str] = None,
-) -> ItemRelation:
+async def google_translate(user_context: UserContext, text: str) -> ItemRelation:
     """
     Exception ValueError raise when language of the inputted word
     is not in [user_context.context_1, user_context.context_2]
@@ -134,15 +131,8 @@ async def google_translate(
         item_1: UUID = await get_or_create_item_db(
             translate.input_text, input_text_context_id, user_context.user.id
         )
-
-        translated_text = (
-            user_personal_translation
-            if user_personal_translation
-            else translate.translated_text
-        )
-
         item_2: UUID = await get_or_create_item_db(
-            translated_text, translated_text_context_id, user_context.user.id
+            translate.translated_text, translated_text_context_id, user_context.user.id
         )
         google: UUID = await get_existing_user_id_db(TELEGRAM_USER_GOOGLE.id)
         item_relation_id: UUID = await add_item_relation_db(google, item_1, item_2)
@@ -236,14 +226,14 @@ async def my_variant(
         None
     """
 
-    incoming_data: dict[str, Any] = {"incoming_word": callback_data.text}
+    data_for_fsm: dict[str, Any] = {"incoming_word": callback_data.text}
 
     await callback_query.message.answer(  # type: ignore
         text="Enter your custom translation into the message field, please."
     )
 
     await state.set_state(FSMCustomTranslation.custom_translation)
-    await state.set_data(incoming_data)
+    await state.set_data(data_for_fsm)
 
 
 async def get_custom_translation(
@@ -267,34 +257,46 @@ async def get_custom_translation(
     if msg.text is None:
         return await msg.answer("Only text can be entered")
 
-    from_state_data: dict[str, Any] = await state.get_data()
+    state_data: dict[str, Any] = await state.get_data()
 
-    inputted_text_lowercase = from_state_data["incoming_word"]
+    inputted_text_lowercase = state_data["incoming_word"]
     user_personal_translation_original_case: str = msg.text.strip()
 
     user_context: Optional[UserContext] = await get_user_context_db(msg.from_user.id)
     if user_context is None:
         return await msg.answer("To work with bot use /start command")
 
-    try:
-        # <get_item_relation_by_text_db> func should be modified
-        item_relation: ItemRelation = await google_translate(
-            user_context,
-            inputted_text_lowercase,
-            user_personal_translation=user_personal_translation_original_case,
-        )
-    except ValueError as er:
-        return await msg.answer(er.args[0])
+    item_1: Optional[Item] = await get_item_by_text_and_usercontext_db(
+        inputted_text_lowercase, user_context
+    )
+    if not item_1:
+        await state.clear()
+        return await msg.answer("😭😭😭😭😭")
 
-    # even if you already have a word in db the following func returns <False>
+    input_text_context_id: UUID = item_1.context
+    # WE ARE GETTING <CONTEXT CLASS> INSTANCE, NOT CONTEXT_ID
+    translated_text_context_id: UUID = list(
+        set((user_context.context_1.id, user_context.context_2.id))
+        - set((input_text_context_id,))
+    )[0]
+
+    item_2: UUID = await get_or_create_item_db(
+        user_personal_translation_original_case,
+        translated_text_context_id,
+        user_context.user.id,
+    )
+
+    item_relation_id: UUID = await get_or_create_item_relation_db(
+        user_context.user.id, item_1.id, item_2
+    )
     is_words_in_card: bool = await is_words_in_card_db(
-        msg.from_user.id, item_relation.id
+        msg.from_user.id, item_relation_id
     )
     if is_words_in_card:
         await state.clear()
         return await msg.answer("You have this pair of words in your words database!")
     else:
-        await add_card_with_custom_translation_db(msg.from_user.id, item_relation.id)
+        await add_card_db(msg.from_user.id, item_relation_id)
         await state.clear()
         return await msg.answer(
             f"You entered - {inputted_text_lowercase} - to get translation.\n"
