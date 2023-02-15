@@ -1,5 +1,6 @@
 import random
 from uuid import UUID
+from typing import List
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -10,6 +11,114 @@ from app.handlers.personal.callback_data_states import (
     ToStudyCallbackData,
     KnowDontKnowCallbackData,
 )
+
+KEY_UP: InlineKeyboardButton = InlineKeyboardButton(text="UP", callback_data="#UP")
+KEY_DOWN: InlineKeyboardButton = InlineKeyboardButton(
+    text="DOWN", callback_data="#DOWN"
+)
+
+
+class ScrollKeyboardGenerator:
+    """Creates a scrollable keyboard object.
+
+    input data:
+    - scrollkeys - a list consisting of lists of inline buttons that will be able to scroll.
+    Important - a row of buttons scrolls - that is, the element being processed is the list
+    item at the top level. If there are several buttons in one row, then when shifting up/down,
+    all the buttons in one row are shifted synchronously.
+    - max_rows_num - the maximum number of simultaneously displayed rows of buttons (one row - one
+    top-level list in the scrollcase list). This number also includes possible buttons "up"\"down."
+    - start_row - the number of the row (that is, the list at the top level) that should be
+    displayed at the top.
+
+    """
+
+    def __init__(
+        self,
+        scrollkeys: List[List[InlineKeyboardButton]],
+        max_rows_number: int = 5,
+        start_row: int = 0,
+    ) -> None:
+        self.scrollkeys = scrollkeys
+        self.max_rows_number = max_rows_number
+        self.start_row = start_row
+
+    def _get_current_scroll_keyboard_list(self) -> List[List[InlineKeyboardButton]]:
+        """Get current scroll keyboard list.
+
+        Depending on the total number of rows displayed in the list, the first row displayed
+        and the total number of items displayed (together with the possible "up" - "down" buttons),
+        forms a keyboard for displaying.
+        """
+        numbers_of_buttons_to_show = self.max_rows_number
+        current_scroll_keyboard: List[List[InlineKeyboardButton]] = []
+        if self.start_row != 0:
+            current_scroll_keyboard = [[KEY_UP]] + current_scroll_keyboard
+            numbers_of_buttons_to_show -= 1
+        if self.start_row + numbers_of_buttons_to_show < len(self.scrollkeys) - 1:
+            return (
+                current_scroll_keyboard
+                + self.scrollkeys[
+                    self.start_row:(self.start_row + numbers_of_buttons_to_show)
+                ]
+            )
+        else:
+            return (
+                current_scroll_keyboard
+                + self.scrollkeys[
+                    self.start_row:(self.start_row + numbers_of_buttons_to_show - 1)
+                ]
+                + [[KEY_DOWN]]
+            )
+
+    def markup(self) -> InlineKeyboardMarkup:
+        """Get the current state of the scrolling keyboard."""
+
+        return InlineKeyboardMarkup(
+            inline_keyboard=self._get_current_scroll_keyboard_list()
+        )
+
+    def markup_up(self) -> InlineKeyboardMarkup:
+        """Get the keyboard "one step up".
+
+        Changes the values of internal variables that store the state of the keyboard after
+        the "up" step and returns a new keyboard object.
+        """
+        self.start_row = self.start_row - 1 if self.start_row > 0 else self.start_row
+        return self.markup()
+
+    def markup_down(self) -> InlineKeyboardMarkup:
+        """Get the keyboard "one step down".
+
+        Changes the values of internal variables that store the state of the keyboard after
+        the down step and returns a new keyboard object.
+        """
+        self.start_row = (
+            (self.start_row + 1)
+            if (self.start_row + (self.max_rows_number - 1)) < len(self.scrollkeys)
+            else self.start_row
+        )
+        return self.markup()
+
+
+class CombiKeyboardGenerator(ScrollKeyboardGenerator):
+    """Creates a combo keyboard object: scrollable plus additional buttons."""
+
+    def __init__(
+        self,
+        scrollkeys: List[List[InlineKeyboardButton]],
+        additional_buttons_list: List[List[InlineKeyboardButton]],
+        max_rows_number: int = 5,
+        start_row: int = 0,
+    ) -> None:
+        super().__init__(scrollkeys, max_rows_number, start_row)
+        self.additional_buttons_list = additional_buttons_list
+
+    def markup(self) -> InlineKeyboardMarkup:
+        return InlineKeyboardMarkup(
+            inline_keyboard=self._get_current_scroll_keyboard_list()
+            + self.additional_buttons_list
+        )
 
 
 # ------- keyboard for choice languages
