@@ -20,7 +20,7 @@ from app.db_functions.personal import (
     get_translated_text_from_item_relation,
     get_user_context_db,
     is_words_in_card_db,
-    get_item_by_text_and_usercontext_db,
+    get_or_create_item_by_text_and_usercontext_db,
     get_or_create_item_relation_db,
 )
 from app.handlers.personal.callback_data_states import (
@@ -266,7 +266,7 @@ async def get_custom_translation(
     if user_context is None:
         return await msg.answer("To work with bot use /start command")
 
-    item_1: Optional[Item] = await get_item_by_text_and_usercontext_db(
+    item_1: Optional[Item] = await get_or_create_item_by_text_and_usercontext_db(
         inputted_text_lowercase, user_context
     )
     if not item_1:
@@ -274,7 +274,7 @@ async def get_custom_translation(
         return await msg.answer("😭😭😭😭😭")
 
     input_text_context_id: UUID = item_1.context
-    # WE ARE GETTING <CONTEXT CLASS> INSTANCE, NOT CONTEXT_ID
+
     translated_text_context_id: UUID = list(
         set((user_context.context_1.id, user_context.context_2.id))
         - set((input_text_context_id,))
