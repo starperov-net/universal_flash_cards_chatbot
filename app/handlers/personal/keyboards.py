@@ -10,6 +10,7 @@ from app.handlers.personal.callback_data_states import (
     StudyFourOptionsCallbackData,
     ToStudyCallbackData,
     KnowDontKnowCallbackData,
+    CustomTranslationCallbackData,
 )
 
 KEY_UP: InlineKeyboardButton = InlineKeyboardButton(text="UP", callback_data="#UP")
@@ -152,7 +153,9 @@ select_language_keyboard = select_language_keyboard_builder.as_markup(
 
 
 # ------ keyboard add new item to train
-def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarkup:
+def what_to_do_with_text_keyboard(
+    item_relation_id: UUID, text: str
+) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
@@ -162,7 +165,10 @@ def what_to_do_with_text_keyboard(item_relation_id: UUID) -> InlineKeyboardMarku
                         item_relation_id=item_relation_id
                     ).pack(),
                 ),
-                InlineKeyboardButton(text="my_variant", callback_data="my_variant"),
+                InlineKeyboardButton(
+                    text="my_variant",
+                    callback_data=CustomTranslationCallbackData(text=text).pack(),
+                ),
             ]
         ]
     )

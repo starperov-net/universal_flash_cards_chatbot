@@ -7,7 +7,6 @@ from zoneinfo import ZoneInfo
 from aiogram import Dispatcher, types
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
 
 from app.base_functions.learning_sets import get_actual_card, set_res_studying_card
 from app.db_functions.personal import (
@@ -18,16 +17,8 @@ from app.exceptions.custom_exceptions import NotFullSetException, NotNoneValueEr
 from app.handlers.personal.callback_data_states import StudyFourOptionsCallbackData
 from app.handlers.personal.keyboards import check_one_correct_from_four_study_keyboard
 from app.serializers import Card
+from app.states.states import FSMStudyOneFromFour
 from app.tables import UserContext
-
-
-class FSMStudyOneFromFour(StatesGroup):
-    """Creates <State Machine> for <study> handler.
-
-    Inherits from <StateGroup> class
-    """
-
-    studying = State()
 
 
 async def collect_data_for_fsm(user_context: UserContext) -> dict[str, Any]:

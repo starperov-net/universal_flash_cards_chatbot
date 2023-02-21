@@ -15,6 +15,18 @@ class ToStudyCallbackData(CallbackData, prefix="to_study"):
     item_relation_id: UUID
 
 
+class CustomTranslationCallbackData(CallbackData, prefix="my_variant"):
+    """
+    Class user-defined callbacks.
+    CallbackData - Base class for callback data wrapper.
+    The class-keyword :code:`prefix` is required to define prefix
+
+    Fields of the class can have only these types: int, str, float, Decimal, Fraction, UUID, Enum.
+    """
+
+    text: str
+
+
 class KnowDontKnowCallbackData(CallbackData, prefix="self_test"):
     """
     CallbackQuerry  - "know", "don't know"

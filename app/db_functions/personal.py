@@ -66,9 +66,37 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> 
 async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) -> UUID:
     item: Item = await Item.objects().get_or_create(
         (Item.text == text) & (Item.context == context_id),
-        defaults={"author": author_id, "context": context_id, "text": text},
+        defaults={"author": author_id},
     )
     return item.id
+
+
+async def get_or_create_item_relation_db(
+    author_id: UUID, item_1: UUID, item_2: UUID
+) -> UUID:
+    """The function creates an item_relation, if there is not one in db,
+    or gets one from db if the item_relation exists.
+
+    Parameters:
+        author_id:
+            a text author's id
+
+        item_1:
+            a text id in one of languages from a user's context
+
+        item_2:
+            a text id in one of languages from a user's context
+
+    Return:
+        id for item relation created or from db
+    """
+
+    item_relation: ItemRelation = await ItemRelation.objects().get_or_create(
+        (ItemRelation.author == author_id)
+        & (ItemRelation.item_1 == item_1)
+        & (ItemRelation.item_2 == item_2),
+    )
+    return item_relation.id
 
 
 async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
@@ -87,6 +115,30 @@ async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
 async def get_context_id_db(name_alfa2: str) -> UUID:
     context: Context = await Context.objects().get(Context.name_alfa2 == name_alfa2)
     return context.id
+
+
+async def get_or_create_item_by_text_and_usercontext_db(
+    text: str, user_context: UserContext
+) -> Item:
+    """The function creates an item, if there is no one in db,
+    or gets one from db if the item exists.
+
+    Parameters:
+        text:
+            a text author's id
+
+        user_context:
+            a user context for particular pair of user's languages
+
+    Return:
+        newly created or existing <item>
+    """
+
+    item: Item = await Item.objects().get_or_create(
+        (Item.text == text)
+        & (Item.context.is_in([user_context.context_1, user_context.context_2]))
+    )
+    return item
 
 
 async def get_item_relation_with_related_items_by_id_db(
