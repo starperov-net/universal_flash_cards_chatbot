@@ -7,6 +7,7 @@ from app.handlers.personal.study import register_handler_study
 from app.handlers.personal.quick_self_test import register_handler_quick_selt_test
 from app.handlers.personal.help import register_handler_help
 from app.handlers.personal.cancel import register_handler_cancel
+from app.handlers.personal.list_of_user_words import register_handler_list
 
 
 def register_handlers_personal(dp: Dispatcher) -> None:
@@ -18,7 +19,9 @@ def register_handlers_personal(dp: Dispatcher) -> None:
         register_handler_quick_selt_test,
         register_handler_help,
         register_handler_cancel,
+        register_handler_list,
         register_handler_start,
+
     )
 
     for handler in handlers:
