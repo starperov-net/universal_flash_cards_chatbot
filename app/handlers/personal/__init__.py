@@ -21,7 +21,6 @@ def register_handlers_personal(dp: Dispatcher) -> None:
         register_handler_cancel,
         register_handler_list,
         register_handler_start,
-
     )
 
     for handler in handlers:
