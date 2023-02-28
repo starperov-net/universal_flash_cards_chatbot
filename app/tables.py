@@ -66,3 +66,10 @@ class Card(Table):
     memorization_stage = Integer(default=0)
     last_date = Timestamptz(default=TimestamptzNow)  # type:ignore
     author = ForeignKey(references=User)
+
+
+class Help(Table):
+    id = UUID(primary_key=True)
+    state = Varchar()
+    help_text = Text()
+    language = ForeignKey(references=Context)
