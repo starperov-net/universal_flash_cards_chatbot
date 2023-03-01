@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from app.base_functions.list_of_words import get_list_of_words
 
 
-async def list_of_user_words(msg: types.Message, state: FSMContext) -> None:
+async def show_my_words(msg: types.Message, state: FSMContext) -> None:
     """A handler to start <myWords> mode.
 
     Getting list of user words mode with </myWords> command.
@@ -30,7 +30,7 @@ async def list_of_user_words(msg: types.Message, state: FSMContext) -> None:
         )
 
 
-def register_handler_list(dp: Dispatcher) -> None:
+def register_handler_mywords(dp: Dispatcher) -> None:
     """A handler's registrator.
 
     Parameters:
@@ -42,6 +42,6 @@ def register_handler_list(dp: Dispatcher) -> None:
     """
 
     dp.message.register(
-        list_of_user_words,
+        show_my_words,
         Command(commands=["mywords", "список моїх слів", "список моих слов"]),
     )
