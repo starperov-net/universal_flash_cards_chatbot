@@ -3,7 +3,9 @@ from typing import List
 from app.tables import Card
 
 
-async def get_list_of_words(telegram_user_id: int) -> List[dict]:
+async def get_list_of_words(
+    telegram_user_id: int, max_repetition_level: int = 8
+) -> List[dict]:
     """
     fuction return all cards of user, sorted by learning_status and alphabet
     learning_status  counted by repetition_level
@@ -19,12 +21,14 @@ async def get_list_of_words(telegram_user_id: int) -> List[dict]:
     'learning_status': str any['learned', 'in progress', 'unstudied']
     """
 
-    query: str = create_select_for_list_of_words(telegram_user_id)
+    query: str = create_select_for_list_of_words(telegram_user_id, max_repetition_level)
     res: List[dict] = await Card.raw(query)
     return res
 
 
-def create_select_for_list_of_words(telegram_user_id: int) -> str:
+def create_select_for_list_of_words(
+    telegram_user_id: int, max_repetition_level: int
+) -> str:
     """
     Create row query.
     Moved to separate function for cleanliness code
@@ -40,13 +44,13 @@ def create_select_for_list_of_words(telegram_user_id: int) -> str:
                     THEN item2.text
                     ELSE item1.text
                 END AS native_word,
-                CASE WHEN repetition_level = 8
+                CASE WHEN repetition_level = {max_repetition_level}
                     THEN 0
                     WHEN repetition_level = 0
                     THEN 2
                     ELSE 1
                 END AS learning_status_code,
-                CASE WHEN repetition_level = 8
+                CASE WHEN repetition_level = {max_repetition_level}
                     THEN 'learned'
                     WHEN repetition_level = 0
                     THEN 'unstudied'

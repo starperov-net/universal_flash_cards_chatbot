@@ -60,14 +60,14 @@ class ScrollKeyboardGenerator:
             return (
                 current_scroll_keyboard
                 + self.scrollkeys[
-                    self.start_row : (self.start_row + numbers_of_buttons_to_show)
+                    self.start_row: (self.start_row + numbers_of_buttons_to_show)
                 ]
             )
         else:
             return (
                 current_scroll_keyboard
                 + self.scrollkeys[
-                    self.start_row : (self.start_row + numbers_of_buttons_to_show - 1)
+                    self.start_row: (self.start_row + numbers_of_buttons_to_show - 1)
                 ]
                 + [[KEY_DOWN]]
             )
