@@ -13,8 +13,8 @@ async def get_list_of_words(telegram_user_id: int) -> List[dict]:
 
     returned dictionaries contain
     {'card_id': UUID,
-    'foreign_word': str,
-    'native_word': str,
+    'foreign_word': str = item where context equals foreign language (user_context.context_2),
+    'native_word': str = item where context equals native language (user_context.context_1),
     'learning_status_code': int any[0,1,2],
     'learning_status': str any['learned', 'in progress', 'unstudied']
     """
@@ -40,23 +40,15 @@ def create_select_for_list_of_words(telegram_user_id: int) -> str:
                     THEN item2.text
                     ELSE item1.text
                 END AS native_word,
-                CASE WHEN repetition_level = (SELECT MAX(card.repetition_level)
-                                                FROM card
-                                                WHERE users.telegram_user_id = {telegram_user_id})
+                CASE WHEN repetition_level = 8
                     THEN 0
-                    WHEN repetition_level = (SELECT MIN(card.repetition_level)
-                                                FROM card
-                                                WHERE users.telegram_user_id = {telegram_user_id})
+                    WHEN repetition_level = 0
                     THEN 2
                     ELSE 1
                 END AS learning_status_code,
-                CASE WHEN repetition_level = (SELECT MAX(card.repetition_level)
-                                                FROM card
-                                                WHERE users.telegram_user_id = {telegram_user_id})
+                CASE WHEN repetition_level = 8
                     THEN 'learned'
-                    WHEN repetition_level = (SELECT MIN(card.repetition_level)
-                                                FROM card
-                                                WHERE users.telegram_user_id = {telegram_user_id})
+                    WHEN repetition_level = 0
                     THEN 'unstudied'
                     ELSE 'in progress'
                 END AS learning_status
