@@ -1,6 +1,6 @@
 import random
 from uuid import UUID
-from typing import List
+from typing import List, Any
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -10,7 +10,7 @@ from app.handlers.personal.callback_data_states import (
     StudyFourOptionsCallbackData,
     ToStudyCallbackData,
     KnowDontKnowCallbackData,
-    CustomTranslationCallbackData,
+    CustomTranslationCallbackData, MyWordsCallbackData,
 )
 
 KEY_UP: InlineKeyboardButton = InlineKeyboardButton(text="UP", callback_data="#UP")
@@ -56,7 +56,7 @@ class ScrollKeyboardGenerator:
         if self.start_row != 0:
             current_scroll_keyboard = [[KEY_UP]] + current_scroll_keyboard
             numbers_of_buttons_to_show -= 1
-        if self.start_row + numbers_of_buttons_to_show < len(self.scrollkeys) - 1:
+        if numbers_of_buttons_to_show >= len(self.scrollkeys) - self.start_row:
             return (
                 current_scroll_keyboard
                 + self.scrollkeys[
@@ -120,6 +120,24 @@ class CombiKeyboardGenerator(ScrollKeyboardGenerator):
             inline_keyboard=self._get_current_scroll_keyboard_list()
             + self.additional_buttons_list
         )
+
+
+def create_scrollkeys_for_mywords(
+        list_of_words: list[dict[str, Any]]
+) -> list[list[InlineKeyboardButton]]:
+    return [
+        [
+            InlineKeyboardButton(
+                text="{foreign_word} - {native_word} - {learning_status}".format(**i),
+                callback_data="abc"
+            ),
+            InlineKeyboardButton(
+                text="Delete",
+                callback_data=MyWordsCallbackData(card_id=i["card_id"]).pack()
+            )
+        ]
+        for i in list_of_words
+    ]
 
 
 # ------- keyboard for choice languages

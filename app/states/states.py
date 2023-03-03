@@ -19,3 +19,9 @@ class FSMCustomTranslation(StatesGroup):
     """State machine class for holding state while custom translation"""
 
     custom_translation = State()
+
+
+class FSMMyWords(StatesGroup):
+    mywords = State()
+    mywords_up = State()
+    mywords_down = State()
