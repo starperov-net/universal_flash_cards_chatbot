@@ -10,7 +10,9 @@ from app.handlers.personal.callback_data_states import (
     StudyFourOptionsCallbackData,
     ToStudyCallbackData,
     KnowDontKnowCallbackData,
-    CustomTranslationCallbackData, MyWordsCallbackData,
+    CustomTranslationCallbackData,
+    MyWordCallbackData,
+    DeletingMyWordCallbackData,
 )
 
 KEY_UP: InlineKeyboardButton = InlineKeyboardButton(text="UP", callback_data="#UP")
@@ -122,21 +124,55 @@ class CombiKeyboardGenerator(ScrollKeyboardGenerator):
         )
 
 
-def create_scrollkeys_for_mywords(
-        list_of_words: list[dict[str, Any]]
+class MyWordsScrollKeyboardGenerator(ScrollKeyboardGenerator):
+    """A scrolling keyboard generator with user's words."""
+
+    def build_context_menu_for_one_word(self, card_id: UUID) -> InlineKeyboardMarkup:  # type: ignore
+        """Returns a keyboard with a word and a context menu for it.
+
+        Parameters:
+            card_id: identifier of the card for which the keyboard is generated.
+        """
+
+        context_menu_button: list[list[InlineKeyboardButton]] = [
+            [
+                InlineKeyboardButton(
+                    text="⚡️ DELETE ⚡️",
+                    callback_data=DeletingMyWordCallbackData(card_id=card_id).pack(),
+                ),
+                InlineKeyboardButton(
+                    text="BACK TO LIST", callback_data="#BACK TO LIST"
+                ),
+            ]
+        ]
+        for row in self.scrollkeys:
+            if row[0].callback_data.endswith(str(card_id)):  # type: ignore
+                return InlineKeyboardMarkup(inline_keyboard=[row] + context_menu_button)
+
+
+def create_set_of_buttons_with_user_words(
+    list_of_words: list[dict[str, Any]]
 ) -> list[list[InlineKeyboardButton]]:
+    """Returns a list of InlineKeyboardButton lists containing the user's words.
+
+    Converts user cards data into a set of rows consisting of buttons,
+    one card per button, one button per line.
+
+    Parameters:
+        list_of_words: user card dataset, contains:
+            {'card_id': UUID, 'foreign_word': str, 'native_word': str,
+            'learning_status_code': int , 'learning_status': str}
+    """
     return [
         [
             InlineKeyboardButton(
-                text="{foreign_word} - {native_word} - {learning_status}".format(**i),
-                callback_data="abc"
+                text="{foreign_word}:  {native_word}  👉  {learning_status}".format(
+                    **card
+                ),
+                callback_data=MyWordCallbackData(card_id=card["card_id"]).pack(),
             ),
-            InlineKeyboardButton(
-                text="Delete",
-                callback_data=MyWordsCallbackData(card_id=i["card_id"]).pack()
-            )
         ]
-        for i in list_of_words
+        for card in list_of_words
     ]
 
 
