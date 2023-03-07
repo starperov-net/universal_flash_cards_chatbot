@@ -78,7 +78,7 @@ async def my_words_down(
         return await callback_query.answer(
             "Update the wordlist by calling the /mywords command."
         )
-    if callback_query.message is None or combi_keyboard_generator is None:
+    if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
     return await callback_query.message.edit_reply_markup(
@@ -104,7 +104,7 @@ async def my_words_up(
         return await callback_query.answer(
             "Update the wordlist by calling the /mywords command"
         )
-    if callback_query.message is None or combi_keyboard_generator is None:
+    if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
     return await callback_query.message.edit_reply_markup(
@@ -134,7 +134,7 @@ async def context_menu_for_one_myword(
         return await callback_query.answer(
             "Update the wordlist by calling the /mywords command"
         )
-    if callback_query.message is None or combi_keyboard_generator is None:
+    if callback_query.message is None:
         return await callback_query.answer("Pay attention the message is too old.")
 
     try:
