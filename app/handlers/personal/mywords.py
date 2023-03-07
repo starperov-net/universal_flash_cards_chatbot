@@ -2,7 +2,7 @@
 
 Using the /mywords command will display a 10 button scrolling keyboard.
 One or two auxiliary buttons (DOWN, UP), others contain information about one user's card:
-<word_in_native_language: word_in_target_language 👉 learning_status>.
+<word_in_target_language: word_in_native_language 👉 learning_status>.
 By clicking on the button with information about the card, under the button
 a context menu will appear in the form of a keyboard with two buttons: DELETE and BACK TO LIST.
 When the context menu appears, all other buttons with information about the cards disappear
