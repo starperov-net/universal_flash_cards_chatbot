@@ -1,0 +1,2 @@
+class TmpStorage(dict):
+    pass

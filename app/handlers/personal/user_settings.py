@@ -17,7 +17,7 @@ class UserSettings(StatesGroup):
 
 async def user_context_menu(
         message: types.Message,
-        state: Optional[FSMContext] = None,
+        state: Optional[FSMContext],
         callback: Optional[types.CallbackQuery] = None
         ) -> None:
     # встановити статус
