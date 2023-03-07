@@ -70,7 +70,7 @@ class ScrollKeyboardGenerator:
         if self.start_row != 0:
             current_scroll_keyboard = [[KEY_UP]] + current_scroll_keyboard
             self.numbers_of_buttons_to_show -= 1
-        if self.start_row + self.numbers_of_buttons_to_show < len(self.scrollkeys) - 1:
+        if self.start_row + self.numbers_of_buttons_to_show >= len(self.scrollkeys) - 1:
             return (
                 current_scroll_keyboard
                 + self.scrollkeys[
@@ -100,7 +100,10 @@ class ScrollKeyboardGenerator:
         Changes the values of internal variables that store the state of the keyboard after
         the "up" step and returns a new keyboard object.
         """
-        self.start_row = self.start_row - self.numbers_of_buttons_to_show if self.start_row - self.numbers_of_buttons_to_show >= 0 else 0
+        self.start_row = (
+            self.start_row -
+            self.numbers_of_buttons_to_show if self.start_row - self.numbers_of_buttons_to_show >= 0 else 0
+            )
         return self.markup()
 
     def markup_down(self) -> InlineKeyboardMarkup:

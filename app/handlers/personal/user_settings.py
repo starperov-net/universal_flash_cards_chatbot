@@ -1,8 +1,8 @@
 from typing import Optional
-from aiogram import types, Dispatcher
-from aiogram.filters import Command
+from aiogram import types
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+
 
 class UserSettings(StatesGroup):
     main = State()
@@ -13,8 +13,6 @@ class UserSettings(StatesGroup):
     extract_from_archive_user_cintext = State()
 
 
-
-
 async def user_context_menu(
         message: types.Message,
         state: Optional[FSMContext],
@@ -22,10 +20,10 @@ async def user_context_menu(
         ) -> None:
     # встановити статус
     # get user_contexts
-    ## get user settings language (from DB or from TG)
-    ## gen dict with possible messages (depends on status, current language)
+    # get user settings language (from DB or from TG)
+    # gen dict with possible messages (depends on status, current language)
     # create current list of keys for keyboard
-    # call handler for 
+    # call handler for
     await message.answer("There will be settings-block")
 
 

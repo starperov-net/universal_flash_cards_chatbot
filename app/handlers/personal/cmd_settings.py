@@ -1,5 +1,4 @@
-import asyncio
-from typing import Optional, Union
+from typing import Union
 from aiogram import types, Dispatcher
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -10,11 +9,12 @@ from app.db_functions.personal import get_user_context
 from app.storages import TmpStorage
 from app.handlers.personal.keyboards import CombiKeyboardGenerator, KeyKeyboard
 
+
 async def cmd_settings(
         event: Union[types.Message, types.CallbackQuery],
         state: FSMContext,
         tmp_storage: TmpStorage,
-    ) -> None:
+) -> None:
     print("in cmd_settings".center(120, "-"))
     print(f"tmp_storage: {tmp_storage}")
     print(f"type of tmp_storage: {type(tmp_storage)}")
@@ -28,33 +28,33 @@ async def cmd_settings(
         print(f"event is Message, message_id: {event.message_id}")
         scrollkey_buttons = [
             [
-            InlineKeyboardButton(
-                text = user_context["context_1"]["name"] + '-' + user_context["context_2"]["name"],
-                callback_data=str(user_context["id"])
+                InlineKeyboardButton(
+                    text=user_context["context_1"]["name"] + '-' + user_context["context_2"]["name"],
+                    callback_data=str(user_context["id"])
                 )
             ] for user_context in user_contexts
         ]
         additional_buttons = [
             [
-            InlineKeyboardButton(
-                text = "set as current context",
-                callback_data = "#SET_CURRENT_CONTEXT"
+                InlineKeyboardButton(
+                    text="set as current context",
+                    callback_data="#SET_CURRENT_CONTEXT"
                 ),
             ],
             [
-            InlineKeyboardButton(
-                text = "create new context",
-                callback_data = "#CREATE_NEW_CONTEXT"
+                InlineKeyboardButton(
+                    text="create new context",
+                    callback_data="#CREATE_NEW_CONTEXT"
                 )
             ],
             [
-            InlineKeyboardButton(
-                text = "send to arhive",
-                callback_data = "#SEND_TO_ARCHIVE"
+                InlineKeyboardButton(
+                    text="send to arhive",
+                    callback_data="#SEND_TO_ARCHIVE"
                 ),
-            InlineKeyboardButton(
-                text = "extract from archive",
-                callback_data = "#EXTRACT_FROM_ARCHIVE"
+                InlineKeyboardButton(
+                    text="extract from archive",
+                    callback_data="#EXTRACT_FROM_ARCHIVE"
                 )
             ]
 
@@ -72,8 +72,8 @@ async def cmd_settings(
             message_id=event.message_id
         )
         print(f"key for keyboard is: {key}")
-        # "Ховаємо" клавіатуру у глобальному об'єкті
-        
+        # "Ховаємо" клавіатуру у глобальному об'
+        tmp_storage[key] = kb
         print(f"tmp_storage after add kb: {tmp_storage}")
         # виводимо клавіатуру
         await event.answer(
@@ -82,12 +82,12 @@ async def cmd_settings(
         )
     if isinstance(event, types.CallbackQuery):
         # дивимось на callback.data, в залежності від нього:
-        # або (обрана дія перебачає нову клавіатуру в новому стані)  
+        # або (обрана дія перебачає нову клавіатуру в новому стані)
         #    - видаляємо з глобального обїекта існуючу клавіатуру
         #    - визиваємо відповідний
         # або (скрол клавіатурі)
         #     - змінюємо стан клавіатури в глобальному сховищі
-        #     - корегуємо повідомлення з новою клавіатурою   
+        #     - корегуємо повідомлення з новою клавіатурою
         await event.answer("it is CallbackQuery")
 
 
