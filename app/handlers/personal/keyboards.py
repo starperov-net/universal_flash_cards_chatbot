@@ -1,6 +1,6 @@
 import random
 from uuid import UUID
-from typing import List
+from typing import List, Any
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -11,6 +11,8 @@ from app.handlers.personal.callback_data_states import (
     ToStudyCallbackData,
     KnowDontKnowCallbackData,
     CustomTranslationCallbackData,
+    MyWordCallbackData,
+    DeletingMyWordCallbackData,
 )
 
 KEY_UP: InlineKeyboardButton = InlineKeyboardButton(text="UP", callback_data="#UP")
@@ -56,7 +58,7 @@ class ScrollKeyboardGenerator:
         if self.start_row != 0:
             current_scroll_keyboard = [[KEY_UP]] + current_scroll_keyboard
             numbers_of_buttons_to_show -= 1
-        if self.start_row + numbers_of_buttons_to_show < len(self.scrollkeys) - 1:
+        if numbers_of_buttons_to_show >= len(self.scrollkeys) - self.start_row:
             return (
                 current_scroll_keyboard
                 + self.scrollkeys[
@@ -120,6 +122,58 @@ class CombiKeyboardGenerator(ScrollKeyboardGenerator):
             inline_keyboard=self._get_current_scroll_keyboard_list()
             + self.additional_buttons_list
         )
+
+
+class MyWordsScrollKeyboardGenerator(ScrollKeyboardGenerator):
+    """A scrolling keyboard generator with user's words."""
+
+    def build_context_menu_for_one_word(self, card_id: UUID) -> InlineKeyboardMarkup:  # type: ignore
+        """Returns a keyboard with a word and a context menu for it.
+
+        Parameters:
+            card_id: identifier of the card for which the keyboard is generated.
+        """
+
+        context_menu_button: list[list[InlineKeyboardButton]] = [
+            [
+                InlineKeyboardButton(
+                    text="⚡️ DELETE ⚡️",
+                    callback_data=DeletingMyWordCallbackData(card_id=card_id).pack(),
+                ),
+                InlineKeyboardButton(
+                    text="BACK TO LIST", callback_data="#BACK TO LIST"
+                ),
+            ]
+        ]
+        for row in self.scrollkeys:
+            if row[0].callback_data.endswith(str(card_id)):  # type: ignore
+                return InlineKeyboardMarkup(inline_keyboard=[row] + context_menu_button)
+
+
+def create_set_of_buttons_with_user_words(
+    list_of_words: list[dict[str, Any]]
+) -> list[list[InlineKeyboardButton]]:
+    """Returns a list of InlineKeyboardButton lists containing the user's words.
+
+    Converts user cards data into a set of rows consisting of buttons,
+    one card per button, one button per line.
+
+    Parameters:
+        list_of_words: user card dataset, contains:
+            {'card_id': UUID, 'foreign_word': str, 'native_word': str,
+            'learning_status_code': int , 'learning_status': str}
+    """
+    return [
+        [
+            InlineKeyboardButton(
+                text="{foreign_word}:  {native_word}  👉  {learning_status}".format(
+                    **card
+                ),
+                callback_data=MyWordCallbackData(card_id=card["card_id"]).pack(),
+            ),
+        ]
+        for card in list_of_words
+    ]
 
 
 # ------- keyboard for choice languages

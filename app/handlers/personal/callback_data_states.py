@@ -45,3 +45,15 @@ class StudyFourOptionsCallbackData(CallbackData, prefix="study_four_options"):
     card_id: UUID
     memorization_stage: int
     repetition_level: int
+
+
+class MyWordCallbackData(CallbackData, prefix="mywords"):
+    """CallbackData of a single user word at the time the "mywords" mode was activated."""
+
+    card_id: UUID
+
+
+class DeletingMyWordCallbackData(CallbackData, prefix="del_mywords"):
+    """CallbackData to delete one user word during the activation of the "mywords" mode."""
+
+    card_id: UUID
