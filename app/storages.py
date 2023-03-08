@@ -68,7 +68,7 @@ class TmpStorage(dict):
             if datetime.now() - self._time_creation[key_for_del] < self.min_lifetime:
                 print(
                     f"WARNING: in object {self} deleted element with key = {key_for_del}. \
-                      The lifetime of this element is less than Wh. You may need to increase the storage size."
+The lifetime of this element is less than {self.min_lifetime}. You may need to increase the storage size."
                 )  # TODO -> in log
             self.__delitem__(key_for_del)
         return super().__setitem__(__key, __value)
