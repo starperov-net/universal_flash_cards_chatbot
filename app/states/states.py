@@ -22,10 +22,6 @@ class FSMCustomTranslation(StatesGroup):
 
 
 class FSMMyWords(StatesGroup):
-    """
-    State machine class for /mywords
-    """
+    """State machine for storing data in <myWords> mode."""
 
     mywords = State()
-    mywords_up = State()
-    mywords_down = State()
