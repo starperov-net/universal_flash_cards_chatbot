@@ -9,7 +9,7 @@ from app.tables import Card, Context, Item, ItemRelation, User, UserContext
 
 
 async def add_card_db(
-    telegram_user_id: int, item_relation_id: UUID, author: Optional[int] = None
+        telegram_user_id: int, item_relation_id: UUID, author: Optional[int] = None
 ) -> Card:
     user: UUID = await get_existing_user_id_db(telegram_user_id)
     card: Card = Card(user=user, item_relation=item_relation_id, author=author or user)
@@ -25,7 +25,7 @@ async def update_card_db(card: serializers.Card) -> None:
 
 
 async def add_item_relation_db(
-    author_id: UUID, item_1_id: UUID, item_2_id: UUID
+        author_id: UUID, item_1_id: UUID, item_2_id: UUID
 ) -> UUID:
     item_relation: ItemRelation = ItemRelation(
         author=author_id, item_1=item_1_id, item_2=item_2_id
@@ -35,7 +35,7 @@ async def add_item_relation_db(
 
 
 async def add_user_context_db(
-    data_callback_query: dict[str, Any], user_db: User
+        data_callback_query: dict[str, Any], user_db: User
 ) -> UserContext:
     context_1 = await Context.objects().get(
         Context.name == data_callback_query["native_lang"]
@@ -52,6 +52,18 @@ async def add_user_context_db(
     return user_context
 
 
+async def delete_card_by_idcard_db(card_id: UUID) -> None:
+    await Card.delete().where(Card.id == card_id)
+
+
+async def delete_item_relation_by_id_db(item_relation_id: UUID) -> None:
+    await ItemRelation.delete().where(ItemRelation.id == item_relation_id)
+
+
+async def delete_item_by_id_db(item_id) -> None:
+    await Item.delete().where(Item.id == item_id)
+
+
 async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> bool:
     """
     The function checks if the user already has the item_relation to study.
@@ -63,6 +75,11 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> 
     return bool(card)
 
 
+async def get_card_by_idcard_db(card_id: UUID) -> dict:
+    result: dict = await Card.select().where(Card.id == card_id).first()
+    return result
+
+
 async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) -> UUID:
     item: Item = await Item.objects().get_or_create(
         (Item.text == text) & (Item.context == context_id),
@@ -72,7 +89,7 @@ async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) ->
 
 
 async def get_or_create_item_relation_db(
-    author_id: UUID, item_1: UUID, item_2: UUID
+        author_id: UUID, item_1: UUID, item_2: UUID
 ) -> UUID:
     """The function creates an item_relation, if there is not one in db,
     or gets one from db if the item_relation exists.
@@ -118,7 +135,7 @@ async def get_context_id_db(name_alfa2: str) -> UUID:
 
 
 async def get_or_create_item_by_text_and_usercontext_db(
-    text: str, user_context: UserContext
+        text: str, user_context: UserContext
 ) -> Item:
     """The function creates an item, if there is no one in db,
     or gets one from db if the item exists.
@@ -141,8 +158,18 @@ async def get_or_create_item_by_text_and_usercontext_db(
     return item
 
 
+async def get_item_by_id_db(item_id: UUID) -> dict:
+    result: dict = Item.select().where(Item.id == item_id)
+    return result
+
+
+async def get_item_relation_by_id_db(item_relation_id: UUID) -> dict:
+    result: dict = ItemRelation.select().where(ItemRelation.id == item_relation_id)
+    return result
+
+
 async def get_item_relation_with_related_items_by_id_db(
-    item_relation_id: UUID,
+        item_relation_id: UUID,
 ) -> ItemRelation:
     """
     return: {ItemRelation}:
@@ -158,7 +185,7 @@ async def get_item_relation_with_related_items_by_id_db(
 
 
 async def get_item_relation_by_text_db(
-    text: str, user_context: UserContext
+        text: str, user_context: UserContext
 ) -> Optional[ItemRelation]:
     """
     беремо всі переклади авторства юзера чи гугла(telegram_iser_id=0)
@@ -217,7 +244,7 @@ async def get_existing_user_id_db(telegram_user_id: int) -> UUID:
 
 
 async def get_translated_text_from_item_relation(
-    text: str, item_relation: ItemRelation
+        text: str, item_relation: ItemRelation
 ) -> str:
     """
     Із item_relation беру два слова і із них прибираю те слово, яке користувач ввів для перекладу(text),
@@ -254,9 +281,8 @@ async def get_all_items_according_context(context_id: UUID) -> list[dict]:
 
 
 async def get_user_context(
-    user: UUID | int, user_context_id: Optional[UUID] = None
+        user: UUID | int, user_context_id: Optional[UUID] = None
 ) -> List[Any]:
-
     """Get user_context.
 
     user: user.id (UUID type) or user.telegram_user_id (int type)
@@ -365,6 +391,7 @@ if __name__ == "__main__":
     telegram_user_id = 144371650
     user_context_id = UUID("9296f4aa-b3b4-4fa0-b97f-ba90f658f576")
 
+
     async def test() -> None:
         res_1 = await get_user_context(user_id_uuid)
         print(f"user - UUID, user_context=None\n{res_1}")
@@ -377,6 +404,7 @@ if __name__ == "__main__":
 
         res_4 = await get_user_context(telegram_user_id, user_context_id)
         print(f"user - int, user_context=UUID\n{res_4}")
+
 
     asyncio.run(test())
 

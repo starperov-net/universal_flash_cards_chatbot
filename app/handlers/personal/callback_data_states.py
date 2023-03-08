@@ -45,3 +45,9 @@ class StudyFourOptionsCallbackData(CallbackData, prefix="study_four_options"):
     card_id: UUID
     memorization_stage: int
     repetition_level: int
+
+
+class MyWordsCallbackData(CallbackData, prefix="mywords"):
+    """CallbackData to display the user`s words."""
+
+    card_id: str
