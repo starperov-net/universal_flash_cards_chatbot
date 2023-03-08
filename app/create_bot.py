@@ -5,7 +5,7 @@ from aioredis import Redis
 
 from app.settings import settings
 
-redis = Redis(host='redis')
+redis = Redis(host="redis")
 storage = RedisStorage(redis=redis)  # type: ignore
 tmp_storage = TmpStorage()
 bot = Bot(token=settings.BOT_TOKEN)  # type: ignore

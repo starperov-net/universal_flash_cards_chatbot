@@ -14,10 +14,10 @@ class UserSettings(StatesGroup):
 
 
 async def user_context_menu(
-        message: types.Message,
-        state: Optional[FSMContext],
-        callback: Optional[types.CallbackQuery] = None
-        ) -> None:
+    message: types.Message,
+    state: Optional[FSMContext],
+    callback: Optional[types.CallbackQuery] = None,
+) -> None:
     # встановити статус
     # get user_contexts
     # get user settings language (from DB or from TG)

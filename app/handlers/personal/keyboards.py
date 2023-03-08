@@ -51,7 +51,7 @@ class ScrollKeyboardGenerator:
         scrollkeys: List[List[InlineKeyboardButton]],
         max_rows_number: int = 5,
         start_row: int = 0,
-        scroll_step: int = 1
+        scroll_step: int = 1,
     ) -> None:
         self.scrollkeys = scrollkeys
         self.max_rows_number = max_rows_number
@@ -101,9 +101,10 @@ class ScrollKeyboardGenerator:
         the "up" step and returns a new keyboard object.
         """
         self.start_row = (
-            self.start_row -
-            self.numbers_of_buttons_to_show if self.start_row - self.numbers_of_buttons_to_show >= 0 else 0
-            )
+            self.start_row - self.numbers_of_buttons_to_show
+            if self.start_row - self.numbers_of_buttons_to_show >= 0
+            else 0
+        )
         return self.markup()
 
     def markup_down(self) -> InlineKeyboardMarkup:
@@ -114,7 +115,8 @@ class ScrollKeyboardGenerator:
         """
         self.start_row = (
             (self.start_row + self.numbers_of_buttons_to_show)
-            if (self.start_row + (self.numbers_of_buttons_to_show - 1)) < len(self.scrollkeys)
+            if (self.start_row + (self.numbers_of_buttons_to_show - 1))
+            < len(self.scrollkeys)
             else len(self.scrollkeys) - self.numbers_of_buttons_to_show
         )
         return self.markup()
@@ -129,8 +131,7 @@ class CombiKeyboardGenerator(ScrollKeyboardGenerator):
         additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
         max_rows_number: int = 5,
         start_row: int = 0,
-        scroll_step: int = 1
-
+        scroll_step: int = 1,
     ) -> None:
         super().__init__(scrollkeys, max_rows_number, start_row, scroll_step)
         if not additional_buttons_list:
