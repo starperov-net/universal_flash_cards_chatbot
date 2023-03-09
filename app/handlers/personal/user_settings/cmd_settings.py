@@ -3,11 +3,12 @@ from aiogram import types, Dispatcher
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton
-from app.handlers.personal.user_settings import UserSettings
+from app.handlers.personal.user_settings.user_settings import UserSettings
 from app.create_bot import bot
 from app.db_functions.personal import get_user_context
 from app.storages import TmpStorage
 from app.handlers.personal.keyboards import CombiKeyboardGenerator, KeyKeyboard
+from app.utils import is_uuid
 
 
 async def cmd_settings(
@@ -89,6 +90,22 @@ async def cmd_settings(
         # або (скрол клавіатурі)
         #     - змінюємо стан клавіатури в глобальному сховищі
         #     - корегуємо повідомлення з новою клавіатурою
+        if event.data == "#CREATE_NEW_CONTEXT":
+            pass
+        elif event.data == "#SET_CURRENT_CONTEXT":
+            pass
+        elif event.data == "#SEND_TO_ARCHIVE":
+            pass
+        elif event.data == "#EXTRACT_FROM_ARCHIVE":
+            pass
+        elif event.data == "#DOWN":
+            pass
+        elif event.data == "#UP":
+            pass
+        elif event.data and is_uuid(event.data):
+            pass
+        else:
+            pass
         await event.answer(f"callback.data is: {event.data}")
 
 
