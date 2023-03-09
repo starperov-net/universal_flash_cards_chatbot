@@ -39,7 +39,7 @@ class TmpStorage(dict):
         self.min_lifetime = timedelta(seconds=min_lifetime_sec)
         self.max_lifetime = timedelta(seconds=max_lifetime_sec)
         self._deque = deque("")
-        self._time_creation = {}
+        self._time_creation: dict = {}
 
     def __setitem__(self, __key: _KT, __value: _VT) -> None:
         """Checks for an element with the following key

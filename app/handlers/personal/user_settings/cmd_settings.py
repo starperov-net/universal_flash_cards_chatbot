@@ -85,11 +85,11 @@ async def cmd_settings(
         # дивимось на callback.data, в залежності від нього:
         # або (обрана дія перебачає нову клавіатуру в новому стані)
         #    - видаляємо з глобального обїекта існуючу клавіатуру
-        #    - визиваємо відповідний
+        #    - визиваємо відповідний обробник
         # або (скрол клавіатурі)
         #     - змінюємо стан клавіатури в глобальному сховищі
         #     - корегуємо повідомлення з новою клавіатурою
-        await event.answer("it is CallbackQuery")
+        await event.answer(f"callback.data is: {event.data}")
 
 
 def register_handler_settings(dp: Dispatcher) -> None:

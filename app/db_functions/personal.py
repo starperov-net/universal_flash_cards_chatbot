@@ -201,9 +201,34 @@ async def get_all_items_according_context(context_id: UUID) -> list[dict]:
     return random_words
 
 
+async def get_context(
+        context_class_id: Optional[UUID] = None,
+        context_id: Optional[UUID] = None
+) -> Any:
+    """Get context.
+    
+    context_class_id: context_class.id (UUID) - optional
+    context_id: context.id (UUID) - optional
+
+    return: list of dicts {
+        'id'
+    }
+    """
+    if not context_class_id and not context_id:
+        return await Context.select()
+    elif not context_id and context_class_id:
+        return await Context.select().where(Context.context_class == context_class_id)
+    elif context_id and not context_class_id:
+        return await Context.select().where(Context.id == context_id)
+    else:
+        return await Context.select().where(
+            (Context.id == context_id) & (Context.context_class == context_class_id)
+        )
+
+
 async def get_user_context(
     user: UUID | int, user_context_id: Optional[UUID] = None
-) -> List[Any]:
+) -> Any:
 
     """Get user_context.
 
