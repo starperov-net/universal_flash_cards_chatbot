@@ -198,26 +198,26 @@ async def delete_customs_card(
     state: FSMContext,
 ) -> Union[types.Message, bool]:
     """
-    запам'ятати id item_relation
-    видалити card  по  id_card
+    remove card  by  id_card
 
-    перевірити author у  item_relation
-    если author = user
-        запам'ятати id  item1 item2
-        видалити item_relation
+    check author in  item_relation
+    if author == user
+        remembering id in item1 and item2
+        remove item_relation
 
-    перевірити author у  item1
-    если author = user
-        видалити item1
+    check author in  item1
+    if author == user
+        remove item1
 
-    перевірити author у  item2
-    если author = user
-        видалити item2
+    check author in  item2
+    if author == user
+        remove item2
     """
 
     card_id: UUID = callback_data.card_id
     card_dict: Optional[dict] = await get_card_by_idcard_db(card_id)
 
+    # case when user want to delete a  deleted word
     if not card_dict:
         return await callback_query.answer("This word was already deleted.")
 
@@ -225,6 +225,8 @@ async def delete_customs_card(
     combi_keyboard_generator: Optional[MyWordsScrollKeyboardGenerator] = state_data.get(
         "combi_keyboard_generator"
     )
+
+    # case when user has used old keyboard with worlds
     if combi_keyboard_generator is None:
         return await callback_query.answer(
             "Update the wordlist by calling the /mywords command"
@@ -235,9 +237,7 @@ async def delete_customs_card(
     # remove button from buttons list. Difficult access to the value of card_id in button of keyboard
     # for example : button[0].callback_data  is str  and has value "mywords:4da3a037-2e08-4407-99f6-0cd5210dee92"
     for button in combi_keyboard_generator.scrollkeys:
-        if button[0].callback_data and button[0].callback_data.split(":")[-1] == str(
-            card_id
-        ):
+        if button[0].callback_data and button[0].callback_data.endswith(str(card_id)):
             combi_keyboard_generator.scrollkeys.remove(button)
             break
 
@@ -258,8 +258,8 @@ async def delete_customs_card(
 
             if item_dict["author"] == card_dict["author"]:
                 await delete_item_by_id_db(item)
+    await callback_query.answer("😢 deleted 😢")
     return await cancel_context_menu_for_one_myword(callback_query, state)
-    # return await callback_query.answer("😢 deleted 😢")
 
 
 def register_handler_mywords(dp: Dispatcher) -> None:
