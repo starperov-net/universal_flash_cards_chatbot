@@ -52,6 +52,18 @@ async def add_user_context_db(
     return user_context
 
 
+async def delete_card_by_idcard_db(card_id: UUID) -> None:
+    await Card.delete().where(Card.id == card_id)
+
+
+async def delete_item_relation_by_id_db(item_relation_id: UUID) -> None:
+    await ItemRelation.delete().where(ItemRelation.id == item_relation_id)
+
+
+async def delete_item_by_id_db(item_id: UUID) -> None:
+    await Item.delete().where(Item.id == item_id)
+
+
 async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> bool:
     """
     The function checks if the user already has the item_relation to study.
@@ -61,6 +73,11 @@ async def is_words_in_card_db(telegram_user_id: int, item_relation_id: UUID) -> 
         & (Card.item_relation.id == item_relation_id)
     )
     return bool(card)
+
+
+async def get_card_by_idcard_db(card_id: UUID) -> Optional[dict]:
+    result: Optional[dict] = await Card.select().where(Card.id == card_id).first()
+    return result
 
 
 async def get_or_create_item_db(text: str, context_id: UUID, author_id: UUID) -> UUID:
@@ -139,6 +156,18 @@ async def get_or_create_item_by_text_and_usercontext_db(
         & (Item.context.is_in([user_context.context_1, user_context.context_2]))
     )
     return item
+
+
+async def get_item_by_id_db(item_id: UUID) -> dict:
+    result: dict = await Item.select().where(Item.id == item_id).first()
+    return result
+
+
+async def get_item_relation_by_id_db(item_relation_id: UUID) -> dict:
+    result: dict = (
+        await ItemRelation.select().where(ItemRelation.id == item_relation_id).first()
+    )
+    return result
 
 
 async def get_item_relation_with_related_items_by_id_db(
@@ -256,7 +285,6 @@ async def get_all_items_according_context(context_id: UUID) -> list[dict]:
 async def get_user_context(
     user: UUID | int, user_context_id: Optional[UUID] = None
 ) -> List[Any]:
-
     """Get user_context.
 
     user: user.id (UUID type) or user.telegram_user_id (int type)
