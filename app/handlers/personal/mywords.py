@@ -10,7 +10,7 @@ and reappear after pressing the BACK TO LIST button.
 DELETE button - deletes the card.
 State here is just like storage.
 """
-from typing import Optional, Union
+from typing import Optional, Union, Any
 
 from aiogram.exceptions import TelegramBadRequest
 
@@ -57,7 +57,10 @@ async def show_my_words(msg: types.Message, state: FSMContext) -> types.Message:
     if msg.from_user is None:
         return await msg.answer("Messages sent to channels")
 
-    list_of_words: list[dict] = await get_list_of_words(msg.from_user.id)
+    list_of_words: list[Any] = await get_list_of_words(msg.from_user.id)
+    if not list_of_words:
+        return await msg.answer("Your word list is empty.")
+
     combi_keyboard_generator: MyWordsScrollKeyboardGenerator = (
         MyWordsScrollKeyboardGenerator(
             scrollkeys=create_set_of_buttons_with_user_words(list_of_words),

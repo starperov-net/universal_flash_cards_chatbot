@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Any
 
 from app.tables import Card
 
 
 async def get_list_of_words(
     telegram_user_id: int, max_repetition_level: int = 8
-) -> List[dict]:
+) -> List[Any]:
     """
     fuction return all cards of user, sorted by learning_status and alphabet
     learning_status  counted by repetition_level
