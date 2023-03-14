@@ -1,11 +1,20 @@
-from typing import Any, Optional, List
+from typing import Any, Optional
 from uuid import UUID
 
 import aiogram
 
+from aiogram import types
+
 from app import serializers
 from app.exceptions.custom_exceptions import NotFullSetException
-from app.tables import Card, Context, Item, ItemRelation, User, UserContext
+from app.tables import (
+    Card,
+    Context,
+    Item,
+    ItemRelation,
+    User,
+    UserContext,
+)
 
 
 async def add_card_db(
@@ -202,11 +211,10 @@ async def get_all_items_according_context(context_id: UUID) -> list[dict]:
 
 
 async def get_context(
-        context_class_id: Optional[UUID] = None,
-        context_id: Optional[UUID] = None
+    context_class_id: Optional[UUID] = None, context_id: Optional[UUID] = None
 ) -> Any:
     """Get context.
-    
+
     context_class_id: context_class.id (UUID) - optional
     context_id: context.id (UUID) - optional
 
@@ -327,6 +335,24 @@ async def get_user_context(
             .order_by(UserContext.last_date)
             .output(nested=True)
         )
+
+
+async def get_default_language(user: types.user.User) -> dict:
+    """Get user language settings.
+
+    IMPORTANT!
+    After adding a language selection in the user settings (with the possibility to differ
+    from the language of the telegram interface), this function must be changed: the user
+    settings are checked and they are in priority. If they are not there, then the telegram
+    settings and interface are taken as the basis.
+    """
+
+    language_code = user.language_code or "en"
+    return (
+        await Context.select(Context.id, Context.name, Context.name_alfa2)
+        .where(Context.name_alfa2.like("%" + language_code + "%"))
+        .first()
+    )
 
 
 if __name__ == "__main__":

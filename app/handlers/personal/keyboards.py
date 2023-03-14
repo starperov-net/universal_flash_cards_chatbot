@@ -1,6 +1,6 @@
 import random
 from uuid import UUID
-from typing import List, Optional
+from typing import List, Optional, Any
 from dataclasses import dataclass
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -26,9 +26,9 @@ class KeyKeyboard:
     __slots__ = ["bot_id", "chat_id", "user_id", "message_id"]
 
     bot_id: int
-    chat_id: int
+    chat_id: int | str
     user_id: int | None
-    message_id: int
+    message_id: int | None
 
 
 class ScrollKeyboardGenerator:
@@ -68,9 +68,16 @@ class ScrollKeyboardGenerator:
         self.numbers_of_buttons_to_show = self.max_rows_number
         current_scroll_keyboard: List[List[InlineKeyboardButton]] = []
         if self.start_row != 0:
+            print(
+                "im _get_current_scroll_keyboard_list, in brunch 'self.start_row != 0'"
+            )
             current_scroll_keyboard = [[KEY_UP]] + current_scroll_keyboard
             self.numbers_of_buttons_to_show -= 1
         if self.start_row + self.numbers_of_buttons_to_show >= len(self.scrollkeys) - 1:
+            print(
+                "im _get_current_scroll_keyboard_list, in brunch 'self.start_row + \
+                self.numbers_of_buttons_to_show >= len(self.scrollkeys) - 1'"
+            )
             return (
                 current_scroll_keyboard
                 + self.scrollkeys[
@@ -78,6 +85,7 @@ class ScrollKeyboardGenerator:
                 ]
             )
         else:
+            print("im _get_current_scroll_keyboard_list, in brunch 'else'")
             self.numbers_of_buttons_to_show -= 1
             return (
                 current_scroll_keyboard
@@ -89,7 +97,7 @@ class ScrollKeyboardGenerator:
 
     def markup(self) -> InlineKeyboardMarkup:
         """Get the current state of the scrolling keyboard."""
-
+        print("in ")
         return InlineKeyboardMarkup(
             inline_keyboard=self._get_current_scroll_keyboard_list()
         )
@@ -129,20 +137,69 @@ class CombiKeyboardGenerator(ScrollKeyboardGenerator):
         self,
         scrollkeys: List[List[InlineKeyboardButton]],
         additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
+        pre_additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
         max_rows_number: int = 5,
         start_row: int = 0,
         scroll_step: int = 1,
     ) -> None:
+        print("I`m in CombiKeyboardGenerator.__init__".center(120, "-"))
+        print(f"scrollkeys: {scrollkeys}")
+        print(f"additional_buttons_list: {additional_buttons_list}")
+        print(f"pre_additional_buttons_list: {pre_additional_buttons_list}")
+        print(f"max_rows_number: {max_rows_number}")
+        print(f"start_row: {start_row}")
+        print(f"scroll_step: {scroll_step}")
         super().__init__(scrollkeys, max_rows_number, start_row, scroll_step)
-        if not additional_buttons_list:
-            additional_buttons_list = []
-        self.additional_buttons_list = additional_buttons_list
+        self.additional_buttons_list = additional_buttons_list or []
+        self.pre_additional_buttons_list = pre_additional_buttons_list or []
 
     def markup(self) -> InlineKeyboardMarkup:
+        print("I`m in CombiKeyboardGenerator.markup".center(120, "*"))
         return InlineKeyboardMarkup(
-            inline_keyboard=self._get_current_scroll_keyboard_list()
-            + self.additional_buttons_list
+            inline_keyboard=(
+                self.pre_additional_buttons_list
+                + self._get_current_scroll_keyboard_list()
+                + self.additional_buttons_list
+            )
         )
+
+
+class KeyboardCreateUserContext(CombiKeyboardGenerator):
+    """Creates a keyboard object for the "create new user context" menu item.
+
+    Adds a date attribute (to store the selected settings), adds a property text to generate a message
+    that matches the current state of the user's selection.
+    """
+
+    def __init__(
+        self,
+        scrollkeys: List[List[InlineKeyboardButton]],
+        additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
+        pre_additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
+        max_rows_number: int = 5,
+        start_row: int = 0,
+        scroll_step: int = 1,
+        data: Any = None,
+    ) -> None:
+        self.data = data or [None, None, False]
+        super().__init__(
+            scrollkeys,
+            additional_buttons_list,
+            pre_additional_buttons_list,
+            max_rows_number,
+            start_row,
+            scroll_step,
+        )
+
+    @property
+    def text(self):
+        if not self.data[0]:
+            return "<b>set the first language --- XXXXXXXXXXXXXXXXXXXXXX</b>"
+        elif self.data[0] and not self.data[1]:
+            return f"<b>first: {self.data[0]['name']} ({self.data[0]['name_alfa2']}) --- set the second language</b>"
+        else:
+            f"<b>first: {self.data[0]['name']} ({self.data[0]['name_alfa2']}) ---\
+                 second: {self.data[1]['name']} ({self.data[1]['name_alfa2']})</b>"
 
 
 # ------- keyboard for choice languages

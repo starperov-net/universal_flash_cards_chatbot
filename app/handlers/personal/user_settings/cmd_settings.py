@@ -3,12 +3,13 @@ from aiogram import types, Dispatcher
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton
+from app.utils import is_uuid
 from app.handlers.personal.user_settings.user_settings import UserSettings
 from app.create_bot import bot
 from app.db_functions.personal import get_user_context
 from app.storages import TmpStorage
 from app.handlers.personal.keyboards import CombiKeyboardGenerator, KeyKeyboard
-from app.utils import is_uuid
+from app.handlers.personal.user_settings.create_user_context import create_user_context
 
 
 async def cmd_settings(
@@ -23,7 +24,6 @@ async def cmd_settings(
     await state.set_state(UserSettings.main)
     print(f"STATE: {await state.get_state()}")
     user_contexts = await get_user_context(event.from_user.id)
-    print(f"user_context: {user_contexts}")
     if isinstance(event, types.message.Message):
         # отримати отсортований за lastdate список всіх статусів користувача (GET user_contexts/)
         # формуємо список кнопок для клавіатури, створюємо клавіатуру (personal.keyboards.CombiKeyboardGenerator).
@@ -76,10 +76,14 @@ async def cmd_settings(
         tmp_storage[key] = kb
         print(f"tmp_storage after add kb: {tmp_storage}")
         # виводимо клавіатуру
-        await event.answer(
+        text = (
             user_contexts[0]["context_1"]["name"]
             + "-"
-            + user_contexts[0]["context_2"]["name"],
+            + user_contexts[0]["context_2"]["name"]
+        )
+        await event.answer(
+            text=f"<b>{text}</b>",
+            parse_mode="HTML",
             reply_markup=tmp_storage[key].markup(),
         )
     if isinstance(event, types.CallbackQuery):
@@ -91,7 +95,7 @@ async def cmd_settings(
         #     - змінюємо стан клавіатури в глобальному сховищі
         #     - корегуємо повідомлення з новою клавіатурою
         if event.data == "#CREATE_NEW_CONTEXT":
-            pass
+            await create_user_context(event, state, tmp_storage)
         elif event.data == "#SET_CURRENT_CONTEXT":
             pass
         elif event.data == "#SEND_TO_ARCHIVE":

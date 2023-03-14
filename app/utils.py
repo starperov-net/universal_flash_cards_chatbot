@@ -8,3 +8,7 @@ def is_uuid(str: str) -> bool:
         return True
     except Exception:
         return False
+
+
+async def get_id_for_context_class_language():
+    pass
