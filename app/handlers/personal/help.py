@@ -1,12 +1,9 @@
 from typing import Optional
 from uuid import UUID
 
-import jinja2
 from aiogram import types, Dispatcher
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from jinja2 import Environment
-from jinja2.environment import Template
 
 
 from app.base_functions.translator import get_translate
@@ -15,49 +12,51 @@ from app.handlers.personal.bot_commands import bot_commands
 from app.scheme.transdata import TranslateRequest
 
 
-async def cmd_help(msg: types.Message, state: FSMContext) -> None:
+async def cmd_help(msg: types.Message, state: FSMContext) -> types.Message:
     """Gives a hint to the user depending on what stage (state) he is at.
 
-    For each state of the bot (FSM) displays a specific hint in the language
-    of the user's telegram interface.
+    For each state of the bot (FSM) displays a specific hint
+    in the language of the user's telegram interface.
+    If the help table does not have a row with the current state,
+    it will return a help message with the status "None".
 
     Parameters:
         msg: types.Message
         state: State Machine
     """
     state_name: str = str(await state.get_state())
-    telegram_language: UUID = await get_context_id_db(msg.from_user.language_code.split("-")[0])  # type: ignore
-    text: Optional[str] = await get_help_db(state_name, telegram_language)
+    user_language: UUID = await get_context_id_db(msg.from_user.language_code.split("-")[0])  # type: ignore
+    # status = CURRENT, language = USER'S
+    help_text: Optional[str] = await get_help_db(state_name, user_language)
 
-    if text is None:
-        # if help with context 'en' does not exist, help_text will get help_text by state 'None'
-        en_text: Optional[str] = await get_help_db(
+    if help_text is None:
+        # status = CURRENT, language = ENGLISH
+        en_help_text: Optional[str] = await get_help_db(
             state_name, id_en_context := await get_context_id_db("en")
         )
-        if en_text is None:
+        if en_help_text is None:
             state_name = "None"
-            text = await get_help_db(state_name, telegram_language)
-            if text is None:
-                en_text = await get_help_db(state_name, id_en_context)
-                text: str = get_translate(  # type: ignore
+            # status = NONE, language = USER'S
+            help_text = await get_help_db(state_name, user_language)
+            if help_text is None:
+                # status = NONE, language = ENGLISH
+                en_help_text = await get_help_db(state_name, id_en_context)
+                help_text: str = get_translate(  # type: ignore
                     TranslateRequest(
-                        native_lang=telegram_language, foreign_lang="en", line=en_text
+                        native_lang=user_language, foreign_lang="en", line=en_help_text
                     )
                 ).translated_text
-                await add_help_db(state=state_name, help_text=text, language=telegram_language)  # type: ignore
+                await add_help_db(state=state_name, help_text=help_text, language=user_language)  # type: ignore
         else:
-            text: str = get_translate(  # type: ignore
+            help_text: str = get_translate(  # type: ignore
                 TranslateRequest(
-                    native_lang=telegram_language, foreign_lang="en", line=en_text
+                    native_lang=user_language, foreign_lang="en", line=en_help_text
                 )
             ).translated_text
-            await add_help_db(state=state_name, help_text=text, language=telegram_language)  # type: ignore
+            await add_help_db(state=state_name, help_text=help_text, language=user_language)  # type: ignore
 
-    environment: Environment = jinja2.Environment()
-    template: Template = environment.from_string(text)
     commands: dict = {f"_{str(i[2])}": f"/{i[0]}" for i in bot_commands}
-    await msg.answer(template.render(**commands))
-    # await msg.answer(text.format(**commands))
+    return await msg.answer(help_text.format(**commands))  # type: ignore
 
 
 def register_handler_help(dp: Dispatcher) -> None:

@@ -1894,7 +1894,7 @@ reference = "the_pypi"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "8030191d7a29ff3a1471781590f8a9fe35e21a07c2c71c726586f7726ff3e2ad"
+content-hash = "d1b892c77825f6c95b4b6ed8cd47d3ef2978621241c5798cc3fda0d0b5ffdfed"
 
 [metadata.files]
 aiofiles = [
