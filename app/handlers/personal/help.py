@@ -1,9 +1,13 @@
 from typing import Optional
 from uuid import UUID
 
+import jinja2
 from aiogram import types, Dispatcher
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from jinja2 import Environment
+from jinja2.environment import Template
+
 
 from app.base_functions.translator import get_translate
 from app.db_functions.personal import get_context_id_db, get_help_db, add_help_db
@@ -14,7 +18,7 @@ from app.scheme.transdata import TranslateRequest
 async def cmd_help(msg: types.Message, state: FSMContext) -> None:
     """Gives a hint to the user depending on what stage (state) he is at.
 
-    For each state of the bot () displays a specific hint in the language
+    For each state of the bot (FSM) displays a specific hint in the language
     of the user's telegram interface.
 
     Parameters:
@@ -26,47 +30,34 @@ async def cmd_help(msg: types.Message, state: FSMContext) -> None:
     text: Optional[str] = await get_help_db(state_name, telegram_language)
 
     if text is None:
-        # if help with context 'en' does not exist, help_text will get and save as in state 'None'
-        en_text = await get_help_db(
+        # if help with context 'en' does not exist, help_text will get help_text by state 'None'
+        en_text: Optional[str] = await get_help_db(
             state_name, id_en_context := await get_context_id_db("en")
-        ) or await get_help_db("None", id_en_context)
-        text: str = get_translate(  # type: ignore
-            TranslateRequest(
-                native_lang=telegram_language, foreign_lang="en", line=en_text
-            )
-        ).translated_text
-        await add_help_db(state=state_name, help_text=text, language=telegram_language)  # type: ignore
+        )
+        if en_text is None:
+            state_name = "None"
+            text = await get_help_db(state_name, telegram_language)
+            if text is None:
+                en_text = await get_help_db(state_name, id_en_context)
+                text: str = get_translate(  # type: ignore
+                    TranslateRequest(
+                        native_lang=telegram_language, foreign_lang="en", line=en_text
+                    )
+                ).translated_text
+                await add_help_db(state=state_name, help_text=text, language=telegram_language)  # type: ignore
+        else:
+            text: str = get_translate(  # type: ignore
+                TranslateRequest(
+                    native_lang=telegram_language, foreign_lang="en", line=en_text
+                )
+            ).translated_text
+            await add_help_db(state=state_name, help_text=text, language=telegram_language)  # type: ignore
 
-    await msg.answer(add_commands_to_text(text))  # type: ignore
-
-
-def add_commands_to_text(text: str) -> str:
-    """Completes the text of the answer message for the /help command by adding commands.
-
-    To format a string by indexes, the order of the indexes must be observed:
-    the index specified in the text must match the command index in the list of commands (bot_commands).
-
-    Parameters:
-        text: text of the answer message for the /help command without commands
-    Return:
-        Formatted text.
-    """
-    sorted_cmds: list[tuple[str, str, int]] = sorted(bot_commands, key=lambda x: x[2])
-    formatted_list_of_cmds: list[Optional[str]] = []
-
-    # len(bot_commands) should be equal to max command number, so missing indexes need to be filled in (by None)
-    if len(bot_commands) == sorted_cmds[-1][2]:
-        formatted_list_of_cmds = ["/" + cmd[0] for cmd in sorted_cmds]
-    else:
-        count_none = 0
-        for index, cmd_data in enumerate(sorted_cmds):
-            if cmd_data[2] != index + count_none:
-                while cmd_data[2] > index + count_none:
-                    formatted_list_of_cmds.append(None)
-                    count_none += 1
-            formatted_list_of_cmds.append("/" + cmd_data[0])
-
-    return text.format(*formatted_list_of_cmds)
+    environment: Environment = jinja2.Environment()
+    template: Template = environment.from_string(text)
+    commands: dict = {f"_{str(i[2])}": f"/{i[0]}" for i in bot_commands}
+    await msg.answer(template.render(**commands))
+    # await msg.answer(text.format(**commands))
 
 
 def register_handler_help(dp: Dispatcher) -> None:
