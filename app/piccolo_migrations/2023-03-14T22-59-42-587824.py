@@ -9,17 +9,16 @@ DESCRIPTION = "filling Context table with name and name_alfa2 values"
 
 google_languages = translate_client.get_languages()
 
+
 async def forwards() -> MigrationManager:
-    manager = MigrationManager(
-        migration_id=ID, app_name="", description=DESCRIPTION
-    )
+    manager = MigrationManager(migration_id=ID, app_name="", description=DESCRIPTION)
 
     async def run() -> None:
         for language in google_languages:
             new_language = Context(
                 name=language["name"], name_alfa2=language["language"]
             )
-            await  new_language.save()
+            await new_language.save()
 
     manager.add_raw(run)
 
