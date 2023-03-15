@@ -25,6 +25,7 @@ async def set_default_commands() -> None:
     )
 
 
+# DELETE FOLLOWING FUNC BEFORE RELEASE
 async def add_languages_to_context() -> None:
     cont_name = await Context.select()
     google_languages = translate_client.get_languages()
@@ -51,6 +52,7 @@ async def add_languages_to_context() -> None:
                 await new_language.save()
 
 
+# DELETE FOLLOWING FUNC BEFORE RELEASE
 async def fill_context_class() -> None:
     """
     It must work only one time for filling field context_class
@@ -73,9 +75,6 @@ async def add_user_google() -> None:
 
 async def on_startup() -> None:
     await set_default_commands()
-    await add_languages_to_context()
-    # After some time this function must be deleted
-    await fill_context_class()
     await add_user_google()
 
 
