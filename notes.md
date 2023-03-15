@@ -1,0 +1,6 @@
+## PRs without changing the code:
+
+
+| Task number                                                                      | Task description                                                                                                                 | Link to result                                                                                                                                                                                                                   |
+|----------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [161](https://github.com/starperov-net/universal_flash_cards_chatbot/issues/161) | add a rule to the wiki: PR without changing the code | [https://github.com/starperov-net/universal_flash_cards_chatbot/wiki/Project-Rules#pr-without-changing-the-code](https://github.com/starperov-net/universal_flash_cards_chatbot/wiki/Project-Rules#pr-without-changing-the-code) |
