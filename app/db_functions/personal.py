@@ -169,12 +169,12 @@ async def get_help_db(state: str, language: UUID) -> Optional[str]:
 
     If this text does not exist, None is returned.
     """
-    help_text: Optional[str] = (
+    help_text: Optional[dict] = (
         await Help.select(Help.help_text)
         .where(Help.state == state, Help.language == language)
         .first()
     )
-    return help_text
+    return help_text["help_text"] if help_text else None
 
 
 async def get_item_by_id_db(item_id: UUID) -> dict:
