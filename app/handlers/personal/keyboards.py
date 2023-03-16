@@ -1,6 +1,6 @@
 import random
 from uuid import UUID
-from typing import List, Optional, Any
+from typing import List, Optional
 from dataclasses import dataclass
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
@@ -12,6 +12,7 @@ from app.handlers.personal.callback_data_states import (
     ToStudyCallbackData,
     KnowDontKnowCallbackData,
 )
+from app.db_functions.personal import get_context
 
 KEY_UP: InlineKeyboardButton = InlineKeyboardButton(text="UP", callback_data="#UP")
 KEY_DOWN: InlineKeyboardButton = InlineKeyboardButton(
@@ -109,8 +110,8 @@ class ScrollKeyboardGenerator:
         the "up" step and returns a new keyboard object.
         """
         self.start_row = (
-            self.start_row - self.numbers_of_buttons_to_show
-            if self.start_row - self.numbers_of_buttons_to_show >= 0
+            self.start_row - self.scroll_step
+            if self.start_row - self.scroll_step >= 0
             else 0
         )
         return self.markup()
@@ -122,10 +123,10 @@ class ScrollKeyboardGenerator:
         the down step and returns a new keyboard object.
         """
         self.start_row = (
-            (self.start_row + self.numbers_of_buttons_to_show)
-            if (self.start_row + (self.numbers_of_buttons_to_show - 1))
+            (self.start_row + self.scroll_step)
+            if (self.start_row + (self.scroll_step - 1))
             < len(self.scrollkeys)
-            else len(self.scrollkeys) - self.numbers_of_buttons_to_show
+            else len(self.scrollkeys) - self.scroll_step
         )
         return self.markup()
 
@@ -178,10 +179,14 @@ class KeyboardCreateUserContext(CombiKeyboardGenerator):
         pre_additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
         max_rows_number: int = 5,
         start_row: int = 0,
-        scroll_step: int = 1,
-        data: Any = None,
+        scroll_step: int = 1
     ) -> None:
-        self.data = data or [None, None, False]
+        # Атрибут встановлюється в залежності від дій (натисутих користувачем кнопок) користувача і відповідає
+        # вибору користувача під час створення коритувацького контексту - self.data[0]- перший контекст,
+        # self.data[1] - вторий контекст. Значення можуть приймати будеві значення до призначення користувачем
+        # контексту (True\False) і це дає можливість пріоритезувати призачення контексту в залежності від
+        # натистутих перед цім кнопок (SET FIRST\SET SECOND).
+        self._data = [True, False]
         super().__init__(
             scrollkeys,
             additional_buttons_list,
@@ -193,13 +198,71 @@ class KeyboardCreateUserContext(CombiKeyboardGenerator):
 
     @property
     def text(self):
-        if not self.data[0]:
-            return "<b>set the first language --- XXXXXXXXXXXXXXXXXXXXXX</b>"
-        elif self.data[0] and not self.data[1]:
-            return f"<b>first: {self.data[0]['name']} ({self.data[0]['name_alfa2']}) --- set the second language</b>"
+        """Повертає значення, яке повинно бути виведено на екрані (message до якого закрыплена клавыатура).
+        
+        Зображення на екрані визачається в залежності від стану атрибуту self.data"""
+
+        if self._data[0] is True:
+            first = "set first language"
+            second = f"{self._data[1]['name']} ({self._data[1]['name_alfa2'].upper()})" if isinstance(self._data[1], dict) else "XXXXXXXXXX"
+        elif self._data[1] is True:
+            second = "set second language"
+            first = f"{self._data[0]['name']} ({self._data[0]['name_alfa2'].upper()})" if isinstance(self._data[0], dict) else "XXXXXXXXXX"
         else:
-            f"<b>first: {self.data[0]['name']} ({self.data[0]['name_alfa2']}) ---\
-                 second: {self.data[1]['name']} ({self.data[1]['name_alfa2']})</b>"
+            first = f"{self._data[0]['name']} ({self._data[0]['name_alfa2'].upper()})" if isinstance(self._data[0], dict) else "XXXXXXXXXX"
+            second = f"{self._data[1]['name']} ({self._data[1]['name_alfa2'].upper()})" if isinstance(self._data[1], dict) else "XXXXXXXXXX"
+
+        return f"<b>{first} --- {second}</b>".center(35)
+    
+    async def set_first(self, context: Optional[dict] = None):
+        """Встановлює зачення першого контексту якщо отримує id_ctx, інакше
+        готує клавіатуру до встановлення на наступному кроці саме другого контексту.
+        """
+        print("in KeyboardCreateUserContext.set_first()".center(120, "+"))
+        print(f"id_ctx: {context}")
+        if not context:
+            self._data[0] = True
+            self._data[1] = False if not isinstance(self._data[1], dict) else self._data[1]
+        else:
+            self._data[0] = context
+        print(f"result set_first(): {self._data}")
+
+    async def set_second(self, context: Optional[dict] = None):
+        """Встановлює зачення другого контексту якщо отримує id_ctx, інакше 
+        готує клавіатуру до встановлення на наступному кроці саме другого контексту.
+        """
+        print("in KeyboardCreateUserContext.set_second()".center(120, "+"))
+        if not context:
+            self._data[1] = True
+            self._data[0] = False if not isinstance(self._data[0], dict) else self._data[0]
+        else:
+            self._data[1] = context
+        print(f"result set_second(): {self._data}")
+    
+    async def set_lng(self, id_ctx: UUID):
+        """В залежності від значень у self._data встановлює значення контексту за
+        отриманим id_ctx в позицію, яка до цього мала значення True.
+        """
+
+        context = (await get_context(context_id=id_ctx))[0]
+        if self._data[0] is True:
+            await self.set_first(context)
+        else:
+            await self.set_second(context)
+    
+    async def set_user_context(self):
+        """перевіряє вірність заповнення self._dict
+        - елемент 0 і елемент 1 є dict - встановити новий user_context для цього юзера, змінити стан
+        - не встановлений 0 - set_first
+        - не встановлений 1 - set_second
+        """
+        if not isinstance(self._data[0], dict):
+            await self.set_first()
+        elif not isinstance(self._data[1], dict):
+            await self.set_second()
+        else:
+            
+
 
 
 # ------- keyboard for choice languages

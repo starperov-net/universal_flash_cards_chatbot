@@ -120,4 +120,4 @@ def register_handler_settings(dp: Dispatcher) -> None:
     - будь-якому стані з класу UserSettings (пріоритет нижче ніж для команди /help)
     """
     dp.message.register(cmd_settings, Command(commands=["settings"]))
-    dp.callback_query.register(cmd_settings, StateFilter(UserSettings))
+    dp.callback_query.register(cmd_settings, StateFilter(UserSettings.main))
