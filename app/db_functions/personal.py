@@ -5,7 +5,7 @@ import aiogram
 
 from app import serializers
 from app.exceptions.custom_exceptions import NotFullSetException
-from app.tables import Card, Context, Item, ItemRelation, User, UserContext
+from app.tables import Card, Context, Item, ItemRelation, User, UserContext, Help
 
 
 async def add_card_db(
@@ -32,6 +32,12 @@ async def add_item_relation_db(
     )
     await item_relation.save()
     return item_relation.id
+
+
+async def add_help_db(state: str, help_text: str, language: UUID) -> None:
+    """Add a new row to the Help table."""
+    help_obj: Help = Help(state=state, help_text=help_text, language=language)
+    await help_obj.save()
 
 
 async def add_user_context_db(
@@ -129,11 +135,6 @@ async def get_or_create_user_db(data_telegram: aiogram.types.User) -> User:
     return user
 
 
-async def get_context_id_db(name_alfa2: str) -> UUID:
-    context: Context = await Context.objects().get(Context.name_alfa2 == name_alfa2)
-    return context.id
-
-
 async def get_or_create_item_by_text_and_usercontext_db(
     text: str, user_context: UserContext
 ) -> Item:
@@ -156,6 +157,24 @@ async def get_or_create_item_by_text_and_usercontext_db(
         & (Item.context.is_in([user_context.context_1, user_context.context_2]))
     )
     return item
+
+
+async def get_context_id_db(name_alfa2: str) -> UUID:
+    context: Context = await Context.objects().get(Context.name_alfa2 == name_alfa2)
+    return context.id
+
+
+async def get_help_db(state: str, language: UUID) -> Optional[str]:
+    """Returns the help text according to the current state and language of the user's telegram.
+
+    If this text does not exist, None is returned.
+    """
+    help_text: Optional[dict] = (
+        await Help.select(Help.help_text)
+        .where(Help.state == state, Help.language == language)
+        .first()
+    )
+    return help_text["help_text"] if help_text else None
 
 
 async def get_item_by_id_db(item_id: UUID) -> dict:

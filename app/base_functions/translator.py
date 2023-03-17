@@ -88,3 +88,23 @@ def get_translate(
     raise ValueError(
         f"In {input_text_language}, " f"it means {result['translatedText']}"
     )
+
+
+def get_translation_from_string_with_paragraph(
+    text: str, target_language: str, source_language: str
+) -> str:
+    """Translates text without deleting the <\n> symbols.
+
+    The translate() method of the Client class deletes the symbols <\n> by default.
+
+    Parameters:
+        text: Text to translate.
+        target_language: Must be an ISO 639-1 language code.
+        source_language: Must be an ISO 639-1 language code.
+    """
+    translated_text = translate_client.translate(
+        text.split("\n"),
+        target_language=target_language,
+        source_language=source_language,
+    )
+    return "\n".join([i["translatedText"] for i in translated_text])

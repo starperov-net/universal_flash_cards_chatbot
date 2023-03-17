@@ -7,6 +7,7 @@ from app.base_functions.translator import translate_client
 from app.create_bot import bot, dp
 from app.db_functions.personal import get_or_create_user_db
 from app.handlers import register_all_handlers
+from app.handlers.personal.bot_commands import bot_commands
 from app.scheme.transdata import ISO639_1
 from app.tables import Context, ContextClass
 from app.tests.utils import TELEGRAM_USER_GOOGLE
@@ -14,14 +15,7 @@ from app.tests.utils import TELEGRAM_USER_GOOGLE
 
 async def set_default_commands() -> None:
     await bot.set_my_commands(
-        [
-            types.BotCommand(command="start", description="start"),
-            types.BotCommand(command="study", description="study"),
-            types.BotCommand(command="selftest", description="self-test"),
-            types.BotCommand(command="help", description="help"),
-            types.BotCommand(command="cancel", description="cancel"),
-            types.BotCommand(command="mywords", description="my-words"),
-        ]
+        [types.BotCommand(command=cmd[0], description=cmd[1]) for cmd in bot_commands]
     )
 
 
