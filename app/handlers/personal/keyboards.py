@@ -1,11 +1,8 @@
 import random
 from uuid import UUID
-<<<<<<< HEAD
-from typing import List, Optional
+
+from typing import List
 from dataclasses import dataclass
-=======
-from typing import List, Any
->>>>>>> main
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -80,7 +77,6 @@ class ScrollKeyboardGenerator:
                 "im _get_current_scroll_keyboard_list, in brunch 'self.start_row != 0'"
             )
             current_scroll_keyboard = [[KEY_UP]] + current_scroll_keyboard
-<<<<<<< HEAD
             self.numbers_of_buttons_to_show -= 1
         if self.start_row + self.numbers_of_buttons_to_show >= len(self.scrollkeys) - 1:
             print(
@@ -91,14 +87,6 @@ class ScrollKeyboardGenerator:
                 current_scroll_keyboard
                 + self.scrollkeys[
                     self.start_row : (self.start_row + self.numbers_of_buttons_to_show)
-=======
-            numbers_of_buttons_to_show -= 1
-        if numbers_of_buttons_to_show >= len(self.scrollkeys) - self.start_row:
-            return (
-                current_scroll_keyboard
-                + self.scrollkeys[
-                    self.start_row: (self.start_row + numbers_of_buttons_to_show)
->>>>>>> main
                 ]
             )
         else:
