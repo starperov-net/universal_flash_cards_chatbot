@@ -7,7 +7,6 @@ from aiogram import types
 
 from app import serializers
 from app.exceptions.custom_exceptions import NotFullSetException
-<<<<<<< HEAD
 from app.tables import (
     Card,
     Context,
@@ -15,10 +14,8 @@ from app.tables import (
     ItemRelation,
     User,
     UserContext,
+    Help,
 )
-=======
-from app.tables import Card, Context, Item, ItemRelation, User, UserContext, Help
->>>>>>> main
 
 
 async def add_card_db(
