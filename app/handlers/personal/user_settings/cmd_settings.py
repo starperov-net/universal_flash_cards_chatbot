@@ -87,13 +87,13 @@ async def cmd_settings(
             reply_markup=tmp_storage[key].markup(),
         )
     if isinstance(event, types.CallbackQuery):
-        # дивимось на callback.data, в залежності від нього:
-        # або (обрана дія перебачає нову клавіатуру в новому стані)
-        #    - видаляємо з глобального обїекта існуючу клавіатуру
-        #    - визиваємо відповідний обробник
-        # або (скрол клавіатурі)
-        #     - змінюємо стан клавіатури в глобальному сховищі
-        #     - корегуємо повідомлення з новою клавіатурою
+        # we look at callback.data, depending on it:
+        # or (the selected action provides a new keyboard in a new state)
+        # - remove the existing keyboard from the global object
+        # - call the appropriate handler
+        # or (keyboard scroll)
+        # - change the state of the keyboard in the global storage
+        # - correct the message with the new keyboard
         if event.data == "#CREATE_NEW_CONTEXT":
             await create_user_context(event, state, tmp_storage)
         elif event.data == "#SET_CURRENT_CONTEXT":
