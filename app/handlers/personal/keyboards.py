@@ -280,7 +280,8 @@ class KeyboardCreateUserContext(CombiKeyboardGenerator):
                 context_1=self._data[0]["id"],
                 context_2=self._data[1]["id"],
             )
-        self._data[2] = True
+            self._data[2] = True
+        return self._data[2]
 
 
 class MyWordsScrollKeyboardGenerator(ScrollKeyboardGenerator):

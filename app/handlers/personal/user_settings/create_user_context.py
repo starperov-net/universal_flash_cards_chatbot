@@ -82,10 +82,10 @@ async def create_user_context(
     elif callback.data == "#DONE!":
         print("in #DONE! branch")
         print(f"tmp_storage[key]: {tmp_storage[key]}")
-        await tmp_storage[key].set_user_context(callback.from_user.id)
-        await callback.message.edit_text(text=tmp_storage[key].text, parse_mode="HTML")
-        await state.clear()
-        return
+        if await tmp_storage[key].set_user_context(callback.from_user.id):
+            await callback.message.edit_text(text=tmp_storage[key].text, parse_mode="HTML")
+            await state.clear()
+            return
     elif callback.data == "#DOWN":
         tmp_storage[key].markup_down()
     elif callback.data == "#UP":
