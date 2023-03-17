@@ -1,7 +1,7 @@
 import random
 from uuid import UUID
 
-from typing import List, Optional
+from typing import List, Optional, Any
 from dataclasses import dataclass
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
