@@ -14,3 +14,4 @@ max-linenumber = 500
 accept-encodings = utf-8
 inline-quotes = double
 multiline-quotes = double
+extend-ignore = E203

@@ -42,8 +42,6 @@ pytest-mock = "*"
 coverage = "==6.*"
 autoflake = "^1.7"
 
-
-
 [tool.poetry.group.dev.dependencies]
 pytest-asyncio = "^0.20.2"
 

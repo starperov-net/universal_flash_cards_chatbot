@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardButton
 from app.handlers.personal.user_settings.user_settings import UserSettings
 from app.create_bot import bot
-from app.db_functions.personal import get_context, get_default_language
+from app.db_functions.personal import get_context
 from app.storages import TmpStorage
 from app.tables import ContextClass
 from app.handlers.personal.keyboards import (
@@ -37,10 +37,6 @@ async def create_user_context(
 ) -> None:
     print("in create_user_context".center(120, "-"))
     await state.set_state(UserSettings.create_new_user_context)
-    print(f"input callback.data: {callback.data}")
-    print(f"set state: {await state.get_state()}")
-    #default_lang = await get_default_language(callback.from_user)
-    #print(f"default_lang: {default_lang}")
     key = KeyKeyboard(
         bot_id=bot.id,
         chat_id=callback.chat_instance,
@@ -68,13 +64,11 @@ async def create_user_context(
         pre_additional_buttons = [
             [
                 InlineKeyboardButton(
-                    text="set the first language",
-                    callback_data="#SET_FIRST_LNG"
+                    text="set the first language", callback_data="#SET_FIRST_LNG"
                 ),
                 InlineKeyboardButton(
-                text="set the second language",
-                callback_data="#SET_SECOND_LNG"
-                )
+                    text="set the second language", callback_data="#SET_SECOND_LNG"
+                ),
             ]
         ]
         kb = KeyboardCreateUserContext(
@@ -82,44 +76,40 @@ async def create_user_context(
             additional_buttons_list=additional_buttons,
             pre_additional_buttons_list=pre_additional_buttons,
             max_rows_number=10,
-            scroll_step=7
+            scroll_step=7,
         )
         tmp_storage[key] = kb
     elif callback.data == "#DONE!":
-        pass
+        print("in #DONE! branch")
+        print(f"tmp_storage[key]: {tmp_storage[key]}")
+        await tmp_storage[key].set_user_context(callback.from_user.id)
+        await callback.message.edit_text(text=tmp_storage[key].text, parse_mode="HTML")
+        await state.clear()
+        return
     elif callback.data == "#DOWN":
         tmp_storage[key].markup_down()
     elif callback.data == "#UP":
         tmp_storage[key].markup_up()
     elif callback.data == "#SET_SECOND_LNG":
-        # print("in create_user_context, branch #SET_SECOND_LNG")
-        # print(f"key is: {key}")
-        # print(f"tmp_storage[key] is: {tmp_storage[key]}")
         await tmp_storage[key].set_second()
-        # print(f"tmp_storage[key].text: {tmp_storage[key].text}")
     elif callback.data == "#SET_FIRST_LNG":
-        # print("in create_user_context, branch #SET_FIRST_LNG")
-        # print(f"key is: {key}")
-        # print(f"tmp_storage[key] is: {tmp_storage[key]}")
         await tmp_storage[key].set_first()
-        # print(f"tmp_storage[key].text: {tmp_storage[key].text}")
     elif callback.data and match_to_uuid4(callback.data):
-        print(f"callback.data = {callback.data}")
-        print(f"type of callback.data = {type(callback.data)}")
         id_ctx = UUID(callback.data)
         await tmp_storage[key].set_lng(id_ctx)
-    else:
-        pass
 
     await callback.message.edit_text(
-        text=tmp_storage[key].text, reply_markup=tmp_storage[key].markup(), parse_mode="HTML"
+        text=tmp_storage[key].text,
+        reply_markup=tmp_storage[key].markup(),
+        parse_mode="HTML",
     )
 
 
 def register_handler_create_user_context(dp: Dispatcher) -> None:
     """
-    Повинно спрацьовувати при умові:
-    - CallbackQuery і стан з UserSettings.create_new_user_context (пріоритет нижче ніж для команди /help, /cancel)
+    It should work under the condition:
+    - CallbackQuery and state from UserSettings.create_new_user_context
+    (priority lower than for command /help, /cancel)
     """
     dp.callback_query.register(
         create_user_context, StateFilter(UserSettings.create_new_user_context)

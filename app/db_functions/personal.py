@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Union
 from uuid import UUID
 
 import aiogram
@@ -234,10 +234,22 @@ async def get_context(
         )
 
 
+async def create_user_context(
+    user_id: Union[UUID, int], context_1: UUID, context_2: UUID
+) -> None:
+    """Creates a new user context."""
+    user_id_uuid = user_id
+    if not isinstance(user_id, UUID):
+        user_id_uuid = (await User.objects().get(User.telegram_user_id == user_id)).id
+    user_context = UserContext(
+        context_1=context_1, context_2=context_2, user=user_id_uuid
+    )
+    await user_context.save()
+
+
 async def get_user_context(
     user: UUID | int, user_context_id: Optional[UUID] = None
 ) -> Any:
-
     """Get user_context.
 
     user: user.id (UUID type) or user.telegram_user_id (int type)
