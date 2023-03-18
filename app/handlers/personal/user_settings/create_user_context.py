@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 from aiogram import types, Dispatcher
 from aiogram.filters import StateFilter
@@ -86,6 +87,13 @@ async def create_user_context(
             await callback.message.edit_text(text=tmp_storage[key].text, parse_mode="HTML")
             await state.clear()
             return
+        else:
+            await callback.message.edit_text(
+                text="<b>you need to select the first and second languages</b>",
+                parse_mode="HTML",
+                reply_markup=tmp_storage[key].markup(),
+            )
+            await asyncio.sleep(1)
     elif callback.data == "#DOWN":
         tmp_storage[key].markup_down()
     elif callback.data == "#UP":
