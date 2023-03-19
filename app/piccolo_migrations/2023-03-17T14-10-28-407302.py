@@ -1,15 +1,15 @@
 from piccolo.apps.migrations.auto.migration_manager import MigrationManager
-from piccolo.columns.base import OnDelete, OnUpdate
-from piccolo.columns.column_types import (
-    UUID,
-    BigInt,
-    ForeignKey,
-    Integer,
-    Text,
-    Timestamp,
-    Varchar,
-)
-from piccolo.columns.defaults.timestamp import TimestampCustom, TimestampNow
+from piccolo.columns.base import OnDelete
+from piccolo.columns.base import OnUpdate
+from piccolo.columns.column_types import BigInt
+from piccolo.columns.column_types import Boolean
+from piccolo.columns.column_types import ForeignKey
+from piccolo.columns.column_types import Integer
+from piccolo.columns.column_types import Text
+from piccolo.columns.column_types import Timestamptz
+from piccolo.columns.column_types import UUID
+from piccolo.columns.column_types import Varchar
+from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.columns.defaults.uuid import UUID4
 from piccolo.columns.indexes import IndexMethod
 from piccolo.table import Table
@@ -85,9 +85,9 @@ class User(Table, tablename="users"):
     )
 
 
-ID = "2022-12-21T20:25:41:299233"
+ID = "2023-03-17T14:10:28:407302"
 VERSION = "0.96.0"
-DESCRIPTION = ""
+DESCRIPTION = "Create all tables"
 
 
 async def forwards() -> MigrationManager:
@@ -95,17 +95,19 @@ async def forwards() -> MigrationManager:
 
     manager.add_table("ItemRelation", tablename="item_relation")
 
+    manager.add_table("UserContext", tablename="user_context")
+
     manager.add_table("Card", tablename="card")
 
     manager.add_table("Item", tablename="item")
 
-    manager.add_table("UserContext", tablename="user_context")
-
-    manager.add_table("Context", tablename="context")
-
     manager.add_table("User", tablename="users")
 
+    manager.add_table("Help", tablename="help")
+
     manager.add_table("ContextClass", tablename="context_class")
+
+    manager.add_table("Context", tablename="context")
 
     manager.add_column(
         table_class_name="ItemRelation",
@@ -197,6 +199,135 @@ async def forwards() -> MigrationManager:
     )
 
     manager.add_column(
+        table_class_name="UserContext",
+        tablename="user_context",
+        column_name="id",
+        db_column_name="id",
+        column_class_name="UUID",
+        column_class=UUID,
+        params={
+            "default": UUID4(),
+            "null": False,
+            "primary_key": True,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="UserContext",
+        tablename="user_context",
+        column_name="context_1",
+        db_column_name="context_1",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": Context,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="UserContext",
+        tablename="user_context",
+        column_name="context_2",
+        db_column_name="context_2",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": Context,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="UserContext",
+        tablename="user_context",
+        column_name="user",
+        db_column_name="user",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": User,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="UserContext",
+        tablename="user_context",
+        column_name="last_date",
+        db_column_name="last_date",
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
+        params={
+            "default": TimestamptzNow,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="UserContext",
+        tablename="user_context",
+        column_name="active",
+        db_column_name="active",
+        column_class_name="Boolean",
+        column_class=Boolean,
+        params={
+            "default": True,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
         table_class_name="Card",
         tablename="card",
         column_name="id",
@@ -265,8 +396,28 @@ async def forwards() -> MigrationManager:
     manager.add_column(
         table_class_name="Card",
         tablename="card",
-        column_name="box_number",
-        db_column_name="box_number",
+        column_name="repetition_level",
+        db_column_name="repetition_level",
+        column_class_name="Integer",
+        column_class=Integer,
+        params={
+            "default": 0,
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="Card",
+        tablename="card",
+        column_name="memorization_stage",
+        db_column_name="memorization_stage",
         column_class_name="Integer",
         column_class=Integer,
         params={
@@ -287,30 +438,10 @@ async def forwards() -> MigrationManager:
         tablename="card",
         column_name="last_date",
         db_column_name="last_date",
-        column_class_name="Timestamp",
-        column_class=Timestamp,
+        column_class_name="Timestamptz",
+        column_class=Timestamptz,
         params={
-            "default": TimestampNow(),
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="Card",
-        tablename="card",
-        column_name="repeats_amount",
-        db_column_name="repeats_amount",
-        column_class_name="Integer",
-        column_class=Integer,
-        params={
-            "default": 0,
+            "default": TimestamptzNow,
             "null": False,
             "primary_key": False,
             "unique": False,
@@ -416,227 +547,6 @@ async def forwards() -> MigrationManager:
         tablename="item",
         column_name="text",
         db_column_name="text",
-        column_class_name="Text",
-        column_class=Text,
-        params={
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="UserContext",
-        tablename="user_context",
-        column_name="id",
-        db_column_name="id",
-        column_class_name="UUID",
-        column_class=UUID,
-        params={
-            "default": UUID4(),
-            "null": False,
-            "primary_key": True,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="UserContext",
-        tablename="user_context",
-        column_name="context_1",
-        db_column_name="context_1",
-        column_class_name="ForeignKey",
-        column_class=ForeignKey,
-        params={
-            "references": Context,
-            "on_delete": OnDelete.cascade,
-            "on_update": OnUpdate.cascade,
-            "target_column": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="UserContext",
-        tablename="user_context",
-        column_name="context_2",
-        db_column_name="context_2",
-        column_class_name="ForeignKey",
-        column_class=ForeignKey,
-        params={
-            "references": Context,
-            "on_delete": OnDelete.cascade,
-            "on_update": OnUpdate.cascade,
-            "target_column": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="UserContext",
-        tablename="user_context",
-        column_name="user",
-        db_column_name="user",
-        column_class_name="ForeignKey",
-        column_class=ForeignKey,
-        params={
-            "references": User,
-            "on_delete": OnDelete.cascade,
-            "on_update": OnUpdate.cascade,
-            "target_column": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="UserContext",
-        tablename="user_context",
-        column_name="last_date",
-        db_column_name="last_date",
-        column_class_name="Timestamp",
-        column_class=Timestamp,
-        params={
-            "default": TimestampCustom(
-                year=2022,
-                month=12,
-                day=12,
-                hour=20,
-                second=41,
-                microsecond=295362,
-            ),
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="Context",
-        tablename="context",
-        column_name="id",
-        db_column_name="id",
-        column_class_name="UUID",
-        column_class=UUID,
-        params={
-            "default": UUID4(),
-            "null": False,
-            "primary_key": True,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="Context",
-        tablename="context",
-        column_name="context_class",
-        db_column_name="context_class",
-        column_class_name="ForeignKey",
-        column_class=ForeignKey,
-        params={
-            "references": ContextClass,
-            "on_delete": OnDelete.cascade,
-            "on_update": OnUpdate.cascade,
-            "target_column": None,
-            "null": True,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="Context",
-        tablename="context",
-        column_name="name",
-        db_column_name="name",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 255,
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="Context",
-        tablename="context",
-        column_name="name_alfa2",
-        db_column_name="name_alfa2",
-        column_class_name="Varchar",
-        column_class=Varchar,
-        params={
-            "length": 255,
-            "default": "",
-            "null": False,
-            "primary_key": False,
-            "unique": False,
-            "index": False,
-            "index_method": IndexMethod.btree,
-            "choices": None,
-            "db_column_name": None,
-            "secret": False,
-        },
-    )
-
-    manager.add_column(
-        table_class_name="Context",
-        tablename="context",
-        column_name="description",
-        db_column_name="description",
         column_class_name="Text",
         column_class=Text,
         params={
@@ -777,6 +687,90 @@ async def forwards() -> MigrationManager:
     )
 
     manager.add_column(
+        table_class_name="Help",
+        tablename="help",
+        column_name="id",
+        db_column_name="id",
+        column_class_name="UUID",
+        column_class=UUID,
+        params={
+            "default": UUID4(),
+            "null": False,
+            "primary_key": True,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="Help",
+        tablename="help",
+        column_name="state",
+        db_column_name="state",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 255,
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="Help",
+        tablename="help",
+        column_name="help_text",
+        db_column_name="help_text",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="Help",
+        tablename="help",
+        column_name="language",
+        db_column_name="language",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": Context,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
         table_class_name="ContextClass",
         tablename="context_class",
         column_name="id",
@@ -825,6 +819,111 @@ async def forwards() -> MigrationManager:
         column_class=Varchar,
         params={
             "length": 255,
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="Context",
+        tablename="context",
+        column_name="id",
+        db_column_name="id",
+        column_class_name="UUID",
+        column_class=UUID,
+        params={
+            "default": UUID4(),
+            "null": False,
+            "primary_key": True,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="Context",
+        tablename="context",
+        column_name="context_class",
+        db_column_name="context_class",
+        column_class_name="ForeignKey",
+        column_class=ForeignKey,
+        params={
+            "references": ContextClass,
+            "on_delete": OnDelete.cascade,
+            "on_update": OnUpdate.cascade,
+            "target_column": None,
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="Context",
+        tablename="context",
+        column_name="name",
+        db_column_name="name",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 255,
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="Context",
+        tablename="context",
+        column_name="name_alfa2",
+        db_column_name="name_alfa2",
+        column_class_name="Varchar",
+        column_class=Varchar,
+        params={
+            "length": 255,
+            "default": "",
+            "null": False,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+    )
+
+    manager.add_column(
+        table_class_name="Context",
+        tablename="context",
+        column_name="description",
+        db_column_name="description",
+        column_class_name="Text",
+        column_class=Text,
+        params={
             "default": "",
             "null": False,
             "primary_key": False,
