@@ -12,7 +12,7 @@ url = "https://pypi.org/simple"
 default = true
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 fastapi = "^0.85.0"
 piccolo = {extras = ["all"], version = "^0.96.0"}
 uvicorn = "^0.18.3"
