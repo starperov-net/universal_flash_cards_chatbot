@@ -1,11 +1,21 @@
-from typing import Any, Optional, List
+from typing import Any, Optional, Union
 from uuid import UUID
 
 import aiogram
 
+from aiogram import types
+
 from app import serializers
 from app.exceptions.custom_exceptions import NotFullSetException
-from app.tables import Card, Context, Item, ItemRelation, User, UserContext, Help
+from app.tables import (
+    Card,
+    Context,
+    Item,
+    ItemRelation,
+    User,
+    UserContext,
+    Help,
+)
 
 
 async def add_card_db(
@@ -301,9 +311,46 @@ async def get_all_items_according_context(context_id: UUID) -> list[dict]:
     return random_words
 
 
+async def get_context(
+    context_class_id: Optional[UUID] = None, context_id: Optional[UUID] = None
+) -> Any:
+    """Get context.
+
+    context_class_id: context_class.id (UUID) - optional
+    context_id: context.id (UUID) - optional
+
+    return: list of dicts {
+        'id'
+    }
+    """
+    if not context_class_id and not context_id:
+        return await Context.select()
+    elif not context_id and context_class_id:
+        return await Context.select().where(Context.context_class == context_class_id)
+    elif context_id and not context_class_id:
+        return await Context.select().where(Context.id == context_id)
+    else:
+        return await Context.select().where(
+            (Context.id == context_id) & (Context.context_class == context_class_id)
+        )
+
+
+async def create_user_context(
+    user_id: Union[UUID, int], context_1: UUID, context_2: UUID
+) -> None:
+    """Creates a new user context."""
+    user_id_uuid = user_id
+    if not isinstance(user_id, UUID):
+        user_id_uuid = (await User.objects().get(User.telegram_user_id == user_id)).id
+    user_context = UserContext(
+        context_1=context_1, context_2=context_2, user=user_id_uuid
+    )
+    await user_context.save()
+
+
 async def get_user_context(
     user: UUID | int, user_context_id: Optional[UUID] = None
-) -> List[Any]:
+) -> Any:
     """Get user_context.
 
     user: user.id (UUID type) or user.telegram_user_id (int type)
@@ -401,6 +448,24 @@ async def get_user_context(
             .order_by(UserContext.last_date)
             .output(nested=True)
         )
+
+
+async def get_default_language(user: types.user.User) -> dict:
+    """Get user language settings.
+
+    IMPORTANT!
+    After adding a language selection in the user settings (with the possibility to differ
+    from the language of the telegram interface), this function must be changed: the user
+    settings are checked and they are in priority. If they are not there, then the telegram
+    settings and interface are taken as the basis.
+    """
+
+    language_code = user.language_code or "en"
+    return (
+        await Context.select(Context.id, Context.name, Context.name_alfa2)
+        .where(Context.name_alfa2.like("%" + language_code + "%"))
+        .first()
+    )
 
 
 if __name__ == "__main__":

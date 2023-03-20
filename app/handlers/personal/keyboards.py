@@ -1,6 +1,8 @@
 import random
 from uuid import UUID
-from typing import List, Any
+
+from typing import List, Optional, Any
+from dataclasses import dataclass
 
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
@@ -14,11 +16,24 @@ from app.handlers.personal.callback_data_states import (
     MyWordCallbackData,
     DeletingMyWordCallbackData,
 )
+from app.db_functions.personal import get_context, create_user_context
 
 KEY_UP: InlineKeyboardButton = InlineKeyboardButton(text="UP", callback_data="#UP")
 KEY_DOWN: InlineKeyboardButton = InlineKeyboardButton(
     text="DOWN", callback_data="#DOWN"
 )
+
+
+@dataclass(frozen=True)
+class KeyKeyboard:
+    """Describes a key to identify a keyboard instance and a message."""
+
+    __slots__ = ["bot_id", "chat_id", "user_id", "message_id"]
+
+    bot_id: int
+    chat_id: int | str
+    user_id: int | None
+    message_id: int | None
 
 
 class ScrollKeyboardGenerator:
@@ -41,10 +56,12 @@ class ScrollKeyboardGenerator:
         scrollkeys: List[List[InlineKeyboardButton]],
         max_rows_number: int = 5,
         start_row: int = 0,
+        scroll_step: int = 1,
     ) -> None:
         self.scrollkeys = scrollkeys
         self.max_rows_number = max_rows_number
         self.start_row = start_row
+        self.scroll_step = scroll_step
 
     def _get_current_scroll_keyboard_list(self) -> List[List[InlineKeyboardButton]]:
         """Get current scroll keyboard list.
@@ -53,30 +70,39 @@ class ScrollKeyboardGenerator:
         and the total number of items displayed (together with the possible "up" - "down" buttons),
         forms a keyboard for displaying.
         """
-        numbers_of_buttons_to_show = self.max_rows_number
+        self.numbers_of_buttons_to_show = self.max_rows_number
         current_scroll_keyboard: List[List[InlineKeyboardButton]] = []
         if self.start_row != 0:
+            print(
+                "im _get_current_scroll_keyboard_list, in brunch 'self.start_row != 0'"
+            )
             current_scroll_keyboard = [[KEY_UP]] + current_scroll_keyboard
-            numbers_of_buttons_to_show -= 1
-        if numbers_of_buttons_to_show >= len(self.scrollkeys) - self.start_row:
+            self.numbers_of_buttons_to_show -= 1
+        if self.start_row + self.numbers_of_buttons_to_show >= len(self.scrollkeys) - 1:
+            print(
+                "im _get_current_scroll_keyboard_list, in brunch 'self.start_row + \
+                self.numbers_of_buttons_to_show >= len(self.scrollkeys) - 1'"
+            )
             return (
                 current_scroll_keyboard
                 + self.scrollkeys[
-                    self.start_row: (self.start_row + numbers_of_buttons_to_show)
+                    self.start_row : (self.start_row + self.numbers_of_buttons_to_show)
                 ]
             )
         else:
+            print("im _get_current_scroll_keyboard_list, in brunch 'else'")
+            self.numbers_of_buttons_to_show -= 1
             return (
                 current_scroll_keyboard
                 + self.scrollkeys[
-                    self.start_row: (self.start_row + numbers_of_buttons_to_show - 1)
+                    self.start_row : (self.start_row + self.numbers_of_buttons_to_show)
                 ]
                 + [[KEY_DOWN]]
             )
 
     def markup(self) -> InlineKeyboardMarkup:
         """Get the current state of the scrolling keyboard."""
-
+        print("in ")
         return InlineKeyboardMarkup(
             inline_keyboard=self._get_current_scroll_keyboard_list()
         )
@@ -87,7 +113,11 @@ class ScrollKeyboardGenerator:
         Changes the values of internal variables that store the state of the keyboard after
         the "up" step and returns a new keyboard object.
         """
-        self.start_row = self.start_row - 1 if self.start_row > 0 else self.start_row
+        self.start_row = (
+            self.start_row - self.scroll_step
+            if self.start_row - self.scroll_step >= 0
+            else 0
+        )
         return self.markup()
 
     def markup_down(self) -> InlineKeyboardMarkup:
@@ -97,9 +127,9 @@ class ScrollKeyboardGenerator:
         the down step and returns a new keyboard object.
         """
         self.start_row = (
-            (self.start_row + 1)
-            if (self.start_row + (self.max_rows_number - 1)) < len(self.scrollkeys)
-            else self.start_row
+            (self.start_row + self.scroll_step)
+            if (self.start_row + (self.scroll_step - 1)) < len(self.scrollkeys)
+            else len(self.scrollkeys) - self.scroll_step
         )
         return self.markup()
 
@@ -110,18 +140,148 @@ class CombiKeyboardGenerator(ScrollKeyboardGenerator):
     def __init__(
         self,
         scrollkeys: List[List[InlineKeyboardButton]],
-        additional_buttons_list: List[List[InlineKeyboardButton]],
+        additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
+        pre_additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
         max_rows_number: int = 5,
         start_row: int = 0,
+        scroll_step: int = 1,
     ) -> None:
-        super().__init__(scrollkeys, max_rows_number, start_row)
-        self.additional_buttons_list = additional_buttons_list
+        print("I`m in CombiKeyboardGenerator.__init__".center(120, "-"))
+        print(f"scrollkeys: {scrollkeys}")
+        print(f"additional_buttons_list: {additional_buttons_list}")
+        print(f"pre_additional_buttons_list: {pre_additional_buttons_list}")
+        print(f"max_rows_number: {max_rows_number}")
+        print(f"start_row: {start_row}")
+        print(f"scroll_step: {scroll_step}")
+        super().__init__(scrollkeys, max_rows_number, start_row, scroll_step)
+        self.additional_buttons_list = additional_buttons_list or []
+        self.pre_additional_buttons_list = pre_additional_buttons_list or []
 
     def markup(self) -> InlineKeyboardMarkup:
+        print("I`m in CombiKeyboardGenerator.markup".center(120, "*"))
         return InlineKeyboardMarkup(
-            inline_keyboard=self._get_current_scroll_keyboard_list()
-            + self.additional_buttons_list
+            inline_keyboard=(
+                self.pre_additional_buttons_list
+                + self._get_current_scroll_keyboard_list()
+                + self.additional_buttons_list
+            )
         )
+
+
+class KeyboardCreateUserContext(CombiKeyboardGenerator):
+    """Creates a keyboard object for the "create new user context" menu item.
+
+    Adds a date attribute (to store the selected settings), adds a property text to generate a message
+    that matches the current state of the user's selection.
+    """
+
+    def __init__(
+        self,
+        scrollkeys: List[List[InlineKeyboardButton]],
+        additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
+        pre_additional_buttons_list: Optional[List[List[InlineKeyboardButton]]] = None,
+        max_rows_number: int = 5,
+        start_row: int = 0,
+        scroll_step: int = 1,
+    ) -> None:
+        # The attribute is set depending on the actions (buttons pressed by the user) of the user and responds
+        # of the user's choice when creating a user context - self.data[0] - the first context,
+        # self.data[1] - the second context. Values can take default values until assigned by the user
+        # of the context (True\False) and this makes it possible to prioritize the assignment of the context
+        # depending on of previously pressed buttons (SET FIRST\SET SECOND).
+        # attribute self._data[2] signals that a new context is created in the method self.set_user_context(user_id)
+        # --> self._data[2] = True. This is used in the self.text property to form a message about
+        # creating a new status and setting it as current.
+        self._data = [True, False, False]
+        super().__init__(
+            scrollkeys,
+            additional_buttons_list,
+            pre_additional_buttons_list,
+            max_rows_number,
+            start_row,
+            scroll_step,
+        )
+
+    @property
+    def text(self):
+        """Returns the value that should be displayed on the screen (message to which the keyboard is locked).
+
+        The image on the screen is displayed depending on the state of the self.data attribute.
+        """
+        first = (
+            f"{self._data[0]['name']} ({self._data[0]['name_alfa2'].upper()})"
+            if isinstance(self._data[0], dict)
+            else "XXXXXXXXXX"
+        )
+        second = (
+            f"{self._data[1]['name']} ({self._data[1]['name_alfa2'].upper()})"
+            if isinstance(self._data[1], dict)
+            else "XXXXXXXXXX"
+        )
+        if not self._data[2]:
+            if self._data[0] is True:
+                first = "set first language"
+            elif self._data[1] is True:
+                second = "set second language"
+            return f"<b>{first} --- {second}</b>".center(35)
+        return f"new language context created and set as current:\n{first} --- {second}"
+
+    async def set_first(self, context: Optional[dict] = None):
+        """Sets the initialization of the first context if it receives id_ctx, otherwise
+        prepares the keyboard to install the second context in the next step.
+        """
+        print("in KeyboardCreateUserContext.set_first()".center(120, "+"))
+        print(f"id_ctx: {context}")
+        if not context:
+            self._data[0] = True
+            self._data[1] = (
+                False if not isinstance(self._data[1], dict) else self._data[1]
+            )
+        else:
+            self._data[0] = context
+        print(f"result set_first(): {self._data}")
+
+    async def set_second(self, context: Optional[dict] = None):
+        """Sets the default of the second context if it receives id_ctx, otherwise
+        prepares the keyboard to install the second context in the next step.
+        """
+        if not context:
+            self._data[1] = True
+            self._data[0] = (
+                False if not isinstance(self._data[0], dict) else self._data[0]
+            )
+        else:
+            self._data[1] = context
+        print(f"result set_second(): {self._data}")
+
+    async def set_lng(self, id_ctx: UUID):
+        """Depending on the values in self._data sets the value of the context by
+        received id_ctx to the position that previously had the value True.
+        """
+        context = (await get_context(context_id=id_ctx))[0]
+        if self._data[0] is True:
+            await self.set_first(context)
+        else:
+            await self.set_second(context)
+
+    async def set_user_context(self, user_id: UUID | int):
+        """Checks the validity of self._dict
+        - element 0 and element 1 are dict - set a new user_context for this user, change the state
+        - not set 0 - set_first
+        - not set 1 - set_second
+        """
+        if not isinstance(self._data[0], dict):
+            await self.set_first()
+        elif not isinstance(self._data[1], dict):
+            await self.set_second()
+        else:
+            await create_user_context(
+                user_id=user_id,
+                context_1=self._data[0]["id"],
+                context_2=self._data[1]["id"],
+            )
+            self._data[2] = True
+        return self._data[2]
 
 
 class MyWordsScrollKeyboardGenerator(ScrollKeyboardGenerator):

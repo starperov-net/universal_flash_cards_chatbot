@@ -24,7 +24,7 @@ class User(Table, tablename="users"):
 class ContextClass(Table):
     id = UUID(primary_key=True)
     description = Text()
-    name = Varchar()
+    name = Varchar()  # TODO: add attribute unique=True
 
 
 class Context(Table):

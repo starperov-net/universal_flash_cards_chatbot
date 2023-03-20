@@ -9,4 +9,5 @@ bot_commands: tuple = (
     ("mywords", "my-words", 3),
     ("help", "help", 4),
     ("cancel", "cancel", 5),
+    ("settings", "settings", 6),
 )
