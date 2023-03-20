@@ -46,7 +46,7 @@ async def greeting(msg: types.Message) -> types.Message:
     if msg.from_user is None:
         return await msg.answer("Messages sent to channels")
 
-    return await msg.answer(text=f"Hello, {msg.from_user.full_name}")
+    return await msg.answer(text=f"Hello&#39;, {msg.from_user.full_name}, <google translate>", parse_mode='HTML')
 
 
 async def get_user_data(msg: types.Message, state: FSMContext) -> types.Message:

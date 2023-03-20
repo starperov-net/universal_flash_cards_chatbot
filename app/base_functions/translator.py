@@ -20,9 +20,21 @@ def get_translate(
     environment variable containing the path to the file with credentials
     (the file must be available at this path)
     """
+
+    results = translate_client.get_languages()
+    print('full list', len(results))
+    for language in results:
+        print(u"{name} ({language})".format(**language))
+
+    print('list for target language = uk', len(results))
+    results = translate_client.get_languages(target_language='uk')
+
+    for language in results:
+        print(u"{name} ({language})".format(**language))
+
     # translated_text_language: str = input_.native_lang
     input_detected_language: dict = translate_client.detect_language(input_.line)
-
+    print('----------detected language-', input_detected_language)
     # attempt to translate from foreign language to native language
     result: dict = translate_client.translate(
         input_.line,
@@ -30,16 +42,16 @@ def get_translate(
         source_language=input_.foreign_lang,
     )
 
+    # if attempt was access and detected language of input word is equal foreign language this user
+    # we need check and fix (if necessary) input text (User could make a mistake)
     if (
         result["translatedText"] != result["input"]
         and input_detected_language["language"] == input_.foreign_lang
     ):
-        return TranslateResponse(
-            input_text=input_.line,
-            translated_text=result["translatedText"],
-            input_text_language=input_.foreign_lang,
-            translated_text_language=input_.native_lang,
-        )
+        return fixed_TranslateResponse(input_text=input_.line,
+                                                       translated_text=result["translatedText"],
+                                                       input_text_language=input_.foreign_lang,
+                                                       translated_text_language=input_.native_lang,)
 
     # attempt to translate from native language to foreign language
     result: dict = translate_client.translate(  # type: ignore
@@ -69,7 +81,7 @@ def get_translate(
     if result["translatedText"] != result["input"] and (
         input_detected_language["language"] == input_.native_lang or is_similar_language
     ):
-        return TranslateResponse(
+        return fixed_TranslateResponse(
             input_text=input_.line,
             translated_text=result["translatedText"],
             input_text_language=input_.native_lang,
@@ -87,4 +99,18 @@ def get_translate(
 
     raise ValueError(
         f"In {input_text_language}, " f"it means {result['translatedText']}"
+    )
+
+def fixed_TranslateResponse(input_text: str,
+                                                       translated_text: str,
+                                                       input_text_language: str,
+                                                       translated_text_language: str) -> TranslateResponse:
+    returned_translate: dict = translate_client.translate(translated_text, target_language=input_text_language)
+    print('-------------', input_text, returned_translate["translatedText"])
+
+    return TranslateResponse(
+    input_text=returned_translate["translatedText"],
+    translated_text=translated_text,
+    input_text_language=input_text_language,
+    translated_text_language=translated_text_language,
     )
