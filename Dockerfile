@@ -2,6 +2,7 @@ FROM python:3.11-slim-buster AS system
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=on
 ENV PYTHONPYCACHEPREFIX=/.pycache
+ENV PYTHONUNBUFFERED=1
 
 # Let all *.pyc files stay within the container, for Python >= 3.8
 RUN mkdir -p $PYTHONPYCACHEPREFIX
@@ -29,16 +30,7 @@ ENV VIRTUAL_ENV=/home/user/.venv
 ENV PATH="${VIRTUAL_ENV}/bin:/home/user/.local/bin:${PATH}"
 ENV POETRY_VIRTUALENVS_IN_PROJECT=true
 
-
-FROM system AS poetry
-
-ENV POETRY_VIRTUALENVS_IN_PROJECT=false
-
-VOLUME /src
-WORKDIR /src
-
-
-FROM system AS dev
+FROM system AS base
 
 COPY pyproject.toml .
 COPY poetry.lock .
