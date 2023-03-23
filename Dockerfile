@@ -38,6 +38,6 @@ COPY poetry.lock .
 RUN poetry install
 
 # Set the default directory where CMD will execute
-WORKDIR /app
+WORKDIR /home/user
 
 CMD bash
