@@ -31,7 +31,7 @@ jobs:
             pwd
             git pull origin main
             docker-compose rm -sf
-            docker-compose create --build
+            docker-compose build
             docker-compose run --rm python piccolo migrations forwards app
             docker-compose up -d
             docker image prune -af
