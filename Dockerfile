@@ -21,7 +21,7 @@ RUN useradd --create-home --user-group -u $USER_ID user
 USER $USER_ID
 WORKDIR /home/user
 
-RUN pip install -U pip 'setuptools<58' wheel
+RUN pip install -U pip setuptools wheel
 
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
@@ -38,6 +38,6 @@ COPY poetry.lock .
 RUN poetry install
 
 # Set the default directory where CMD will execute
-WORKDIR /home/user
+WORKDIR /app
 
 CMD bash
