@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from app.db_functions.personal import get_user_context
 
 from app.handlers.personal.callback_data_states import (
     StudyFourOptionsCallbackData,
@@ -282,6 +283,67 @@ class KeyboardCreateUserContext(CombiKeyboardGenerator):
             )
             self._data[2] = True
         return self._data[2]
+
+
+class KeyboardSetUserContext(CombiKeyboardGenerator):
+    """Creates a keyboard object for the "/settings-command" menu item.
+
+    Outputs:
+    - a message that reflects the currently selected user context (changes depending on
+    the context selected by the user)
+    - a scrolling keyboard with a description of the contexts existing for the user (pressing
+    leads to the display in the message and storing the state)
+    - button "set context as actual"
+    - button "create new context"
+    - button "send context to archive"
+    - button "extract context from archive"    
+    """
+    async def __init__(self, user_id: int) -> None:
+        user_contexts = await get_user_context(user_id)
+        scrollkeys: List[List[InlineKeyboardButton]] = [
+            [
+                InlineKeyboardButton(
+                    text=user_context["context_1"]["name"]
+                    + "-"
+                    + user_context["context_2"]["name"],
+                    callback_data=str(user_context["id"]),
+                )
+            ]
+            for user_context in user_contexts
+            ]
+        additional_buttons: List[List[InlineKeyboardButton]] = [
+            [
+                InlineKeyboardButton(
+                    text="set as current context", callback_data="#SET_CURRENT_CONTEXT"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="create new context", callback_data="#CREATE_NEW_CONTEXT"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="send to arhive", callback_data="#SEND_TO_ARCHIVE"
+                ),
+                InlineKeyboardButton(
+                    text="extract from archive", callback_data="#EXTRACT_FROM_ARCHIVE"
+                ),
+            ],
+        ]
+        self._text = (
+            user_contexts[0]["context_1"]["name"]
+            + "-"
+            + user_contexts[0]["context_2"]["name"]
+        )
+        self._current_context = user_contexts[0]
+        super().__init__(
+            scrollkeys=scrollkeys,
+            additional_buttons_list=additional_buttons,
+            max_rows_number=5,
+            start_row=0,
+            scroll_step=4
+        )
 
 
 class MyWordsScrollKeyboardGenerator(ScrollKeyboardGenerator):
