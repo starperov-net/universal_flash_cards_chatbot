@@ -8,7 +8,7 @@ from app.handlers.personal.user_settings.user_settings import UserSettings
 from app.create_bot import bot
 from app.db_functions.personal import get_user_context
 from app.storages import TmpStorage
-from app.handlers.personal.keyboards import CombiKeyboardGenerator, KeyKeyboard
+from app.handlers.personal.keyboards import KeyboardSetUserContext, KeyKeyboard
 from app.handlers.personal.user_settings.create_user_context import create_user_context
 
 
@@ -28,43 +28,11 @@ async def cmd_settings(
         # отримати отсортований за lastdate список всіх статусів користувача (GET user_contexts/)
         # формуємо список кнопок для клавіатури, створюємо клавіатуру (personal.keyboards.CombiKeyboardGenerator).
         print(f"event is Message, message_id: {event.message_id}")
-        scrollkey_buttons = [
-            [
-                InlineKeyboardButton(
-                    text=user_context["context_1"]["name"]
-                    + "-"
-                    + user_context["context_2"]["name"],
-                    callback_data=str(user_context["id"]),
-                )
-            ]
-            for user_context in user_contexts
-        ]
-        additional_buttons = [
-            [
-                InlineKeyboardButton(
-                    text="set as current context", callback_data="#SET_CURRENT_CONTEXT"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="create new context", callback_data="#CREATE_NEW_CONTEXT"
-                )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="send to arhive", callback_data="#SEND_TO_ARCHIVE"
-                ),
-                InlineKeyboardButton(
-                    text="extract from archive", callback_data="#EXTRACT_FROM_ARCHIVE"
-                ),
-            ],
-        ]
-        kb = CombiKeyboardGenerator(
-            scrollkeys=scrollkey_buttons,
-            additional_buttons_list=additional_buttons,
-            max_rows_number=5,
-            scroll_step=1,
-        )
+        # since the __init__ method is implemented as asynchronous, the creation of an instance of the class is
+        # divided into two steps (I call the __new__ method on the first one - it has not changed, so it is taken
+        # from the parent class, then the __init__ method is called for the created instance as asynchronous)
+        kb = super(KeyboardSetUserContext, KeyboardSetUserContext).__new__(KeyboardSetUserContext)
+        await kb.__init__(user_id=event.from_user.id)
         key = KeyKeyboard(
             bot_id=bot.id,
             chat_id=event.chat.id,
