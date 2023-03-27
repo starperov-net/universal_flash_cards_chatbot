@@ -296,8 +296,9 @@ class KeyboardSetUserContext(CombiKeyboardGenerator):
     - button "set context as actual"
     - button "create new context"
     - button "send context to archive"
-    - button "extract context from archive"    
+    - button "extract context from archive"
     """
+
     async def __init__(self, user_id: int) -> None:
         user_contexts = await get_user_context(user_id)
         scrollkeys: List[List[InlineKeyboardButton]] = [
@@ -310,7 +311,7 @@ class KeyboardSetUserContext(CombiKeyboardGenerator):
                 )
             ]
             for user_context in user_contexts
-            ]
+        ]
         additional_buttons: List[List[InlineKeyboardButton]] = [
             [
                 InlineKeyboardButton(
@@ -342,7 +343,7 @@ class KeyboardSetUserContext(CombiKeyboardGenerator):
             additional_buttons_list=additional_buttons,
             max_rows_number=5,
             start_row=0,
-            scroll_step=4
+            scroll_step=4,
         )
 
 
