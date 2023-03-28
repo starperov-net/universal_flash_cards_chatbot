@@ -2,7 +2,6 @@ from typing import Union
 from aiogram import types, Dispatcher
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import InlineKeyboardButton
 from app.utils import is_uuid
 from app.handlers.personal.user_settings.user_settings import UserSettings
 from app.create_bot import bot
@@ -31,7 +30,9 @@ async def cmd_settings(
         # since the __init__ method is implemented as asynchronous, the creation of an instance of the class is
         # divided into two steps (I call the __new__ method on the first one - it has not changed, so it is taken
         # from the parent class, then the __init__ method is called for the created instance as asynchronous)
-        kb = super(KeyboardSetUserContext, KeyboardSetUserContext).__new__(KeyboardSetUserContext)
+        kb = super(KeyboardSetUserContext, KeyboardSetUserContext).__new__(
+            KeyboardSetUserContext
+        )
         await kb.__init__(user_id=event.from_user.id)
         key = KeyKeyboard(
             bot_id=bot.id,

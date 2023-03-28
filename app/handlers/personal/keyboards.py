@@ -286,7 +286,7 @@ class KeyboardCreateUserContext(CombiKeyboardGenerator):
 
 
 class KeyboardSetUserContext(CombiKeyboardGenerator):
-    """Creates a keyboard object for the "/settings-command" menu item.
+    """Creates a keyboard object for the "/settings"-command menu item.
 
     Outputs:
     - a message that reflects the currently selected user context (changes depending on

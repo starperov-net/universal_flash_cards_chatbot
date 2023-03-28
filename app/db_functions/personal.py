@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any, Optional, Union
 from uuid import UUID
 
@@ -384,7 +385,7 @@ async def get_user_context(
                     UserContext.user.telegram_user_id,
                 )
                 .where(UserContext.user.telegram_user_id == user)
-                .order_by(UserContext.last_date)
+                .order_by(UserContext.last_date, ascending=False)
                 .output(nested=True)
             )
         else:
@@ -426,7 +427,7 @@ async def get_user_context(
                 UserContext.user.telegram_user_id,
             )
             .where(UserContext.user.id == user)
-            .order_by(UserContext.last_date)
+            .order_by(UserContext.last_date, ascending=False)
             .output(nested=True)
         )
     else:
@@ -445,9 +446,22 @@ async def get_user_context(
                 UserContext.user.telegram_user_id,
             )
             .where(UserContext.user.id == user, UserContext.id == user_context_id)
-            .order_by(UserContext.last_date)
             .output(nested=True)
         )
+
+
+async def update_user_context(id: UUID, **kwargs) -> None:
+    """Update existing row in user_context table."""
+    if "last_date" in kwargs:
+        if (
+            isinstance(kwargs["last_date"], datetime)
+            and kwargs["last_date"].tzinfo is None
+            and kwargs["last_date"].tzinfo.utcoffset(kwargs["last_date"]) is None
+        ):
+            raise ValueError(
+                f"last_date parameter must be datetime aware object (with tzinfo), but got: {kwargs['last_date']}"
+            )
+    await UserContext.update(kwargs).where(UserContext.id == id)
 
 
 async def get_default_language(user: types.user.User) -> dict:
