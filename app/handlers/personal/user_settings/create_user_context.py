@@ -82,12 +82,12 @@ async def create_user_context(
         tmp_storage[key] = kb
     elif callback.data == "#DONE!":
         print("in #DONE! branch")
-        print(f"tmp_storage[key]: {tmp_storage[key]}")
         if await tmp_storage[key].set_user_context(callback.from_user.id):
             await callback.message.edit_text(
                 text=tmp_storage[key].text, parse_mode="HTML"
             )
             await state.clear()
+            del tmp_storage[key]
             return
         else:
             await callback.message.edit_text(
