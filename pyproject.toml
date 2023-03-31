@@ -27,6 +27,7 @@ aiogram = "^3.0.0b6"
 executor = "^23.2"
 parameterized = "^0.8.1"
 redis = "^4.5.1"
+pytz = "^2023.3"
 
 [tool.poetry.dev-dependencies]
 black = "^22.10.0"

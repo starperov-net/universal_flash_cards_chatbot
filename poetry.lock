@@ -2633,6 +2633,23 @@ url = "https://pypi.org/simple"
 reference = "the_pypi"
 
 [[package]]
+name = "pytz"
+version = "2023.3"
+description = "World timezone definitions, modern and historical"
+category = "main"
+optional = false
+python-versions = "*"
+files = [
+    {file = "pytz-2023.3-py2.py3-none-any.whl", hash = "sha256:a151b3abb88eda1d4e34a9814df37de2a80e301e68ba0fd856fb9b46bfbbbffb"},
+    {file = "pytz-2023.3.tar.gz", hash = "sha256:1d8ce29db189191fb55338ee6d0387d82ab59f3d00eac103412d64e0ebd0c588"},
+]
+
+[package.source]
+type = "legacy"
+url = "https://pypi.org/simple"
+reference = "the_pypi"
+
+[[package]]
 name = "redis"
 version = "4.5.2"
 description = "Python client for Redis database and key-value store"
@@ -3191,4 +3208,4 @@ reference = "the_pypi"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "525b78db02d091f341c2f40ff32c2cbfb5cd1a3056f962d899287e24505b04ae"
+content-hash = "09fafe3cd7d77324a34f9029afe29c8a5517c0cb4d80824de4cc88df387ad90f"

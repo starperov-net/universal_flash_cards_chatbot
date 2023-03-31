@@ -1,5 +1,7 @@
 import random
 from uuid import UUID
+from datetime import datetime
+import pytz
 
 from typing import List, Optional, Any
 from dataclasses import dataclass
@@ -7,7 +9,7 @@ from dataclasses import dataclass
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from app.db_functions.personal import get_user_context
+from app.db_functions.personal import get_user_context, update_user_context
 
 from app.handlers.personal.callback_data_states import (
     StudyFourOptionsCallbackData,
@@ -32,7 +34,7 @@ class KeyKeyboard:
     __slots__ = ["bot_id", "chat_id", "user_id", "message_id"]
 
     bot_id: int
-    chat_id: int | str
+    chat_id: int | None | str
     user_id: int | None
     message_id: int | None
 
@@ -74,16 +76,9 @@ class ScrollKeyboardGenerator:
         self.numbers_of_buttons_to_show = self.max_rows_number
         current_scroll_keyboard: List[List[InlineKeyboardButton]] = []
         if self.start_row != 0:
-            print(
-                "im _get_current_scroll_keyboard_list, in brunch 'self.start_row != 0'"
-            )
             current_scroll_keyboard = [[KEY_UP]] + current_scroll_keyboard
             self.numbers_of_buttons_to_show -= 1
         if self.start_row + self.numbers_of_buttons_to_show >= len(self.scrollkeys) - 1:
-            print(
-                "im _get_current_scroll_keyboard_list, in brunch 'self.start_row + \
-                self.numbers_of_buttons_to_show >= len(self.scrollkeys) - 1'"
-            )
             return (
                 current_scroll_keyboard
                 + self.scrollkeys[
@@ -91,7 +86,6 @@ class ScrollKeyboardGenerator:
                 ]
             )
         else:
-            print("im _get_current_scroll_keyboard_list, in brunch 'else'")
             self.numbers_of_buttons_to_show -= 1
             return (
                 current_scroll_keyboard
@@ -103,7 +97,6 @@ class ScrollKeyboardGenerator:
 
     def markup(self) -> InlineKeyboardMarkup:
         """Get the current state of the scrolling keyboard."""
-        print("in ")
         return InlineKeyboardMarkup(
             inline_keyboard=self._get_current_scroll_keyboard_list()
         )
@@ -147,19 +140,11 @@ class CombiKeyboardGenerator(ScrollKeyboardGenerator):
         start_row: int = 0,
         scroll_step: int = 1,
     ) -> None:
-        print("I`m in CombiKeyboardGenerator.__init__".center(120, "-"))
-        print(f"scrollkeys: {scrollkeys}")
-        print(f"additional_buttons_list: {additional_buttons_list}")
-        print(f"pre_additional_buttons_list: {pre_additional_buttons_list}")
-        print(f"max_rows_number: {max_rows_number}")
-        print(f"start_row: {start_row}")
-        print(f"scroll_step: {scroll_step}")
         super().__init__(scrollkeys, max_rows_number, start_row, scroll_step)
         self.additional_buttons_list = additional_buttons_list or []
         self.pre_additional_buttons_list = pre_additional_buttons_list or []
 
     def markup(self) -> InlineKeyboardMarkup:
-        print("I`m in CombiKeyboardGenerator.markup".center(120, "*"))
         return InlineKeyboardMarkup(
             inline_keyboard=(
                 self.pre_additional_buttons_list
@@ -231,8 +216,6 @@ class KeyboardCreateUserContext(CombiKeyboardGenerator):
         """Sets the initialization of the first context if it receives id_ctx, otherwise
         prepares the keyboard to install the second context in the next step.
         """
-        print("in KeyboardCreateUserContext.set_first()".center(120, "+"))
-        print(f"id_ctx: {context}")
         if not context:
             self._data[0] = True
             self._data[1] = (
@@ -286,7 +269,7 @@ class KeyboardCreateUserContext(CombiKeyboardGenerator):
 
 
 class KeyboardSetUserContext(CombiKeyboardGenerator):
-    """Creates a keyboard object for the "/settings-command" menu item.
+    """Creates a keyboard object for the "/settings"-command menu item.
 
     Outputs:
     - a message that reflects the currently selected user context (changes depending on
@@ -301,6 +284,12 @@ class KeyboardSetUserContext(CombiKeyboardGenerator):
 
     async def __init__(self, user_id: int) -> None:
         user_contexts = await get_user_context(user_id)
+        self.user_contexts_title_dict = {
+            str(user_context["id"]): user_context["context_1"]["name"]
+            + " - "
+            + user_context["context_2"]["name"]
+            for user_context in user_contexts
+        }
         scrollkeys: List[List[InlineKeyboardButton]] = [
             [
                 InlineKeyboardButton(
@@ -315,28 +304,11 @@ class KeyboardSetUserContext(CombiKeyboardGenerator):
         additional_buttons: List[List[InlineKeyboardButton]] = [
             [
                 InlineKeyboardButton(
-                    text="set as current context", callback_data="#SET_CURRENT_CONTEXT"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
                     text="create new context", callback_data="#CREATE_NEW_CONTEXT"
                 )
             ],
-            [
-                InlineKeyboardButton(
-                    text="send to arhive", callback_data="#SEND_TO_ARCHIVE"
-                ),
-                InlineKeyboardButton(
-                    text="extract from archive", callback_data="#EXTRACT_FROM_ARCHIVE"
-                ),
-            ],
         ]
-        self._text = (
-            user_contexts[0]["context_1"]["name"]
-            + "-"
-            + user_contexts[0]["context_2"]["name"]
-        )
+        self._current_context_id = str(user_contexts[0]["id"])
         self._current_context = user_contexts[0]
         super().__init__(
             scrollkeys=scrollkeys,
@@ -345,6 +317,16 @@ class KeyboardSetUserContext(CombiKeyboardGenerator):
             start_row=0,
             scroll_step=4,
         )
+
+    @property
+    def text(self) -> str:
+        return f"<b>{self.user_contexts_title_dict[self._current_context_id]}</b>"
+
+    async def set_existing_context(self, context_id: UUID) -> None:
+        """ "Set the current datetime with timezone in user_context.latest_date."""
+        last_date = datetime.now().replace(tzinfo=pytz.utc)
+        await update_user_context(id=context_id, last_date=last_date)
+        self._current_context_id = str(context_id)
 
 
 class MyWordsScrollKeyboardGenerator(ScrollKeyboardGenerator):
