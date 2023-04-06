@@ -35,38 +35,45 @@ def create_select_for_list_of_words(
     """
 
     query: str = f"""
-        SELECT  card.id as card_id,
-                CASE WHEN item1.context = user_context.context_2
-                    THEN item1.text
-                    ELSE item2.text
-                END AS foreign_word,
-                CASE WHEN item2.context = user_context.context_1
-                    THEN item2.text
-                    ELSE item1.text
-                END AS native_word,
-                CASE WHEN repetition_level = {max_repetition_level}
-                    THEN 0
-                    WHEN repetition_level = 0
-                    THEN 2
-                    ELSE 1
-                END AS learning_status_code,
-                CASE WHEN repetition_level = {max_repetition_level}
-                    THEN 'learned'
-                    WHEN repetition_level = 0
-                    THEN 'unstudied'
-                    ELSE 'in progress'
-                END AS learning_status
-        FROM card
-        INNER JOIN users ON card.user = users.id
-        INNER JOIN item_relation ON card.item_relation = item_relation.id
-        INNER JOIN item AS item1 ON item_relation.item_1 = item1.id
-        INNER JOIN item AS item2 ON item_relation.item_2 = item2.id
-        INNER JOIN user_context ON users.id = user_context.user
-        WHERE users.telegram_user_id = {telegram_user_id} AND
-            user_context.last_date = (SELECT MAX(last_date)
-                                        FROM user_context
-                                        INNER JOIN users ON user_context.user = users.id
-                                        WHERE users.telegram_user_id = {telegram_user_id})
-        ORDER BY learning_status_code, foreign_word;
-        """
+           SELECT * FROM (
+               SELECT  card.id as card_id,
+                       CASE WHEN item1.context = user_context.context_2
+                            THEN item1.text
+                            WHEN item1.context = user_context.context_1
+                            THEN item2.text
+                       END AS foreign_word,
+                       CASE WHEN item2.context = user_context.context_1
+                            THEN item2.text
+                            WHEN item2.context = user_context.context_2
+                            THEN item1.text
+                       END AS native_word,
+                       CASE WHEN repetition_level = {max_repetition_level}
+                           THEN 0
+                           WHEN repetition_level = 0
+                           THEN 2
+                           ELSE 1
+                       END AS learning_status_code,
+                       CASE WHEN repetition_level = {max_repetition_level}
+                           THEN 'learned'
+                           WHEN repetition_level = 0
+                           THEN 'unstudied'
+                           ELSE 'in progress'
+                       END AS learning_status
+               FROM card
+               INNER JOIN users ON card.user = users.id
+               INNER JOIN item_relation ON card.item_relation = item_relation.id
+               INNER JOIN item AS item1 ON item_relation.item_1 = item1.id
+               INNER JOIN item AS item2 ON item_relation.item_2 = item2.id
+               INNER JOIN user_context ON users.id = user_context.user
+               WHERE users.telegram_user_id = {telegram_user_id} AND
+                   user_context.last_date = (SELECT MAX(last_date)
+                                               FROM user_context
+                                               INNER JOIN users ON user_context.user = users.id
+                                               WHERE users.telegram_user_id = {telegram_user_id})) A
+           WHERE
+           foreign_word is not NULL
+           AND
+           native_word is not NULL
+           ORDER BY learning_status_code, foreign_word;
+           """
     return query
