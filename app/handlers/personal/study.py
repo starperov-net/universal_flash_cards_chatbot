@@ -57,7 +57,7 @@ async def collect_data_for_fsm(user_context: UserContext) -> dict[str, Any]:
     )
 
     start_time = datetime.now(tz=ZoneInfo("UTC"))
-    end_time = start_time + timedelta(seconds=100)
+    end_time = start_time + timedelta(seconds=150)
 
     return {
         "end_time": end_time,
